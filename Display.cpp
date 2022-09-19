@@ -29,6 +29,8 @@ namespace Display {
 			if (std::cin.fail()) {
 				std::cin.clear();
 				std::cin.ignore(10000, '\n');
+				Log(LogCode::LOG, "Bad input entered");
+				Sleep(2000);
 			}
 			else {
 				switch (input) {

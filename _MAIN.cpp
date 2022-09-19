@@ -43,9 +43,8 @@ int main() {
 		app->run();
 
 	}
-	catch (Error) {
-		std::cout << "Error thrown\n";
-		
+	catch (Log& log) {
+		std::cout << "log caught\n";
 	}
 	
 	return 0;

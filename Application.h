@@ -2,24 +2,11 @@
 #include "FileSystem.h"
 #include "Display.h"
 #include "Vehicle.h"
-
-
-enum class Error {
-	FUNCTION_FAILED,
-	INITIALIZATION_FAILED,
-};
-
+#include "Log.h"
 class Application
 {
 public:
-	Application() {
-		if (!FileSystem::init(DIRECTORY_PATH.string())) {
-			throw Error::FUNCTION_FAILED;
-		}
-		else {
-			m_initialized = true;
-		}
-	}
+	Application();
 	~Application() {
 
 	}
@@ -34,8 +21,14 @@ public:
 
 private:
 	bool m_initialized{ false };
-	const std::filesystem::path DIRECTORY_PATH{ "C:/Users/ryanb/Desktop/LAS Folder/" };
-	const std::string			VEHICLE_FILE_NAME{ "Vehicles.dat" };
+	const std::filesystem::path DIRECTORY_PATH		{ "C:/Users/ryanb/Desktop/LAS Folder/" };
+	const std::filesystem::path	DEBUG_PATH			{ DIRECTORY_PATH.string() + "Debug/"};
+	const std::string			VEHICLE_FILE_NAME	{ "Vehicles.dat" };
+
+	std::filesystem::path m_currentInstanceLogFile{};
+
+	std::ostringstream LogFileName();
+	
 
 	std::vector<Vehicle> m_vehicleList;
 };

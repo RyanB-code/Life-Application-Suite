@@ -4,11 +4,12 @@
 #include <filesystem>
 
 #include "Vehicle.h"
+#include "Log.h"
 namespace FileSystem {
 	
 	
 
-	bool init(const std::string path);
+	bool createDirectory(const std::string path);
 
 	bool	createFile		(const std::string path);
 	bool	doesFileExist	(const std::string path);

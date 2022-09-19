@@ -1,16 +1,21 @@
 #include "FileSystem.h"
 
-#include <iostream>
+
 namespace FileSystem {
-	bool init(const std::string path) {
+	bool createDirectory(const std::string path) {
 		bool success{ false };
 
 
 		if (doesFileExist(path)) {
+			std::ostringstream logText{ path + " was found." };
+			Log(LogCode::ROUTINE, logText.str());
 			success = true;
 		}
 		else {
 			std::filesystem::create_directory(path);
+			std::ostringstream logText{ path + " was created." };
+			Log(LogCode::ROUTINE, logText.str());
+
 			success = true;
 		}
 		return success;
@@ -22,12 +27,19 @@ namespace FileSystem {
 
 		//if file doesn't exist, create it
 		if (!doesFileExist(path.str())) {
-			std::ofstream newFile{path.str()};
+			std::ofstream newFile{path.str()};	//creates the files here
 
-			if (!doesFileExist(path.str()))
+			if (!doesFileExist(path.str())) {//if the file still does not exist, return false		
+				Log(LogCode::WARNING, std::string{ "Could not create " + path.str() });
 				return false;
+			}
+			else {
+				Log(LogCode::ROUTINE, std::string{ "Created file " + path.str() });
+				return true;
+			}
 		}
 		else {
+			Log(LogCode::ROUTINE, std::string{ "Created file " + path.str() });
 			return true;
 		}
 
@@ -37,12 +49,17 @@ namespace FileSystem {
 		const std::filesystem::path checkFile(path);
 
 		if (std::filesystem::exists(checkFile) ){
+			std::string errorText{ checkFile.string() + " does exist."};
+			Log(LogCode::ROUTINE, errorText);
 			return true;
 		}
 		else
 		{
+			std::string errorText{ checkFile.string() + " does not exist." };
+			Log(LogCode::ROUTINE, errorText);
 			return false;
 		}
+
 	}
 
 
@@ -170,7 +187,7 @@ namespace FileSystem {
 	GasStop& MakeGasStopFromText(std::string text) {
 		std::stringstream stream{ text };
 
-		std::cout << stream.str() << "\n";
+
 
 		uint32_t setMiles;
 		uint8_t setGallons;
@@ -190,15 +207,6 @@ namespace FileSystem {
 		for (std::string word; stream >> word;) {
 			notes << word;
 		}
-
-
-		std::cout << setMiles << "\n";
-		std::cout << setGallons << "\n";
-		std::cout << setPricePerGallon << "\n";
-		std::cout << notes.str() << "\n";
-
-
-
 
 		GasStop buffer{ setMiles, setGallons, setPricePerGallon, notes.str() };
 		return buffer;
