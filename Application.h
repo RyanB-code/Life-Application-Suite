@@ -13,7 +13,7 @@ class Application
 {
 public:
 	Application() {
-		if (!FileSystem::init(FILE_PATH.string())) {
+		if (!FileSystem::init(DIRECTORY_PATH.string())) {
 			throw Error::FUNCTION_FAILED;
 		}
 		else {
@@ -34,7 +34,7 @@ public:
 
 private:
 	bool m_initialized{ false };
-	const std::filesystem::path FILE_PATH{ "C:/Users/ryanb/Desktop/LAS Folder/" };
+	const std::filesystem::path DIRECTORY_PATH{ "C:/Users/ryanb/Desktop/LAS Folder/" };
 	const std::string			VEHICLE_FILE_NAME{ "Vehicles.dat" };
 
 	std::vector<Vehicle> m_vehicleList;

@@ -4,6 +4,7 @@
 #include <sstream>
 #include <Windows.h>
 
+#include "Application.h"
 namespace Display
 {
 	//Clears the display
@@ -11,7 +12,9 @@ namespace Display
 
 	//Displays home screen
 	void Home();
+
 	void VehicleHome();
+	
 
 	//Displays in format DDD MMM XX, YYYY -> XX meaning day number ie. 12th or 1st of the month
 	std::ostringstream readableDayMonthYear();

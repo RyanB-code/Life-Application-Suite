@@ -46,12 +46,12 @@ void Vehicle::NewGasStop(GasStop& newGasStop) {
 
 
 std::ostream& operator<<(std::ostream& os, const Repair& repair) {
-	os << repair.mileageDone << '|' << repair.type << '|' << repair.cost << '|' << repair.isThirdPartyRepair << '|' << repair.notes << "|\n";
+	os << repair.mileageDone << '|' << repair.type << '|' << repair.cost << '|' << repair.isThirdPartyRepair << '|' << repair.notes;
 
 	return os;
 }
 std::ostream& operator<<(std::ostream & os, const GasStop & gasStop) {
-	os << gasStop.mileageDone << '|' << gasStop.pricePerGallon << '|' << gasStop.gallons << '|' << gasStop.notes << "|\n";
+	os << gasStop.mileageDone << '|' << gasStop.pricePerGallon << '|' << gasStop.gallons << '|' << gasStop.notes;
 
 	return os;
 }

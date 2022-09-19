@@ -2,7 +2,7 @@
 
 bool const Application::saveVehicles() {
 	bool success{ false };
-	std::ostringstream savePath{ FILE_PATH.string() + VEHICLE_FILE_NAME };
+	std::ostringstream savePath{ DIRECTORY_PATH.string() + VEHICLE_FILE_NAME };
 	for (Vehicle& currentVehicle : m_vehicleList) {
 		if (!FileSystem::writeToFile(savePath.str(), currentVehicle)) {
 			success = false;

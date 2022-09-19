@@ -30,12 +30,14 @@ int main() {
 	testVehicle2.NewGasStop(testGasStop2);
 	*/
 
-	//app->NewVehicle(testVehicle1);
-	//app->NewVehicle(testVehicle2);
+	
 
 	//start release code
 
 	Application* app = new Application();
+
+//	app->NewVehicle(testVehicle1);
+//	app->NewVehicle(testVehicle2);
 
 	try {
 		app->run();
