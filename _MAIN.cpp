@@ -2,7 +2,6 @@
 
 #include "Application.h"
 
-
 int main() {
 	/*
 	Vehicle testVehicle1{ "Jeep Liberty", 1 };
@@ -44,7 +43,7 @@ int main() {
 
 	}
 	catch (Log& log) {
-		std::cout << "log caught\n";
+		Log(LogCode::WARNING, "Log error throw was caught.");
 	}
 	
 	return 0;

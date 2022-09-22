@@ -11,6 +11,7 @@ namespace Display {
 
 	void Home()
 	{
+		Log(LogCode::LOG, "Home Screen called");
 		bool exit{ false };
 		while (!exit) {
 			clear();
@@ -29,8 +30,6 @@ namespace Display {
 			if (std::cin.fail()) {
 				std::cin.clear();
 				std::cin.ignore(10000, '\n');
-				Log(LogCode::LOG, "Bad input entered");
-				Sleep(2000);
 			}
 			else {
 				switch (input) {
@@ -57,7 +56,7 @@ namespace Display {
 		
 	}
 	void VehicleHome() {
-
+		Log(LogCode::LOG, "Vehicle Home Screen called");
 		bool exit{ false };
 		while (!exit) {
 			clear();
@@ -65,8 +64,9 @@ namespace Display {
 
 			std::cout << "\nOptions: \n";
 			std::cout << "1. List Vehicles\n";
-			std::cout << "2. Settings\n";
-			std::cout << "3. Home Page\n";
+			std::cout << "2. Save Vehicles\n";
+			std::cout << "3. Settings\n";
+			std::cout << "4. Home Page\n";
 
 			std::cout << ">";
 
@@ -85,10 +85,14 @@ namespace Display {
 					Sleep(2000);
 					break;
 				case 2:
-					std::cout << "\nIn settings. Does nothing now. Restarting...\n";
+					std::cout << "\nSelected Save Vehicle List\n";
 					Sleep(2000);
 					break;
 				case 3:
+					std::cout << "\nIn settings. Does nothing now. Restarting...\n";
+					Sleep(2000);
+					break;
+				case 4:
 					std::cout << "\nExiting...\n";
 					Sleep(2000);
 					exit = true;

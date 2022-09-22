@@ -1,5 +1,7 @@
 #include "Application.h"
 
+
+
 #pragma warning(disable : 4996)
 
 
@@ -15,10 +17,24 @@ Application::Application() {
 			Log(LogCode::FATAL, "Could not create log file.");
 		}
 		else {
-			m_currentInstanceLogFile = debugFilePath.str() ;
+			m_currentInstanceLogFile = debugFilePath.str();
+			Log::m_path = m_currentInstanceLogFile.string();
+
 			m_initialized = true;
 		}
 	}
+}
+
+void Application::run() {
+	if (!m_initialized) {
+		throw Log(LogCode::FATAL, "Application initialization failed.");
+		return;
+	}
+	else {
+		Display::Home();
+	}
+
+	return;
 }
 
 bool const Application::saveVehicles() {
@@ -35,17 +51,6 @@ bool const Application::saveVehicles() {
 	return success;
 }
 
-void Application::run() {
-	if (!m_initialized) {
-		throw Log(LogCode::FATAL, "Application initialization failed.");
-		return;
-	}
-	else {
-		Display::Home();
-	}
-
-	return;
-}
 
 std::ostringstream Application::LogFileName() {
 	time_t now{ time(0) };

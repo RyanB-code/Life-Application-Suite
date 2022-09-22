@@ -2,8 +2,12 @@
 
 #pragma warning(disable : 4996)
 
+std::string Log::m_path = "";
 
-Log::Log(LogCode code, std::string msg) : m_code{ code }, m_msg{ msg } {
+Log::Log(LogCode code, std::string msg)
+	: m_code	{ code }, 
+	m_msg		{ msg }
+{
 	std::ostringstream os;
 
 	time_t now{ time(0) };
@@ -33,7 +37,19 @@ Log::Log(LogCode code, std::string msg) : m_code{ code }, m_msg{ msg } {
 
 	os << "\t\t" << m_msg << "\n";
 
-	std::cout << os.str();
+	if (m_path == "") {
+		std::cout << os.str();
+	}
+	else {
+		if(std::filesystem::exists(m_path)) {
+			std::ofstream file{ m_path, std::ios_base::app};
+			file << os.str();
+		}
+		else {
+			std::cout << os.str();
+		}
+	}
+
 }
 
 std::ostream& operator<<(std::ostream& os, Log& log) {

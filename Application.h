@@ -3,6 +3,7 @@
 #include "Display.h"
 #include "Vehicle.h"
 #include "Log.h"
+
 class Application
 {
 public:
