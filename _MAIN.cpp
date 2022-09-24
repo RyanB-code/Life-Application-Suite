@@ -3,7 +3,7 @@
 #include "Application.h"
 
 int main() {
-	/*
+	
 	Vehicle testVehicle1{ "Jeep Liberty", 1 };
 	Repair testRepair1{ 10, "New Repair", 20, "NSTR", false };
 	Repair testRepair2{ 5, "PSK", 20, "NSTR", false };
@@ -27,7 +27,9 @@ int main() {
 	testVehicle2.NewRepair(testRepair4);
 	testVehicle2.NewGasStop(testGasStop1);
 	testVehicle2.NewGasStop(testGasStop2);
-	*/
+
+	testVehicle1.NewGasStop(testGasStop1);
+	
 
 	
 
@@ -35,8 +37,8 @@ int main() {
 
 	Application* app = new Application();
 
-//	app->NewVehicle(testVehicle1);
-//	app->NewVehicle(testVehicle2);
+app->NewVehicle(testVehicle1);
+app->NewVehicle(testVehicle2);
 
 	try {
 		app->run();

@@ -6,7 +6,10 @@
 
 
 Application::Application() {
-	if (!FileSystem::createDirectory(DIRECTORY_PATH.string()) || !FileSystem::createDirectory(DEBUG_PATH.string())) {
+	if (!FileSystem::createDirectory(DIRECTORY_PATH.string()) 
+		|| !FileSystem::createDirectory(DEBUG_PATH.string()) 
+		|| !FileSystem::createDirectory(VEHICLE_FOLDER.string()))
+	{
 		Log(LogCode::FATAL, "Could not initialize the file system.");
 	}
 	else {
@@ -14,7 +17,7 @@ Application::Application() {
 		std::ostringstream debugFilePath{ DEBUG_PATH.string() + LogFileName().str() + ".dat" };
 
 		if (!FileSystem::createFile(debugFilePath.str())) {
-			Log(LogCode::FATAL, "Could not create log file.");
+			Log(LogCode::FATAL, "Could not create debug log file.");
 		}
 		else {
 			m_currentInstanceLogFile = debugFilePath.str();
@@ -31,24 +34,48 @@ void Application::run() {
 		return;
 	}
 	else {
-		Display::Home();
+		
 	}
 
 	return;
 }
 
 bool const Application::saveVehicles() {
+
 	bool success{ false };
-	std::ostringstream savePath{ DIRECTORY_PATH.string() + VEHICLE_FILE_NAME };
 	for (Vehicle& currentVehicle : m_vehicleList) {
-		if (!FileSystem::writeToFile(savePath.str(), currentVehicle)) {
+		std::ostringstream saveFileName{ VEHICLE_FOLDER.string() + currentVehicle.getName() + ".dat"};
+		if (FileSystem::createFile(saveFileName.str())){
+
+			if (!FileSystem::writeToFile(saveFileName.str(), currentVehicle)) {
+				Log(LogCode::WARNING, "Could not save vehicle information for " + currentVehicle.getName());
+				success = false;
+			}
+			else {
+				Log(LogCode::LOG, "Saved vehicle inforation for " + currentVehicle.getName());
+				success = true;
+			}
+		}
+		else {
 			success = false;
 		}
-		else
-			success = true;
 	}
 
 	return success;
+}
+
+const std::ostringstream Application::ListVehicles() {
+	std::ostringstream os;
+	os << "   Vehicles:       Miles:\n";
+	int i{ 1 };
+
+	for (Vehicle& currentVehicle : m_vehicleList) {
+		os << i << ". " << std::setw(currentVehicle.maxVehicleNameSize + 1) << std::left << currentVehicle.getName() << std::setw(6) << currentVehicle.getMileage() << "\n";
+		++i;
+	}
+	os << "\n";
+
+	return os;
 }
 
 
@@ -57,41 +84,6 @@ std::ostringstream Application::LogFileName() {
 	tm* ltm = localtime(&now);
 
 	std::ostringstream date;
-
-	// THIS DISPLAYS THE TIME IN HH : MM:SS format
-
-		date
-		<< std::setw(2) << std::setfill('0') << ltm->tm_hour << '-'
-		<< std::setw(2) << std::setfill('0') << ltm->tm_min << '-'
-		<< std::setw(2) << std::setfill('0') << ltm->tm_sec << " ";
-	/*
-	switch (ltm->tm_wday) {
-	case 0:
-		date << "SUN";
-		break;
-	case 1:
-		date << "MON";
-		break;
-	case 2:
-		date << "TUE";
-		break;
-	case 3:
-		date << "WED";
-		break;
-	case 4:
-		date << "THU";
-		break;
-	case 5:
-		date << "FRI";
-		break;
-	case 6:
-		date << "SAT";
-		break;
-	default:
-		date << "DDD";
-	}
-	date << "-";
-	*/
 
 	date << std::setw(2) << std::setfill('0') << ltm->tm_mday << '-';
 	switch (ltm->tm_mon) {
@@ -139,6 +131,43 @@ std::ostringstream Application::LogFileName() {
 	int year{ ltm->tm_year + 1900 };
 
 	date << '-' << year;
+
+	// THIS DISPLAYS THE TIME IN HH : MM:SS format
+
+		date << "_"
+		<< std::setw(2) << std::setfill('0') << ltm->tm_hour << '-'
+		<< std::setw(2) << std::setfill('0') << ltm->tm_min << '-'
+		<< std::setw(2) << std::setfill('0') << ltm->tm_sec;
+	/*
+	switch (ltm->tm_wday) {
+	case 0:
+		date << "SUN";
+		break;
+	case 1:
+		date << "MON";
+		break;
+	case 2:
+		date << "TUE";
+		break;
+	case 3:
+		date << "WED";
+		break;
+	case 4:
+		date << "THU";
+		break;
+	case 5:
+		date << "FRI";
+		break;
+	case 6:
+		date << "SAT";
+		break;
+	default:
+		date << "DDD";
+	}
+	date << "-";
+	*/
+
+	
 
 	return date;
 }

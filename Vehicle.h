@@ -63,6 +63,7 @@ public:
 
 	}
 
+	static constexpr int maxVehicleNameSize {15};
 
 	const uint32_t getMileage() { return m_mileage; }
 	const std::string getName() { return m_name; };
