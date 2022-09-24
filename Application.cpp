@@ -24,6 +24,7 @@ Application::Application() {
 			Log::m_path = m_currentInstanceLogFile.string();
 
 			m_initialized = true;
+			Log(LogCode::LOG, "Initialization successful.");
 		}
 	}
 }
@@ -34,7 +35,9 @@ void Application::run() {
 		return;
 	}
 	else {
-		
+		Display::clear();
+		Startup();	
+
 	}
 
 	return;
@@ -52,7 +55,7 @@ bool const Application::saveVehicles() {
 				success = false;
 			}
 			else {
-				Log(LogCode::LOG, "Saved vehicle inforation for " + currentVehicle.getName());
+				Log(LogCode::LOG, "Saved vehicle information for " + currentVehicle.getName());
 				success = true;
 			}
 		}
@@ -64,6 +67,48 @@ bool const Application::saveVehicles() {
 	return success;
 }
 
+bool Application::Startup() {
+
+	//read Vehicle files
+	std::vector<std::string> vehicleFiles;
+	std::string fileNameBuffer;
+
+	bool writeChar{ true };
+	for (const char& c : FileSystem::filesInDirectory(VEHICLE_FOLDER.string()).str()) {
+
+		//Iterate through the stream and write each file name to the vehicleFile vector
+		if(c == '\n') {
+			vehicleFiles.push_back(fileNameBuffer); //save current string buffer to vector
+			fileNameBuffer = "";					//reset buffer
+			writeChar = false;						//do not copy the newling character
+		}
+		else {
+			writeChar = true;
+		}
+
+		if (writeChar) {
+			fileNameBuffer += c; //save the current character
+		}
+	}
+
+	std::ostringstream logText; 
+	logText << "Found " << vehicleFiles.size() << " vehicle file(s)";
+	Log(LogCode::ROUTINE, logText.str());
+
+	for (const std::string& fileName : vehicleFiles) {
+		std::ostringstream fileText;
+		if (!FileSystem::readFile(fileName, fileText)) { 
+			//If file couldn't be opened to read
+			//Do nothing
+		}
+
+		//currently reads the file. Now need to parse the text
+	}
+	//end reading vehicle Files
+
+
+	return true;
+}
 const std::ostringstream Application::ListVehicles() {
 	std::ostringstream os;
 	os << "   Vehicles:       Miles:\n";

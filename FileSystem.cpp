@@ -56,7 +56,7 @@ namespace FileSystem {
 	}
 
 
-	bool const writeToFile (const std::string path, Vehicle& vehicle) {
+	bool const writeToFile(const std::string path, Vehicle& vehicle) {
 
 		//If the file doesnt exist, create the path, and then it writes to it again. If that writeToFile fails again, return with unsuccessful
 		if (!doesFileExist(path)) {
@@ -79,7 +79,6 @@ namespace FileSystem {
 				file << ']';
 				file << '\n';
 			}
-
 			return true;
 		}
 
@@ -88,7 +87,7 @@ namespace FileSystem {
 	}
 	
 
-	bool const readFromFile(const std::string setPath, Vehicle& vehicle) {
+	bool const readFile(const std::string setPath, std::ostringstream& output) {
 		std::ostringstream path{ setPath };
 
 		if (!doesFileExist(path.str())) {
@@ -102,9 +101,21 @@ namespace FileSystem {
 			}
 			else {
 				Log(LogCode::LOG, "Successfully opened " + path.str() + " for reading.");
-			
+				std::string line;
+				while (file.good()) {
+					std::getline(file, line);
+					output << line;
+				}
 				return true;
 			}
 		}
+	}
+
+	std::ostringstream filesInDirectory(const std::string directoryToRead) {
+		std::ostringstream os;
+		for (std::filesystem::path dirEntry : std::filesystem::directory_iterator{ directoryToRead }) {
+			os << dirEntry.string() << "\n";
+		}
+		return os;
 	}
 }

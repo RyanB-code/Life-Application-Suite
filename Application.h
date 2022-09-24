@@ -19,6 +19,8 @@ public:
 	//MAKE PRIVATE AFTER DISPLAY SYSTEM IS MADE
 	//Saves vehicles by writing to file. The path is specified in the Application class
 	bool const saveVehicles();	//MAKE PRIVATE AFTER DISPLAY SYSTEM IS MADE
+
+
 	std::ostringstream const ListVehicles();
 
 	friend bool const FileSystem::writeToFile(const std::string setPath, Vehicle& vehicle);
@@ -30,8 +32,12 @@ private:
 	const std::filesystem::path	VEHICLE_FOLDER		{ DIRECTORY_PATH.string() + "Vehicles/"};
 
 	std::filesystem::path m_currentInstanceLogFile{};
-
+	
+	//Creates the Log file name using date and time.
 	std::ostringstream LogFileName();
+
+	//Once App is initialized, start reading files.
+	bool Startup();
 	
 	std::vector<Vehicle> m_vehicleList;
 };

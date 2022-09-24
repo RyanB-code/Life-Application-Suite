@@ -6,7 +6,7 @@
 // \param Mileage, Type Of Repair, Cost, Notes, bool Did Third Party Perform it?
 class Repair {
 public:
-	Repair(uint32_t setMileage, std::string setType, uint16_t setCost, std::string setNotes, bool setThirdParty)
+	Repair(uint32_t setMileage, std::string setType, double setCost, std::string setNotes, bool setThirdParty)
 		: mileageDone{ setMileage },
 		type{ setType },
 		cost{ setCost },
@@ -25,7 +25,7 @@ private:
 	uint32_t mileageDone;
 	std::string type;
 	std::string notes;
-	uint16_t cost;
+	double cost;
 	bool isThirdPartyRepair;
 };
 
