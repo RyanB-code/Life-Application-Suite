@@ -32,7 +32,7 @@ private:
 // \param Mileage, Gallons Filled, Price Per Gallon, Notes,
 class GasStop {
 public:
-	GasStop(uint32_t setMileage, uint8_t setGallons, double setPricePerGallon, std::string setNotes)
+	GasStop(uint32_t setMileage, short setGallons, double setPricePerGallon, std::string setNotes)
 		: mileageDone{ setMileage },
 		gallons{setGallons},
 		pricePerGallon{setPricePerGallon},

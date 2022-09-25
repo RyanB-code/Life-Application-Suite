@@ -9,7 +9,7 @@ int main() {
 	//start release code
 	Application* app = new Application();
 
-	AddTestCases(*app);
+	//AddTestCases(*app);
 
 	try {
 		app->run();

@@ -37,6 +37,7 @@ void Application::run() {
 	else {
 		Display::clear();
 		Startup();	
+		std::cout << ListVehicles().str();
 
 	}
 
@@ -95,20 +96,217 @@ bool Application::Startup() {
 	logText << "Found " << vehicleFiles.size() << " vehicle file(s)";
 	Log(LogCode::ROUTINE, logText.str());
 
+
 	for (const std::string& fileName : vehicleFiles) {
 		std::ostringstream fileText;
+		
+		//Opens vehicle file and reads text 
 		if (!FileSystem::readFile(fileName, fileText)) { 
-			//If file couldn't be opened to read
+			//If vehicle file couldn't be opened to read
 			//Do nothing
 		}
+		else{
+			std::string vehicleInformationBuffer{ fileText.str() };
 
-		//currently reads the file. Now need to parse the text
+			//make a vehicle type from the text found in the vehicle info buffer and delete read characters
+			Vehicle vehicleBuffer{ makeVehicle(vehicleInformationBuffer) }; 
+			
+			//Make repairs from the remaining text
+			std::vector<Repair> repairBuffer;
+			makeRepair(vehicleInformationBuffer, repairBuffer);
+
+			for (Repair& rep : repairBuffer) {
+				vehicleBuffer.NewRepair(rep);
+				Log(LogCode::ROUTINE, "Added a repair to " + vehicleBuffer.getName());
+			}
+
+			std::vector<GasStop> gasBuffer;
+			makeGasStop(vehicleInformationBuffer, gasBuffer);
+			for (GasStop& gas : gasBuffer) {
+				vehicleBuffer.NewGasStop(gas);
+				Log(LogCode::ROUTINE, "Added a gas stop to " + vehicleBuffer.getName());
+			}
+
+			NewVehicle(vehicleBuffer); //add vehicle to the known list
+		}
+		
 	}
 	//end reading vehicle Files
 
 
+
 	return true;
 }
+
+inline void Application::NewVehicle(Vehicle& vehicle) {
+	m_vehicleList.push_back(vehicle); 
+	Log(LogCode::ROUTINE, "Added " + vehicle.getName() + " to list of vehicles.");
+}
+
+const Vehicle Application::makeVehicle(std::string& text) {
+	std::string vehNameBuf{};
+	bool writeChar{ false };
+
+	bool exitLoop{ false };
+	
+	int charactersRead{ 0 };
+	for (const char& c : text) {
+		++charactersRead;
+		if (c == ')') {
+			writeChar = false;
+			exitLoop = true;
+		}
+		if (writeChar) {
+			vehNameBuf += c;
+		}
+		if (c == '(') {
+			writeChar = true;
+		}
+
+		if (exitLoop) {
+			for (int i{ 0 }; i < charactersRead; ++i) {
+				text.erase(0, 1);
+			}
+			return { vehNameBuf, 0 };
+		}
+
+	}
+	return { vehNameBuf, 0 };
+}
+const void Application::makeRepair(std::string& text, std::vector<Repair>& repairList) {
+	//Buffers to write to
+	uint32_t mileBuf{};
+	std::ostringstream typeBuf{};
+	double costBuf{};
+	std::ostringstream notesBuf{};
+	bool thirdPartyBuf{};
+
+	std::string foundRepairBuf;				//buffer of characters being read from text
+	std::vector<std::string> repairStrings; //vector of repairs not yet formatted
+
+	bool writeChar{ false };
+	int charactersRead{ 1 };
+	for (char& c : text) {
+		++charactersRead;
+		if (c == '>') {
+			repairStrings.push_back(foundRepairBuf);
+			foundRepairBuf.erase();
+			writeChar = false;
+		}
+
+		if (writeChar) {
+			foundRepairBuf += c;
+		}
+		if (c == '<') {
+			writeChar = true;
+		}
+	}
+
+
+	for (std::string currentString : repairStrings) {
+		char separator{ '|' };
+
+		readUntil(currentString, separator, mileBuf);
+		typeBuf << readUntil(currentString, separator);
+		readUntil(currentString, separator, costBuf);
+		readUntil(currentString, separator, thirdPartyBuf);
+		notesBuf << readUntil(currentString, separator);
+		
+		repairList.push_back(Repair { mileBuf, typeBuf.str(), costBuf, notesBuf.str(),thirdPartyBuf} );
+
+		mileBuf = 0;
+		typeBuf.str("");
+		costBuf = 0;
+		thirdPartyBuf = false;
+		notesBuf.str("");
+	}
+
+}
+const void Application::makeGasStop(std::string& text, std::vector<GasStop>& gasList) {
+	//Buffers to write to
+	
+	uint32_t mileBuf{};
+	short gallonsBuf{};
+	double ppgBuf{};
+	std::ostringstream notesBuf{};
+
+	std::string foundGasBuf;				//buffer of characters being read from text
+	std::vector<std::string> gasStrings;	//vector of gas stops not yet formatted
+
+	bool writeChar{ false };
+	int charactersRead{ 1 };
+	for (char& c : text) {
+		++charactersRead;
+		if (c == ']') {
+			gasStrings.push_back(foundGasBuf);
+			foundGasBuf.erase();
+			writeChar = false;
+		}
+
+		if (writeChar) {
+			foundGasBuf += c;
+		}
+		if (c == '[') {
+			writeChar = true;
+		}
+	}
+
+
+	for (std::string currentString : gasStrings) {
+		char separator{ '|' };
+
+		readUntil(currentString, separator, mileBuf);
+		readUntil(currentString, separator, ppgBuf);
+		readUntil(currentString, separator, gallonsBuf);
+		notesBuf << readUntil(currentString, separator);
+
+		gasList.push_back(GasStop{ mileBuf, gallonsBuf, ppgBuf, notesBuf.str()});
+
+		mileBuf = 0;
+		gallonsBuf = 0;
+		ppgBuf = 0;
+		notesBuf.str("");
+	}
+
+}
+
+void Application::readUntil(std::string& text, const char limit, auto& returnType) {
+	std::stringstream bufferText;
+	
+	int charRead{ 0 };
+	for (char& c : text) {
+		++charRead;
+		if (c != limit) {
+			bufferText << c;
+		}
+		else {
+			bufferText >> returnType;
+			text.erase(0, charRead);
+			return;
+		}
+	}
+}
+
+std::string Application::readUntil(std::string& text, const char limit) {
+	std::string bufferText;
+	int charRead{ 0 };
+	for (const char& c : text) {
+		++charRead;
+		if (c != limit && charRead < text.length()) {
+			bufferText += c;
+		}
+
+		else{
+			if (c != limit) {
+				bufferText += c;
+			}
+			text.erase(0, charRead);
+			return bufferText;
+		}
+
+	}
+}
+
 const std::ostringstream Application::ListVehicles() {
 	std::ostringstream os;
 	os << "   Vehicles:       Miles:\n";
@@ -117,13 +315,22 @@ const std::ostringstream Application::ListVehicles() {
 	for (Vehicle& currentVehicle : m_vehicleList) {
 		os << i << ". " << std::setw(currentVehicle.maxVehicleNameSize + 1) << std::left << currentVehicle.getName() << std::setw(6) << currentVehicle.getMileage() << "\n";
 		++i;
+		os << "\tRepairs:\n";
+		for (Repair& rep : currentVehicle.getRepairList()) {
+			os << '\t' << rep << "\n";
+		}
+		os << '\n';
+
+		os << "\tGas Stops:\n";
+		for (GasStop& gas : currentVehicle.getGasStopList()) {
+			os << '\t' << gas << "\n";
+		}
+		os << "\n";
 	}
 	os << "\n";
 
 	return os;
 }
-
-
 std::ostringstream Application::LogFileName() {
 	time_t now{ time(0) };
 	tm* ltm = localtime(&now);

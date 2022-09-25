@@ -14,12 +14,18 @@ public:
 	void run();
 
 	//Add Vehicle to the list of known vehicles
-	void NewVehicle(Vehicle& vehicle) { m_vehicleList.push_back(vehicle); }		
+	inline void NewVehicle(Vehicle& vehicle);
 	
 	//MAKE PRIVATE AFTER DISPLAY SYSTEM IS MADE
 	//Saves vehicles by writing to file. The path is specified in the Application class
 	bool const saveVehicles();	//MAKE PRIVATE AFTER DISPLAY SYSTEM IS MADE
 
+	//Make a Vehicle type from the text. Deletes read characters
+	const Vehicle makeVehicle(std::string& text);
+	//Make a Repair type from the text. Deletes read characters. \param repairList: Adds found repairs to the vector
+	const void makeRepair(std::string& text, std::vector<Repair>& repairList);
+	// Make a GasStop type from the text. Deletes read characters. \param gasList : Adds found gas stops to the vector
+	const void makeGasStop(std::string& text, std::vector<GasStop>& gasList);
 
 	std::ostringstream const ListVehicles();
 
@@ -38,6 +44,9 @@ private:
 
 	//Once App is initialized, start reading files.
 	bool Startup();
+
+	void readUntil(std::string& text, const char limit, auto& returnType);
+	std::string readUntil(std::string& text, const char limit);
 	
 	std::vector<Vehicle> m_vehicleList;
 };
