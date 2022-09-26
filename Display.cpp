@@ -9,7 +9,7 @@ namespace Display {
 		system("cls"); 
 	}
 
-	//===========Menus/Screens======================
+	//===========Menus/Screens=====================
 	void Home(Application* app)
 	{
 		Log(LogCode::LOG, "Home Screen called");
