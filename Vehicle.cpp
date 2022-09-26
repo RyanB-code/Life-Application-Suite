@@ -3,11 +3,12 @@
 void Vehicle::NewRepair(Repair& newRepair) {
 	repairList.push_back(newRepair);	
 
-	if (repairList.size() == 1 || newRepair.getMileage() > repairList[repairList.size() - 2].getMileage()) //If the New Repair's mileage is higher than the last element in the vector, no need to sort.
+	//If the New Repair's mileage is higher than the last element in the vector, no need to sort.
+	if (repairList.size() == 1 || newRepair.getMileage() > repairList[repairList.size() - 2].getMileage())
 	{
 		// Do nothing
 	}
-	else {
+	else { //sort by mileage
 		for (int i{ 0 }; i < repairList.size()-1; ++i) {
 			for (int x{ i+1 }; x < repairList.size(); ++x) {
 				if (repairList[x].getMileage() < repairList[i].getMileage()) {
@@ -25,11 +26,12 @@ void Vehicle::NewRepair(Repair& newRepair) {
 void Vehicle::NewGasStop(GasStop& newGasStop) {
 	gasList.push_back(newGasStop);
 
-	if (gasList.size() == 1 || newGasStop.getMileage() > gasList[gasList.size() - 2].getMileage()) //If the New Repair's mileage is higher than the last element in the vector, no need to sort.
+	//If the New GasStop's mileage is higher than the last element in the vector, no need to sort.
+	if (gasList.size() == 1 || newGasStop.getMileage() > gasList[gasList.size() - 2].getMileage())
 	{
 		//Do nothing
 	}	
-	else {
+	else { //sort by mileage
 		for (int i{ 0 }; i < gasList.size() - 1; ++i) {
 			for (int x{ i + 1 }; x < gasList.size(); ++x) {
 				if (gasList[x].getMileage() < gasList[i].getMileage()) {

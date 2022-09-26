@@ -1,8 +1,8 @@
 #pragma once
 #include "FileSystem.h"
-#include "Display.h"
 #include "Vehicle.h"
 #include "Log.h"
+
 
 class Application
 {
@@ -13,41 +13,53 @@ public:
 	}
 	void run();
 
-	//Add Vehicle to the list of known vehicles
+	//Add vehicle to the list of known vehicles
 	inline void NewVehicle(Vehicle& vehicle);
 	
-	//MAKE PRIVATE AFTER DISPLAY SYSTEM IS MADE
 	//Saves vehicles by writing to file. The path is specified in the Application class
-	bool const saveVehicles();	//MAKE PRIVATE AFTER DISPLAY SYSTEM IS MADE
+	bool const saveVehicles();
 
-	//Make a Vehicle type from the text. Deletes read characters
-	const Vehicle makeVehicle(std::string& text);
-	//Make a Repair type from the text. Deletes read characters. \param repairList: Adds found repairs to the vector
+	// Reads \param Text string from file. Deletes chars read \return Name
+	const std::string makeVehicle(std::string& text);
+	//Make a Repair from a text stream. \param repairList: Adds found repairs to this vector
 	const void makeRepair(std::string& text, std::vector<Repair>& repairList);
-	// Make a GasStop type from the text. Deletes read characters. \param gasList : Adds found gas stops to the vector
+	// Make a GasStop from a text stream. \param gasList : Adds found gas stops to this vector
 	const void makeGasStop(std::string& text, std::vector<GasStop>& gasList);
-
-	std::ostringstream const ListVehicles();
 
 	friend bool const FileSystem::writeToFile(const std::string setPath, Vehicle& vehicle);
 
+	std::vector<Vehicle>& getVehicleList() { return m_vehicleList; };
+
+	//Show protected file paths =============
+	std::string showMainDirectory()		{ return DIRECTORY_PATH.string(); };
+	std::string showDebugDirectory()	{ return DEBUG_PATH.string(); };
+	std::string showVehicleDirectory()	{ return VEHICLE_PATH.string(); };
+	std::string showLogFilePath()		{ return m_currentInstanceLogFile.string(); };
+	//=======================================
 private:
+	Application* app{};
+
 	bool m_initialized{ false };
 	const std::filesystem::path DIRECTORY_PATH		{ "C:/Users/ryanb/Desktop/LAS Folder/" };
 	const std::filesystem::path	DEBUG_PATH			{ DIRECTORY_PATH.string() + "Debug/"};
-	const std::filesystem::path	VEHICLE_FOLDER		{ DIRECTORY_PATH.string() + "Vehicles/"};
-
-	std::filesystem::path m_currentInstanceLogFile{};
+	const std::filesystem::path	VEHICLE_PATH		{ DIRECTORY_PATH.string() + "Vehicles/"};
+	std::filesystem::path m_currentInstanceLogFile	{};
 	
-	//Creates the Log file name using date and time.
+	//Displays the date for Log file as: SUN, SEP 25, 2022
 	std::ostringstream LogFileName();
 
-	//Once App is initialized, start reading files.
-	bool Startup();
+	//Once the application is initialized, start reading files.
+	void Startup();
 
+
+	//===Used for creating data from module files
+
+	//Reads text until limit and deletes characters read \param text: what will be read, limit: char to read until, returnType: will be overwritten with the data
 	void readUntil(std::string& text, const char limit, auto& returnType);
+	//Reads text until limit, and deletes characters read \param text: what will be read limit: char to read until \return String of read text
 	std::string readUntil(std::string& text, const char limit);
-	
+	//=====================================
+
 	std::vector<Vehicle> m_vehicleList;
 };
 

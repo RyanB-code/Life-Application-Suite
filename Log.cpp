@@ -12,13 +12,12 @@ Log::Log(LogCode code, std::string msg)
 
 	time_t now{ time(0) };
 	tm* ltm = localtime(&now);
-	// THIS DISPLAYS THE TIME IN HH : MM:SS format
 
+	//Time in HH:MM:SS format
 	os << "["
 		<< std::setw(2) << std::setfill('0') << ltm->tm_hour << ':'
 		<< std::setw(2) << std::setfill('0') << ltm->tm_min << ':'
 		<< std::setw(2) << std::setfill('0') << ltm->tm_sec << "]\t";
-		// NEED TO ADD MILLISECONDS<< std::setw(2) << std::setfill('0') << ltm->tm_
 
 	switch (m_code) {
 	case LogCode::FATAL:
@@ -49,7 +48,6 @@ Log::Log(LogCode code, std::string msg)
 			std::cout << os.str();
 		}
 	}
-
 }
 
 std::ostream& operator<<(std::ostream& os, Log& log) {

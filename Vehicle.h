@@ -3,7 +3,7 @@
 #include <vector>
 #include <sstream>
 
-// \param Mileage, Type Of Repair, Cost, Notes, bool Did Third Party Perform it?
+// \param Mileage, Type Of Repair, Cost, Notes, Did Third Party Perform it?
 class Repair {
 public:
 	Repair(uint32_t setMileage, std::string setType, double setCost, std::string setNotes, bool setThirdParty)
@@ -40,14 +40,17 @@ public:
 	{
 
 	}
+	~GasStop() {
+
+	}
 
 	const uint32_t getMileage() { return mileageDone; }
 	friend std::ostream& operator<<(std::ostream& os, const GasStop& gasStop);
 
 private:
-	uint32_t mileageDone;
-	short gallons;
-	double pricePerGallon;
+	uint32_t	mileageDone;
+	short		gallons;
+	double		pricePerGallon;
 	std::string notes;
 };
 
@@ -71,14 +74,14 @@ public:
 	void NewRepair(Repair& newRepair);
 	void NewGasStop(GasStop& newGasStop);
 
-	std::vector<Repair>& getRepairList() { return repairList; }
-	std::vector<GasStop>& getGasStopList() { return gasList; }
+	std::vector<Repair>& getRepairList()	{ return repairList; }
+	std::vector<GasStop>& getGasStopList()	{ return gasList; }
 
 private:
 	std::string m_name;
-	uint32_t m_mileage;
+	uint32_t	m_mileage;
 
-	std::vector<Repair> repairList{};
-	std::vector<GasStop> gasList{};
+	std::vector<Repair>		repairList{};
+	std::vector<GasStop>	gasList{};
 };
 

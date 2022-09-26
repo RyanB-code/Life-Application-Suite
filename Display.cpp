@@ -9,13 +9,12 @@ namespace Display {
 		system("cls"); 
 	}
 
-	void Home()
+	//===========Menus/Screens======================
+	void Home(Application* app)
 	{
 		Log(LogCode::LOG, "Home Screen called");
 		bool exit{ false };
 		while (!exit) {
-			clear();
-			
 			DisplayBanner("Life Application Suite");
 			std::cout << "\nOptions: \n";
 			std::cout << "1. Vehicle Manager\n";
@@ -34,11 +33,10 @@ namespace Display {
 			else {
 				switch (input) {
 				case 1:
-					VehicleHome();
+					VehicleHome(app);
 					break;
 				case 2:
-					std::cout << "\nIn settings. Does nothing now. Restarting...\n";
-					Sleep(2000);
+					Settings(app);
 					break;
 				case 3:
 					std::cout << "\nExiting...\n";
@@ -51,28 +49,35 @@ namespace Display {
 				} //end switch
 			}
 
-
 		} // end while loop
 		
 	}
-	void VehicleHome() {
+	void VehicleHome(Application* app) {
 		Log(LogCode::LOG, "Vehicle Home Screen called");
+
+		Vehicle* selectedVehicle{ nullptr };
+
 		bool exit{ false };
 		while (!exit) {
-			clear();
-			DisplayBanner("Vehicles Home Page");
+			DisplayBanner("Vehicles -> Home");
+
+			std::cout << ListVehicles(app->getVehicleList()).str();
+
+			if (!selectedVehicle) {
+				//Do nothing
+			}
+			else {
+				std::cout << "\nSelected Vehicle > " << selectedVehicle->getName() << "\n";
+			}
 
 			std::cout << "\nOptions: \n";
-			std::cout << "1. List Vehicles\n";
-			std::cout << "2. Save Vehicles\n";
-			std::cout << "3. Settings\n";
-			std::cout << "4. Home Page\n";
-
+			std::cout << "1. Select Vehicle\n";
+			std::cout << "2. View Full Vehicle Info\n";
+			std::cout << "3. Home Page\n";
 			std::cout << ">";
 
 			unsigned short input;
 			std::cin >> input;
-
 
 			if (std::cin.fail()) {
 				std::cin.clear();
@@ -81,20 +86,12 @@ namespace Display {
 			else {
 				switch (input) {
 				case 1:
-					std::cout << "\nSelected Vehicle List\n";
-					Sleep(2000);
+					selectedVehicle = SelectVehicle(app->getVehicleList());
 					break;
 				case 2:
-					std::cout << "\nSelected Save Vehicle List\n";
-					Sleep(2000);
+					ShowFullVehicleInformation(app->getVehicleList());
 					break;
 				case 3:
-					std::cout << "\nIn settings. Does nothing now. Restarting...\n";
-					Sleep(2000);
-					break;
-				case 4:
-					std::cout << "\nExiting...\n";
-					Sleep(2000);
 					exit = true;
 					break;
 				default:
@@ -105,7 +102,95 @@ namespace Display {
 			}
 		} //end while loop
 	}
+	void Settings(Application* app) {
+		DisplayBanner("LAS -> Settings");
+		std::cout << "Main Directory:\t\t" << app->showMainDirectory() << "\n";
+		std::cout << "Debug Directory:\t" << app->showDebugDirectory() << "\n";
+		std::cout << "Debug File:\t\t" << app->showLogFilePath() << "\n";
+		std::cout << "Vehicle Directory:\t" << app->showVehicleDirectory() << "\n";
+		std::cout << "\n";
+		system("pause");
+	}
 
+	void ShowFullVehicleInformation(std::vector<Vehicle>& vehList) {
+		DisplayBanner("Vehicles -> Detailed View");
+		std::cout << ListVehicles(vehList, true).str();
+		system("pause");
+		return;
+	}
+	Vehicle* SelectVehicle(std::vector<Vehicle>& vehList) {
+		if (vehList.empty()) {
+			return nullptr;
+		}
+		else {
+			Vehicle* selVeh{ nullptr };
+
+			bool exit{ false };
+			while (!exit) {
+				clear();
+				DisplayBanner("Vehicles -> Select Vehicle");
+				std::cout << ListVehicles(vehList).str();
+
+				std::cout << ">";
+
+				unsigned short input;
+				std::cin >> input;
+
+				if (std::cin.fail()) {
+					std::cin.clear();
+					std::cin.ignore(10000, '\n');
+				}
+				else {
+					if (input - 1 < vehList.size()) {
+						selVeh = &vehList[input - 1];
+						exit = true;
+					}
+					else {
+
+					}
+				}
+			}
+
+			return selVeh;
+		}
+
+	}
+	//============END MENU/SCREENS==================
+
+	const std::ostringstream ListVehicles(std::vector<Vehicle>& vehList, bool detailed) {
+		std::ostringstream os;
+		if (vehList.empty()) {
+			os << "No vehicles found.\n";
+		}
+		else
+		{
+			os << "   Vehicles:       Miles:\n";
+			int i{ 1 };
+
+			for (Vehicle& currentVehicle : vehList) {
+				os << i << ". " << std::setw(currentVehicle.maxVehicleNameSize + 1) << std::left << currentVehicle.getName() << std::setw(6) << currentVehicle.getMileage() << "\n";
+				++i;
+				if (detailed) {		//If set to detailed view, display repairs and gas lists
+					os << "\tRepairs:\n";
+					for (Repair& rep : currentVehicle.getRepairList()) {
+						os << '\t' << rep << "\n";
+					}
+					os << '\n';
+
+					os << "\tGas Stops:\n";
+					for (GasStop& gas : currentVehicle.getGasStopList()) {
+						os << '\t' << gas << "\n";
+					}
+					os << "\n";
+				}
+				else {
+					//do nothing				
+				}
+			}
+		}
+
+		return os;
+	}
 	std::ostringstream readableDayMonthYear() {
 		time_t now{ time(0) };
 		tm* ltm = localtime(&now);
@@ -137,7 +222,7 @@ namespace Display {
 		default:
 			date << "DDD";
 		}
-		date << " ";
+		date << ", ";
 
 		switch (ltm->tm_mon) {
 		case 0:
@@ -199,8 +284,8 @@ namespace Display {
 
 		return date;
 	}
-
 	void DisplayBanner(const std::string title) {
+		clear();
 		unsigned short screenWidth{ 50 };
 		std::ostringstream date{ readableDayMonthYear() };
 
