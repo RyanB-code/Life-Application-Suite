@@ -164,24 +164,70 @@ namespace Display {
 		}
 		else
 		{
-			os << "   Vehicles:       Miles:\n";
 			int i{ 1 };
 
+				//Width of table
+				short mileageWidth{ 8 };
+				short typeWidth{ 15 };
+				short costWidth{ 8 };
+				short thirdPartyWidth{ 8 };
+				short notesWidth{ 30 };
+				int tableLineRepairs{ mileageWidth + typeWidth + costWidth + thirdPartyWidth + notesWidth + 12 }; //last number is number of separators
+
+				short gallonsWidth { 8 };
+				int tableLineGas{ mileageWidth + gallonsWidth + costWidth + notesWidth + 9 };
+				os << '\n';
+
 			for (Vehicle& currentVehicle : vehList) {
-				os << i << ". " << std::setw(currentVehicle.maxVehicleNameSize + 1) << std::left << currentVehicle.getName() << std::setw(6) << currentVehicle.getMileage() << "\n";
+				os << i << ". " << std::setw(currentVehicle.maxVehicleNameSize + 1) << std::left << currentVehicle.getName() << std::setw(6) << std::right << currentVehicle.getMileage() << " miles\n";
 				++i;
 				if (detailed) {		//If set to detailed view, display repairs and gas lists
-					os << "\tRepairs:\n";
-					for (Repair& rep : currentVehicle.getRepairList()) {
-						os << '\t' << rep << "\n";
-					}
-					os << '\n';
+					os << std::setw((tableLineRepairs / 2) + 7) << std::right << "===REPAIRS===" << std::left << '\n'; //make repairs be in the middle
+					os << "   " << std::setw(mileageWidth) << "Miles"; os << " | ";
+					os << std::setw(typeWidth) << "Type"; os << " | ";
+					os << std::setw(costWidth) << "Cost"; os << " | ";
+					os << std::setw(thirdPartyWidth) << "By Me?"; os << " | ";
+					os << std::setw(notesWidth) << "Notes";
+					os << std::setw(tableLineRepairs) << std::setfill('=');
+					os << "\n   " << std::setfill(' ');
 
-					os << "\tGas Stops:\n";
-					for (GasStop& gas : currentVehicle.getGasStopList()) {
-						os << '\t' << gas << "\n";
+					for (Repair& rep : currentVehicle.getRepairList()) {
+						int				mileBuf;
+						std::string		typeBuf;
+						double			costBuf;
+						std::string		notesBuf;
+						bool			thirdPartyBuf;
+						rep.getRepairInfo(mileBuf, typeBuf, costBuf, notesBuf, thirdPartyBuf);
+						os << "\n   " << std::setw(mileageWidth) << std::right << mileBuf; os << " | ";
+						os << std::setw(typeWidth) << typeBuf; os << " | ";
+						os << std::setw(costWidth) << costBuf; os << " | ";
+						os << std::setw(thirdPartyWidth) << std::boolalpha << thirdPartyBuf; os << " | ";
+						os << std::setw(notesWidth) << std::left << notesBuf;
 					}
-					os << "\n";
+					os << "\n\n";
+
+					os << std::setw((tableLineGas / 2) + 8) << std::right << "===GAS STOPS===" << std::left << '\n'; //make text be in the middle
+					os << "   " << std::setw(mileageWidth) << "Miles"; os << " | ";
+					os << std::setw(gallonsWidth) << "Gallons"; os << " | ";
+					os << std::setw(costWidth) << "PPG"; os << " | ";
+					os << std::setw(notesWidth) << "Notes";
+					os << std::setw(tableLineGas) << std::setfill('=');
+					os << "\n   " << std::setfill(' ');
+
+
+					for (GasStop& gas : currentVehicle.getGasStopList()) {
+						int			mileBuf;
+						short		galBuf;
+						double		costBuf;
+						std::string notesBuf;
+						gas.getGasStopInfo(mileBuf, galBuf, costBuf, notesBuf);
+						os << "\n   " << std::setw(mileageWidth) << std::right << mileBuf; os << " | ";
+						os << std::setw(gallonsWidth) << galBuf; os << " | ";
+						os << std::setw(costWidth) << costBuf; os << " | ";
+						os << std::setw(notesWidth) << std::left << notesBuf;
+
+					}
+					os << "\n\n";
 				}
 				else {
 					//do nothing				

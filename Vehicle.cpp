@@ -1,5 +1,21 @@
 #include "Vehicle.h"
 
+const void Repair::getRepairInfo(int& mileage, std::string& typeStr, double& costDbl, std::string& notesVar, bool& wasThirdParty) {
+	mileage = mileageDone;
+	typeStr = type;
+	costDbl = cost;
+	notesVar = notes;
+	wasThirdParty = isThirdPartyRepair;
+	return;
+}
+const void GasStop::getGasStopInfo(int& mileage, short& gal, double& ppg, std::string& notesVar) {
+	mileage = mileageDone;
+	gal = gallons;
+	ppg = pricePerGallon;
+	notesVar = notes;
+	return;
+}
+
 void Vehicle::NewRepair(Repair& newRepair) {
 	repairList.push_back(newRepair);	
 
@@ -22,7 +38,6 @@ void Vehicle::NewRepair(Repair& newRepair) {
 	if (repairList.back().getMileage() > m_mileage)
 		m_mileage = repairList.back().getMileage();
 }
-
 void Vehicle::NewGasStop(GasStop& newGasStop) {
 	gasList.push_back(newGasStop);
 

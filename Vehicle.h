@@ -18,6 +18,8 @@ public:
 	~Repair() {
 
 	}
+	//Overwrites the parameters with the info of the repair
+	const void getRepairInfo(int& mileage, std::string& typeStr, double& costDbl, std::string& notesVar, bool& wasThirdParty);
 	const uint32_t getMileage() { return mileageDone; }
 	friend std::ostream& operator<<(std::ostream& os, const Repair& repair);
 
@@ -43,7 +45,8 @@ public:
 	~GasStop() {
 
 	}
-
+	//Overwrites the parameters with the info of the gas stop
+	const void getGasStopInfo(int& mileage, short& gal, double& ppg, std::string& notesVar);
 	const uint32_t getMileage() { return mileageDone; }
 	friend std::ostream& operator<<(std::ostream& os, const GasStop& gasStop);
 
