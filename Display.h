@@ -16,7 +16,11 @@ namespace Display
 	void VehicleHome(Application* app);
 	void Settings(Application* app);
 
+	//Shows all vehicles in the vector
 	void ShowFullVehicleInformation(std::vector<Vehicle>& vehList);
+	//Shows just one vehicle
+	std::ostringstream ShowFullVehicleInformation(Vehicle* veh);
+	void EditVehicle(Vehicle* veh);
 	//Vehicle sub-menu. Choose a vehicle from vehList \return Pointer to vehicle chosen
 	Vehicle* SelectVehicle(std::vector<Vehicle>& vehList);
 	//=============================================

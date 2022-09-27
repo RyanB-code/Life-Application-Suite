@@ -61,44 +61,84 @@ namespace Display {
 		while (!exit) {
 			DisplayBanner("Vehicles -> Home");
 
+			std::cout << "Vehicles:\n";
 			std::cout << ListVehicles(app->getVehicleList()).str();
 
 			if (!selectedVehicle) {
-				//Do nothing
+				std::cout << "\nOptions: \n";
+				std::cout << "1. Select Vehicle\n";
+				std::cout << "2. View All Vehicle Info\n";
+				std::cout << "3. Go back\n";
+				std::cout << ">";
+
+				unsigned short input;
+				std::cin >> input;
+
+				if (std::cin.fail()) {
+					std::cin.clear();
+					std::cin.ignore(10000, '\n');
+				}
+				else {
+					switch (input) {
+					case 1:
+						selectedVehicle = SelectVehicle(app->getVehicleList());
+						break;
+					case 2:
+						ShowFullVehicleInformation(app->getVehicleList());
+						break;
+					case 3:
+						exit = true;
+						break;
+					default:
+						std::cout << "\nInvalid number. Restarting...\n";
+						Sleep(2000);
+						break;
+					} //end switch
+				}
 			}
 			else {
 				std::cout << "\nSelected Vehicle > " << selectedVehicle->getName() << "\n";
-			}
+				std::cout << "\nOptions: \n";
+				std::cout << "1. Select Another Vehicle\n";
+				std::cout << "2. Deselect Vehicle\n";
+				std::cout << "3. View Selected Vehicle Info\n";
+				std::cout << "4. Edit\n";
+				std::cout << "5. Go back\n";
+				std::cout << ">";
 
-			std::cout << "\nOptions: \n";
-			std::cout << "1. Select Vehicle\n";
-			std::cout << "2. View Full Vehicle Info\n";
-			std::cout << "3. Home Page\n";
-			std::cout << ">";
+				unsigned short input;
+				std::cin >> input;
 
-			unsigned short input;
-			std::cin >> input;
+				if (std::cin.fail()) {
+					std::cin.clear();
+					std::cin.ignore(10000, '\n');
+				}
+				else {
+					switch (input) {
+					case 1:
+						selectedVehicle = SelectVehicle(app->getVehicleList());
+						break;
+					case 2:
+						selectedVehicle = nullptr;
+						break;
+					case 3:
+						DisplayBanner("Vehicle -> View");
+						std::cout << ShowFullVehicleInformation(selectedVehicle).str();
+						system("pause");
+						break;
+					case 4:
+						EditVehicle(selectedVehicle);
+						break;
+					case 5:
+						exit = true;
+						break;
+					default:
+						std::cout << "\nInvalid number. Restarting...\n";
+						Sleep(2000);
+						break;
+					} //end switch
 
-			if (std::cin.fail()) {
-				std::cin.clear();
-				std::cin.ignore(10000, '\n');
-			}
-			else {
-				switch (input) {
-				case 1:
-					selectedVehicle = SelectVehicle(app->getVehicleList());
-					break;
-				case 2:
-					ShowFullVehicleInformation(app->getVehicleList());
-					break;
-				case 3:
-					exit = true;
-					break;
-				default:
-					std::cout << "\nInvalid number. Restarting...\n";
-					Sleep(2000);
-					break;
-				} //end switch
+				}
 			}
 		} //end while loop
 	}
@@ -117,6 +157,117 @@ namespace Display {
 		std::cout << ListVehicles(vehList, true).str();
 		system("pause");
 		return;
+	}
+
+	std::ostringstream ShowFullVehicleInformation(Vehicle* veh) {
+		std::ostringstream os;
+
+		if (!veh) {
+			Log(LogCode::WARNING, "Could not show full vehicle information. Null pointer.");
+		}
+		else {
+			short mileageWidth{ 8 };
+			short typeWidth{ 15 };
+			short costWidth{ 8 };
+			short thirdPartyWidth{ 8 };
+			short notesWidth{ 30 };
+			int tableLineRepairs{ mileageWidth + typeWidth + costWidth + thirdPartyWidth + notesWidth + 12 }; //last number is number of separators
+
+			short gallonsWidth{ 8 };
+			int tableLineGas{ mileageWidth + gallonsWidth + costWidth + notesWidth + 9 };
+
+			os << std::setw(veh->maxVehicleNameSize + 1) << std::left << veh->getName() << std::setw(6) << std::right << veh->getMileage() << " miles\n";
+
+			os << std::setw((tableLineRepairs / 2) + 7) << std::right << "===REPAIRS===" << std::left << '\n'; //make repairs be in the middle
+			os << "   " << std::setw(mileageWidth) << "Miles"; os << " | ";
+			os << std::setw(typeWidth) << "Type"; os << " | ";
+			os << std::setw(costWidth) << "Cost"; os << " | ";
+			os << std::setw(thirdPartyWidth) << "By Me?"; os << " | ";
+			os << std::setw(notesWidth) << "Notes";
+			os << std::setw(tableLineRepairs) << std::setfill('=');
+			os << "\n   " << std::setfill(' ');
+
+			for (Repair& rep : veh->getRepairList()) {
+				int				mileBuf;
+				std::string		typeBuf;
+				double			costBuf;
+				std::string		notesBuf;
+				bool			thirdPartyBuf;
+				rep.getRepairInfo(mileBuf, typeBuf, costBuf, notesBuf, thirdPartyBuf);
+				os << "\n   " << std::setw(mileageWidth) << std::right << mileBuf; os << " | ";
+				os << std::setw(typeWidth) << typeBuf; os << " | ";
+				os << std::setw(costWidth) << costBuf; os << " | ";
+				os << std::setw(thirdPartyWidth) << std::boolalpha << thirdPartyBuf; os << " | ";
+				os << std::setw(notesWidth) << std::left << notesBuf;
+			}
+			os << "\n\n";
+
+			os << std::setw((tableLineGas / 2) + 8) << std::right << "===GAS STOPS===" << std::left << '\n'; //make text be in the middle
+			os << "   " << std::setw(mileageWidth) << "Miles"; os << " | ";
+			os << std::setw(gallonsWidth) << "Gallons"; os << " | ";
+			os << std::setw(costWidth) << "PPG"; os << " | ";
+			os << std::setw(notesWidth) << "Notes";
+			os << std::setw(tableLineGas) << std::setfill('=');
+			os << "\n   " << std::setfill(' ');
+
+
+			for (GasStop& gas : veh->getGasStopList()) {
+				int			mileBuf;
+				short		galBuf;
+				double		costBuf;
+				std::string notesBuf;
+				gas.getGasStopInfo(mileBuf, galBuf, costBuf, notesBuf);
+				os << "\n   " << std::setw(mileageWidth) << std::right << mileBuf; os << " | ";
+				os << std::setw(gallonsWidth) << galBuf; os << " | ";
+				os << std::setw(costWidth) << costBuf; os << " | ";
+				os << std::setw(notesWidth) << std::left << notesBuf;
+			}
+
+			os << "\n\n";
+		}
+
+		return os;
+	}
+	void EditVehicle(Vehicle* veh) {
+
+		bool exit{ false };
+		while (!exit) {
+			DisplayBanner("Vehicle -> Edit");
+			std::cout << ShowFullVehicleInformation(veh).str();
+
+			std::cout << "\nOptions:\n";
+			std::cout << "1. Add a new repair or gas stop\n";
+			std::cout << "2. Edit an existing repair or gas stop\n";
+			std::cout << "3. Go back\n";
+			std::cout << ">";
+			unsigned short input;
+			std::cin >> input;
+
+			if (std::cin.fail()) {
+				std::cin.clear();
+				std::cin.ignore(10000, '\n');
+			}
+			else {
+				switch (input) {
+				case 1:
+					std::cout << "\nIn new repair/gas stop\n";
+					Sleep(2000);
+					break;
+				case 2:
+					std::cout << "\nIn edit repair/gas stop\n";
+					Sleep(2000);
+					break;
+				case 3:
+					exit = true;
+					break;
+				default:
+					std::cout << "\nInvalid number. Restarting...\n";
+					Sleep(2000);
+					break;
+				} //end switch
+			}
+		}
+
 	}
 	Vehicle* SelectVehicle(std::vector<Vehicle>& vehList) {
 		if (vehList.empty()) {
@@ -166,72 +317,15 @@ namespace Display {
 		{
 			int i{ 1 };
 
-				//Width of table
-				short mileageWidth{ 8 };
-				short typeWidth{ 15 };
-				short costWidth{ 8 };
-				short thirdPartyWidth{ 8 };
-				short notesWidth{ 30 };
-				int tableLineRepairs{ mileageWidth + typeWidth + costWidth + thirdPartyWidth + notesWidth + 12 }; //last number is number of separators
-
-				short gallonsWidth { 8 };
-				int tableLineGas{ mileageWidth + gallonsWidth + costWidth + notesWidth + 9 };
-				os << '\n';
-
 			for (Vehicle& currentVehicle : vehList) {
-				os << i << ". " << std::setw(currentVehicle.maxVehicleNameSize + 1) << std::left << currentVehicle.getName() << std::setw(6) << std::right << currentVehicle.getMileage() << " miles\n";
-				++i;
 				if (detailed) {		//If set to detailed view, display repairs and gas lists
-					os << std::setw((tableLineRepairs / 2) + 7) << std::right << "===REPAIRS===" << std::left << '\n'; //make repairs be in the middle
-					os << "   " << std::setw(mileageWidth) << "Miles"; os << " | ";
-					os << std::setw(typeWidth) << "Type"; os << " | ";
-					os << std::setw(costWidth) << "Cost"; os << " | ";
-					os << std::setw(thirdPartyWidth) << "By Me?"; os << " | ";
-					os << std::setw(notesWidth) << "Notes";
-					os << std::setw(tableLineRepairs) << std::setfill('=');
-					os << "\n   " << std::setfill(' ');
-
-					for (Repair& rep : currentVehicle.getRepairList()) {
-						int				mileBuf;
-						std::string		typeBuf;
-						double			costBuf;
-						std::string		notesBuf;
-						bool			thirdPartyBuf;
-						rep.getRepairInfo(mileBuf, typeBuf, costBuf, notesBuf, thirdPartyBuf);
-						os << "\n   " << std::setw(mileageWidth) << std::right << mileBuf; os << " | ";
-						os << std::setw(typeWidth) << typeBuf; os << " | ";
-						os << std::setw(costWidth) << costBuf; os << " | ";
-						os << std::setw(thirdPartyWidth) << std::boolalpha << thirdPartyBuf; os << " | ";
-						os << std::setw(notesWidth) << std::left << notesBuf;
-					}
-					os << "\n\n";
-
-					os << std::setw((tableLineGas / 2) + 8) << std::right << "===GAS STOPS===" << std::left << '\n'; //make text be in the middle
-					os << "   " << std::setw(mileageWidth) << "Miles"; os << " | ";
-					os << std::setw(gallonsWidth) << "Gallons"; os << " | ";
-					os << std::setw(costWidth) << "PPG"; os << " | ";
-					os << std::setw(notesWidth) << "Notes";
-					os << std::setw(tableLineGas) << std::setfill('=');
-					os << "\n   " << std::setfill(' ');
-
-
-					for (GasStop& gas : currentVehicle.getGasStopList()) {
-						int			mileBuf;
-						short		galBuf;
-						double		costBuf;
-						std::string notesBuf;
-						gas.getGasStopInfo(mileBuf, galBuf, costBuf, notesBuf);
-						os << "\n   " << std::setw(mileageWidth) << std::right << mileBuf; os << " | ";
-						os << std::setw(gallonsWidth) << galBuf; os << " | ";
-						os << std::setw(costWidth) << costBuf; os << " | ";
-						os << std::setw(notesWidth) << std::left << notesBuf;
-
-					}
-					os << "\n\n";
+					os << i << ". ";
+					os << ShowFullVehicleInformation(&currentVehicle).str();
 				}
 				else {
-					//do nothing				
+					os << i << ". " << std::setw(currentVehicle.maxVehicleNameSize + 1) << std::left << currentVehicle.getName() << std::setw(6) << std::right << currentVehicle.getMileage() << " miles\n";
 				}
+				++i;
 			}
 		}
 
