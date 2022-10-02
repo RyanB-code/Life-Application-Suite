@@ -26,6 +26,7 @@ namespace Display
 	std::ostringstream ShowFullVehicleInformation(Vehicle* veh);
 	bool AddRepair(Vehicle* veh);
 	bool AddGasStop(Vehicle* veh);
+	bool AddVehicle(Application* app);
 	//Vehicle sub-menu. Choose a vehicle from vehList \return Pointer to vehicle chosen
 	Vehicle* SelectVehicle(std::vector<Vehicle>& vehList);
 	//=============================================

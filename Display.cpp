@@ -107,25 +107,21 @@ namespace Display {
 
 		bool exit{ false };
 		while (!exit) {
-			DisplayBanner("Vehicles -> Home");
+			DisplayBanner("Vehicles -> Home", "Remember to save hit save before exiting...\n");
 
 			std::cout << "Vehicles:\n";
 			std::cout << ListVehicles(app->getVehicleList()).str();
 
-			if (!selectedVehicle) {
-				std::cout << "\nOptions: \n";
-				std::cout << "1. Select Vehicle\n";
-				std::cout << "2. View All Vehicle Info\n";
-				std::cout << "3. Go back\n";
-
-				switch (getInput(1, 3)) {
+			if (app->getVehicleList().empty()) {
+				std::cout << "\nOptions:\n";
+				std::cout << "1. Add new Vehicle\n";
+				std::cout << "2. Go back\n";
+				switch (getInput(1, 2)) {
 				case 1:
-					selectedVehicle = SelectVehicle(app->getVehicleList());
+					AddVehicle(app);
+					selectedVehicle = nullptr;
 					break;
 				case 2:
-					ShowFullVehicleInformation(app->getVehicleList());
-					break;
-				case 3:
 					exit = true;
 					break;
 				default:
@@ -134,60 +130,102 @@ namespace Display {
 					break;
 				}
 			}
+
 			else {
-				std::cout << "\nSelected Vehicle > " << selectedVehicle->getName() << "\n";
-				std::cout << "\nOptions: \n";
-				std::cout << "1. Select Another Vehicle\n";
-				std::cout << "2. Deselect Vehicle\n";
-				std::cout << "\n";
-				std::cout << "3. View Selected Vehicle Info\n";
-				std::cout << "4. Add a new repair\n";
-				std::cout << "5. Add a new gas stop\n";
-				std::cout << "6. Edit name\n";
-				std::cout << "7. Save all vehicles\n";
-				std::cout << "\n";
-				std::cout << "8. Go back\n";
+				if (!selectedVehicle) {
+					std::cout << "\nOptions: \n";
+					std::cout << "1. Select Vehicle\n";
+					std::cout << "2. View All Vehicle Info\n";
+					std::cout << "3. Add new Vehicle\n";
+					std::cout << "\n4. Save all Vehicles\n\n";
+					std::cout << "5. Go back\n";
 
-				switch (getInput(1, 8)) {
-				case 1:
-					selectedVehicle = SelectVehicle(app->getVehicleList());
-					break;
-				case 2:
-					selectedVehicle = nullptr;
-					break;
-				case 3:
-					DisplayBanner("Vehicle -> View");
-					std::cout << ShowFullVehicleInformation(selectedVehicle).str();
-					system("pause");
-					break;
-				case 4:
-					AddRepair(selectedVehicle);
-					break;
-				case 5:
-					AddGasStop(selectedVehicle);
-					break;
-				case 6:
-					std::cout << "\nIn Edit name\n";
-					Sleep(2000);
-					break;
-				case 7:
-					if (app->saveVehicles()) {
-						std::cout << "\nSaved all vehicle information.\n";
+					switch (getInput(1, 5)) {
+					case 1:
+						selectedVehicle = SelectVehicle(app->getVehicleList());
+						break;
+					case 2:
+						ShowFullVehicleInformation(app->getVehicleList());
+						break;
+					case 3:
+						AddVehicle(app);
+						selectedVehicle = nullptr;
+						break;
+					case 4:
+						if (app->saveVehicles()) {
+							std::cout << "\nSaved all vehicle information.\n";
+						}
+						else {
+							std::cout << "\nCould not save all vehicle information.\n";
+						}
+						Sleep(2000);
+						break;
+					case 5:
+						exit = true;
+						break;
+					default:
+						std::cout << "\nInvalid number. Restarting...\n";
+						Sleep(2000);
+						break;
 					}
-					else {
-						std::cout << "\nCould not save all vehicle information.\n";
-					}
-					Sleep(2000);
-					break;
-				case 8:
-					exit = true;
-					break;
-				default:
-					std::cout << "\nInvalid number. Restarting...\n";
-					Sleep(2000);
-					break;
-				} //end switch
+				}
+				else {
+					std::cout << "\nSelected Vehicle > " << selectedVehicle->getName() << "\n";
+					std::cout << "\nOptions: \n";
+					std::cout << "1. Deselect Vehicle\n";
+					std::cout << "2. Add new Vehicle\n";
+					std::cout << "\n";
+					std::cout << "3. View Selected Vehicle Info\n";
+					std::cout << "4. Add a new repair\n";
+					std::cout << "5. Add a new gas stop\n";
+					std::cout << "6. Edit name\n";
+					std::cout << "\n";
+					std::cout << "7. Save all vehicles\n";
+					std::cout << "\n";
+					std::cout << "8. Go back\n";
 
+					switch (getInput(1, 8)) {
+					case 1:
+						selectedVehicle = nullptr;
+						break;
+					case 2:
+						AddVehicle(app);
+						selectedVehicle = nullptr;
+						break;
+					case 3:
+						DisplayBanner("Vehicle -> View");
+						std::cout << ShowFullVehicleInformation(selectedVehicle).str();
+						system("pause");
+						break;
+					case 4:
+						AddRepair(selectedVehicle);
+						break;
+					case 5:
+						AddGasStop(selectedVehicle);
+						break;
+					case 6:
+						std::cout << "\nIn Edit name\n";
+						Sleep(2000);
+						break;
+					case 7:
+						if (app->saveVehicles()) {
+							std::cout << "\nSaved all vehicle information.\n";
+						}
+						else {
+							std::cout << "\nCould not save all vehicle information.\n";
+						}
+						Sleep(2000);
+						break;
+					case 8:
+						exit = true;
+						break;
+					default:
+						std::cout << "\nInvalid number. Restarting...\n";
+						Sleep(2000);
+						break;
+					} //end switch
+
+				}
 			}
 		} //end while loop
 	}
@@ -278,6 +316,45 @@ namespace Display {
 		return os;
 	}
 	
+	bool AddVehicle(Application* app) {
+		std::string nameBuf;
+		uint32_t mileBuf;
+		DisplayBanner("Create Vehicle", "To create a new vehicle, we need some information.\n");
+
+		std::cout << "Name\n>";
+		std::cin.ignore(10000, '\n');
+		std::getline(std::cin, nameBuf);
+
+		bool exit{ false };
+		do {
+			DisplayBanner("Create Vehicle", "To create a new vehicle, we need some information.\n");
+			std::cout << "Mileage >";
+			std::cin >> mileBuf;
+			clearLineAfterInput();
+
+			if (std::cin.fail()) {
+				std::cin.clear();
+				std::cin.ignore(10000, '\n');
+			}
+			else {
+				exit = true;
+			}
+
+		} while (!exit);
+
+		DisplayBanner("Create Vehicle", "Review before submitting...\n");
+		std::cout << "Name:\t\t" << nameBuf << std::endl;
+		std::cout << "Mileage:\t" << mileBuf << std::endl;
+
+		std::cout << "\nSave Vehicle?\n";
+		if (getBoolInput()) {
+			Vehicle newVehicle{ nameBuf, mileBuf };
+			app->NewVehicle(newVehicle);
+		}
+		else {
+
+		}
+	}
 	bool AddRepair(Vehicle* veh) {
 
 		uint32_t mileBuf{ 0 };
@@ -448,6 +525,7 @@ namespace Display {
 		} while (!exit0);
 	}
 
+
 	Vehicle* SelectVehicle(std::vector<Vehicle>& vehList) {
 		if (vehList.empty()) {
 			return nullptr;
@@ -480,7 +558,7 @@ namespace Display {
 					}
 				}
 			}
-
+			Log(LogCode::ROUTINE, "Selected vehicle " + selVeh->getName());
 			return selVeh;
 		}
 
@@ -618,5 +696,3 @@ namespace Display {
 		}
 	}
 }
-
-
