@@ -3,6 +3,8 @@
 #include <vector>
 #include <sstream>
 
+#include "Log.h"
+
 // \param Mileage, Type Of Repair, Cost, Notes, Did Third Party Perform it?
 class Repair {
 public:
@@ -18,6 +20,7 @@ public:
 	~Repair() {
 
 	}
+
 	//Overwrites the parameters with the info of the repair
 	const void getRepairInfo(int& mileage, std::string& typeStr, double& costDbl, std::string& notesVar, bool& wasThirdParty);
 	const uint32_t getMileage() { return mileageDone; }
@@ -60,22 +63,43 @@ private:
 // \param Name, Mileage
 class Vehicle {
 public:
-	Vehicle(const std::string setName = "Vehicle", uint32_t setMileage = 1) : m_name{ setName }, m_mileage{ setMileage }
+	Vehicle(const std::string setName = "Vehicle", uint32_t setMileage = 0)
 	{
+		if (setName.length() <= 0 || setName.length() > maxVehicleNameSize) {
+			std::ostringstream logText;
+			logText << "Vehicle name out of range. Max allowed is: " << maxVehicleNameSize << ". Current: " << setName.length();
+			Log(LogCode::WARNING, logText.str());
+			m_name = "Vehicle";
+		}
+		else {
+			m_name = setName;
+		}
 
+		if (setMileage < 0) {
+			Log(LogCode::WARNING, "Vehicle mileage out of range for " + m_name);
+			m_mileage = 0;
+		}
+		else {
+			m_mileage = setMileage;
+		}
 	}
 	~Vehicle() 
 	{
 
 	}
 
-	static constexpr int maxVehicleNameSize {15};
+	static constexpr int maxVehicleNameSize { 15 };
+
+	static constexpr int maxRepairTypeSize	{ 15 };
+	static constexpr int maxNotesSize		{ 30 };
 
 	const uint32_t getMileage() { return m_mileage; }
 	const std::string getName() { return m_name; };
 
-	void NewRepair(Repair& newRepair);
-	void NewGasStop(GasStop& newGasStop);
+	//Given individual types, it will error check ranges and data before adding to the vehicle's list
+	bool NewRepair(uint32_t setMiles, std::string setType, double setCost, std::string setNotes, bool setThirdParty);
+	//Given individual types, it will error check ranges and data before adding to the vehicle's list
+	bool NewGasStop(uint32_t setMiles, short setGal, double setPPG, std::string setNotes);
 
 	std::vector<Repair>& getRepairList()	{ return repairList; }
 	std::vector<GasStop>& getGasStopList()	{ return gasList; }

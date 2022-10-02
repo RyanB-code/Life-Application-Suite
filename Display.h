@@ -9,6 +9,10 @@ namespace Display
 {
 	//Clears the display
 	void clear();
+	void clearLineAfterInput();
+
+	int getInput(short low, short high);
+	bool getBoolInput();
 
 	//===========Menus/Screens======================
 
@@ -20,7 +24,8 @@ namespace Display
 	void ShowFullVehicleInformation(std::vector<Vehicle>& vehList);
 	//Shows just one vehicle
 	std::ostringstream ShowFullVehicleInformation(Vehicle* veh);
-	void EditVehicle(Vehicle* veh);
+	bool AddRepair(Vehicle* veh);
+	bool AddGasStop(Vehicle* veh);
 	//Vehicle sub-menu. Choose a vehicle from vehList \return Pointer to vehicle chosen
 	Vehicle* SelectVehicle(std::vector<Vehicle>& vehList);
 	//=============================================
@@ -32,6 +37,6 @@ namespace Display
 	std::ostringstream readableDayMonthYear();
 
 	// Displays the date and title text \param The banner text
-	void DisplayBanner(const std::string title);
+	void DisplayBanner(const std::string title, const std::string subheading = "");
 }
 

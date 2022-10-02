@@ -13,7 +13,7 @@ enum class LogCode {
 	FATAL,
 	WARNING,
 	ROUTINE,
-	LOG
+	LOG,
 };
 
 class Log {

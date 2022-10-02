@@ -5,52 +5,100 @@
 namespace Display {
 
 	void clear()
-	{ 
-		system("cls"); 
+	{
+		system("cls");
+	}
+	void clearLineAfterInput() {
+		printf("\033[A"); //goes up a line
+		printf("\33[2K"); //clears current line
 	}
 
-	//===========Menus/Screens=====================
-	void Home(Application* app)
-	{
-		Log(LogCode::LOG, "Home Screen called");
+	int getInput(short low, short high) {
+		int input{ 0 };
+
 		bool exit{ false };
 		while (!exit) {
-			DisplayBanner("Life Application Suite");
-			std::cout << "\nOptions: \n";
-			std::cout << "1. Vehicle Manager\n";
-			std::cout << "2. Settings\n";
-			std::cout << "3. Exit\n";
-
 			std::cout << ">";
-
-			unsigned short input;
 			std::cin >> input;
+
+			clearLineAfterInput();
 
 			if (std::cin.fail()) {
 				std::cin.clear();
 				std::cin.ignore(10000, '\n');
 			}
 			else {
-				switch (input) {
-				case 1:
-					VehicleHome(app);
-					break;
-				case 2:
-					Settings(app);
-					break;
-				case 3:
-					std::cout << "\nExiting...\n";
+				if (input < low || input > high) {
+
+				}
+				else {
 					exit = true;
-					break;
-				default:
-					std::cout << "\nInvalid number. Restarting...\n";
-					Sleep(2000);
-					break;
-				} //end switch
+				}
+			}
+		}
+
+		return input;
+	}
+	bool getBoolInput() {
+		bool exit{ false };
+		while (!exit) {
+			std::cout << "(y/n) >";
+			char input;
+			std::cin >> input;
+			clearLineAfterInput();
+
+			switch (input) {
+			case 'y': case 'Y':
+				std::cin.ignore(10000, '\n');
+				return true;
+				break;
+			case 'n': case 'N':
+				std::cin.ignore(10000, '\n');
+				return false;
+				break;
+			default:
+				std::cin.ignore(10000, '\n');
+				exit = false;
+				break;
 			}
 
-		} // end while loop
-		
+			if (std::cin.fail()) {
+				std::cin.clear();
+				std::cin.ignore(10000, '\n');
+			}
+			else {
+				
+			}
+		}
+	}
+
+	//===========Menus/Screens=====================
+	void Home(Application* app)
+	{
+		bool exit{ false };
+		do {
+			Log(LogCode::LOG, "Home Screen called");
+
+			DisplayBanner("Life Application Suite");
+			std::cout << "\nOptions: \n";
+			std::cout << "1. Vehicle Manager\n";
+			std::cout << "2. Settings\n";
+			std::cout << "3. Exit\n";
+
+
+			switch (getInput(1, 3)) {
+			case 1:
+				VehicleHome(app);
+				break;
+			case 2:
+				Settings(app);
+				break;
+			case 3:
+				exit = true;
+				break;
+			}
+
+		} while (!exit);
 	}
 	void VehicleHome(Application* app) {
 		Log(LogCode::LOG, "Vehicle Home Screen called");
@@ -69,31 +117,21 @@ namespace Display {
 				std::cout << "1. Select Vehicle\n";
 				std::cout << "2. View All Vehicle Info\n";
 				std::cout << "3. Go back\n";
-				std::cout << ">";
 
-				unsigned short input;
-				std::cin >> input;
-
-				if (std::cin.fail()) {
-					std::cin.clear();
-					std::cin.ignore(10000, '\n');
-				}
-				else {
-					switch (input) {
-					case 1:
-						selectedVehicle = SelectVehicle(app->getVehicleList());
-						break;
-					case 2:
-						ShowFullVehicleInformation(app->getVehicleList());
-						break;
-					case 3:
-						exit = true;
-						break;
-					default:
-						std::cout << "\nInvalid number. Restarting...\n";
-						Sleep(2000);
-						break;
-					} //end switch
+				switch (getInput(1, 3)) {
+				case 1:
+					selectedVehicle = SelectVehicle(app->getVehicleList());
+					break;
+				case 2:
+					ShowFullVehicleInformation(app->getVehicleList());
+					break;
+				case 3:
+					exit = true;
+					break;
+				default:
+					std::cout << "\nInvalid number. Restarting...\n";
+					Sleep(2000);
+					break;
 				}
 			}
 			else {
@@ -101,44 +139,55 @@ namespace Display {
 				std::cout << "\nOptions: \n";
 				std::cout << "1. Select Another Vehicle\n";
 				std::cout << "2. Deselect Vehicle\n";
+				std::cout << "\n";
 				std::cout << "3. View Selected Vehicle Info\n";
-				std::cout << "4. Edit\n";
-				std::cout << "5. Go back\n";
-				std::cout << ">";
+				std::cout << "4. Add a new repair\n";
+				std::cout << "5. Add a new gas stop\n";
+				std::cout << "6. Edit name\n";
+				std::cout << "7. Save all vehicles\n";
+				std::cout << "\n";
+				std::cout << "8. Go back\n";
 
-				unsigned short input;
-				std::cin >> input;
+				switch (getInput(1, 8)) {
+				case 1:
+					selectedVehicle = SelectVehicle(app->getVehicleList());
+					break;
+				case 2:
+					selectedVehicle = nullptr;
+					break;
+				case 3:
+					DisplayBanner("Vehicle -> View");
+					std::cout << ShowFullVehicleInformation(selectedVehicle).str();
+					system("pause");
+					break;
+				case 4:
+					AddRepair(selectedVehicle);
+					break;
+				case 5:
+					AddGasStop(selectedVehicle);
+					break;
+				case 6:
+					std::cout << "\nIn Edit name\n";
+					Sleep(2000);
+					break;
+				case 7:
+					if (app->saveVehicles()) {
+						std::cout << "\nSaved all vehicle information.\n";
+					}
+					else {
+						std::cout << "\nCould not save all vehicle information.\n";
+					}
+					Sleep(2000);
+					break;
+				case 8:
+					exit = true;
+					break;
+				default:
+					std::cout << "\nInvalid number. Restarting...\n";
+					Sleep(2000);
+					break;
+				} //end switch
 
-				if (std::cin.fail()) {
-					std::cin.clear();
-					std::cin.ignore(10000, '\n');
-				}
-				else {
-					switch (input) {
-					case 1:
-						selectedVehicle = SelectVehicle(app->getVehicleList());
-						break;
-					case 2:
-						selectedVehicle = nullptr;
-						break;
-					case 3:
-						DisplayBanner("Vehicle -> View");
-						std::cout << ShowFullVehicleInformation(selectedVehicle).str();
-						system("pause");
-						break;
-					case 4:
-						EditVehicle(selectedVehicle);
-						break;
-					case 5:
-						exit = true;
-						break;
-					default:
-						std::cout << "\nInvalid number. Restarting...\n";
-						Sleep(2000);
-						break;
-					} //end switch
-
-				}
 			}
 		} //end while loop
 	}
@@ -228,47 +277,177 @@ namespace Display {
 
 		return os;
 	}
-	void EditVehicle(Vehicle* veh) {
+	
+	bool AddRepair(Vehicle* veh) {
 
-		bool exit{ false };
-		while (!exit) {
-			DisplayBanner("Vehicle -> Edit");
-			std::cout << ShowFullVehicleInformation(veh).str();
+		uint32_t mileBuf{ 0 };
+		std::string typeBuf;
+		double costBuf{ 0.0 };
+		std::string notesBuf;
+		bool thirdPartyBuf;
 
-			std::cout << "\nOptions:\n";
-			std::cout << "1. Add a new repair or gas stop\n";
-			std::cout << "2. Edit an existing repair or gas stop\n";
-			std::cout << "3. Go back\n";
-			std::cout << ">";
-			unsigned short input;
-			std::cin >> input;
+		bool exit0{ false };
+		do {
+			DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
 
-			if (std::cin.fail()) {
-				std::cin.clear();
-				std::cin.ignore(10000, '\n');
+
+			bool exit1{ false };
+			do {
+				std::cout << "Mileage done >";
+				std::cin >> mileBuf;
+				clearLineAfterInput();
+				if (std::cin.fail()) {
+					std::cin.clear();
+					std::cin.ignore(10000, '\n');
+				}
+				else {
+					exit1 = true;
+				}
+
+			} while (!exit1);
+
+			DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
+			std::cout << "The Type of repair. [Max characters " << veh->maxRepairTypeSize << "]\nExamples: 'Oil Change', 'Power Steering', 'Body Work', etc...\n>";
+			std::cin.ignore(10000, '\n');
+			std::getline(std::cin, typeBuf);
+
+
+			bool exit2{ false };
+			do {
+				DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
+				std::cout << "Cost >";
+				std::cin >> costBuf;
+				clearLineAfterInput();
+				if (std::cin.fail()) {
+					std::cin.clear();
+					std::cin.ignore(10000, '\n');
+				}
+				else {
+					exit2 = true;
+				}
+
+			} while (!exit2);
+
+			DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
+			std::cout << "Notes. [Max characters " << veh->maxNotesSize << "]\n>";
+			std::cin.ignore(10000, '\n');
+			std::getline(std::cin, notesBuf);
+
+		
+			DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
+			std::cout << "Did a third party perform the repair?" << std::endl;
+			thirdPartyBuf = getBoolInput();
+
+			DisplayBanner("Edit -> " + veh->getName(), "Review before saving.");
+			std::cout << "Miles:\t\t" << mileBuf << std::endl;
+			std::cout << "Type:\t\t" << typeBuf << std::endl;
+			std::cout << "Cost:\t\t" << costBuf << std::endl;
+			std::cout << "Notes:\t\t" << notesBuf << std::endl;
+			std::cout << "3rd Party:\t" << std::boolalpha << thirdPartyBuf << std::endl;
+
+			std::cout << "\nSave Repair?\n";
+			if (getBoolInput()) {
+				if (!veh->NewRepair(mileBuf, typeBuf, costBuf, notesBuf, thirdPartyBuf)) {
+					std::cout << "\nCould not add repair to vehicle. \nTry Again?\n";
+					if (!getBoolInput()) {
+						exit0 = true;
+					}
+				}
+				else {
+					exit0 = true;
+				}
 			}
 			else {
-				switch (input) {
-				case 1:
-					std::cout << "\nIn new repair/gas stop\n";
-					Sleep(2000);
-					break;
-				case 2:
-					std::cout << "\nIn edit repair/gas stop\n";
-					Sleep(2000);
-					break;
-				case 3:
-					exit = true;
-					break;
-				default:
-					std::cout << "\nInvalid number. Restarting...\n";
-					Sleep(2000);
-					break;
-				} //end switch
+				exit0 = true;
 			}
-		}
-
+		} while (!exit0);
 	}
+	bool AddGasStop(Vehicle* veh) {
+
+		uint32_t mileBuf{ 0 };
+		short galBuf;
+		double ppgBuf{ 0.0 };
+		std::string notesBuf;
+
+		bool exit0{ false };
+		do {
+			bool exit1{ false };
+			do {
+				DisplayBanner("Edit -> " + veh->getName(), "To add a new gas stop we need some information.\n\n");
+				std::cout << "Mileage done >";
+				std::cin >> mileBuf;
+				clearLineAfterInput();
+				if (std::cin.fail()) {
+					std::cin.clear();
+					std::cin.ignore(10000, '\n');
+				}
+				else {
+					exit1 = true;
+				}
+
+			} while (!exit1);
+
+			DisplayBanner("Edit -> " + veh->getName(), "To add a new gas stop we need some information.\n\n");
+			bool exit2{ false };
+			do {
+				std::cout << "Gallons >";
+				std::cin >> galBuf;
+				clearLineAfterInput();
+				if (std::cin.fail()) {
+					std::cin.clear();
+					std::cin.ignore(10000, '\n');
+				}
+				else {
+					exit2 = true;
+				}
+
+			} while (!exit2);
+
+			bool exit3{ false };
+			do {
+				DisplayBanner("Edit -> " + veh->getName(), "To add a new gas stop we need some information.\n\n");
+				std::cout << "Price Per Gallon >";
+				std::cin >> ppgBuf;
+				clearLineAfterInput();
+				if (std::cin.fail()) {
+					std::cin.clear();
+					std::cin.ignore(10000, '\n');
+				}
+				else {
+					exit3 = true;
+				}
+
+			} while (!exit3);
+
+			DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
+			std::cout << "Notes. [Max characters " << veh->maxNotesSize << "]\n>";
+			std::cin.ignore(10000, '\n');
+			std::getline(std::cin, notesBuf);
+
+			DisplayBanner("Edit -> " + veh->getName(), "Review before saving.");
+			std::cout << std::setw(17) << std::right << "Miles:\t" << mileBuf << std::endl;
+			std::cout << std::setw(17) << std::right << "Gallons:\t" << galBuf << std::endl;
+			std::cout << std::setw(17) << std::right << "Price Per Gallon:\t" << ppgBuf << std::endl;
+			std::cout << std::setw(17) << std::right << "Notes:\t" << notesBuf << std::endl;
+
+			std::cout << "\nSave Gas Stop?\n";
+			if (getBoolInput()) {
+				if (!veh->NewGasStop(mileBuf, galBuf, ppgBuf, notesBuf)) {
+					std::cout << "\nCould not add gas stop to vehicle. \nTry Again?\n";
+					if (!getBoolInput()) {
+						exit0 = true;
+					}
+				}
+				else {
+					exit0 = true;
+				}
+			}
+			else {
+				exit0 = true;
+			}
+		} while (!exit0);
+	}
+
 	Vehicle* SelectVehicle(std::vector<Vehicle>& vehList) {
 		if (vehList.empty()) {
 			return nullptr;
@@ -424,7 +603,7 @@ namespace Display {
 
 		return date;
 	}
-	void DisplayBanner(const std::string title) {
+	void DisplayBanner(const std::string title, const std::string subheading) {
 		clear();
 		unsigned short screenWidth{ 50 };
 		std::ostringstream date{ readableDayMonthYear() };
@@ -434,6 +613,9 @@ namespace Display {
 			std::cout << "=";
 		}
 		std::cout << "\n";
+		if (subheading != "") {
+			std::cout << subheading << "\n";
+		}
 	}
 }
 

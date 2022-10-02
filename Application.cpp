@@ -40,9 +40,9 @@ void Application::run() {
 	return;
 }
 
-inline void Application::NewVehicle(Vehicle& vehicle) {
-	m_vehicleList.push_back(vehicle);
-	Log(LogCode::ROUTINE, "Added " + vehicle.getName() + " to list of vehicles.");
+inline void Application::NewVehicle(Vehicle& veh) {
+	m_vehicleList.push_back(veh);
+	Log(LogCode::ROUTINE, "Added " + veh.getName() + " to list of vehicles.");
 }
 bool const Application::saveVehicles() {
 	bool success{ false };
@@ -99,7 +99,7 @@ const std::string Application::makeVehicle(std::string& text) {
 	}
 	return vehNameBuf;
 }
-const void Application::makeRepair(std::string& text, std::vector<Repair>& repairList) {
+const void Application::makeRepair(std::string& text, Vehicle& veh) {
 	std::string repBuf;						//Buffer of characters being read from text
 	std::vector<std::string> repairStrings; //Vector of strings of repair info not yet formatted
 
@@ -133,11 +133,11 @@ const void Application::makeRepair(std::string& text, std::vector<Repair>& repai
 		readUntil(currentString, separator, thirdPartyBuf);
 		notesBuf << readUntil(currentString, separator);
 		
-		repairList.push_back(Repair { mileBuf, typeBuf.str(), costBuf, notesBuf.str(),thirdPartyBuf} );
+		veh.NewRepair(mileBuf, typeBuf.str(), costBuf, notesBuf.str(), thirdPartyBuf);
 	}
 
 }
-const void Application::makeGasStop(std::string& text, std::vector<GasStop>& gasList) {
+const void Application::makeGasStop(std::string& text, Vehicle& veh) {
 	std::string foundGasBuf;				//Buffer of characters being read from text
 	std::vector<std::string> gasStrings;	//Vector of gas stops not yet formatted
 
@@ -168,7 +168,7 @@ const void Application::makeGasStop(std::string& text, std::vector<GasStop>& gas
 		readUntil(currentString, separator, gallonsBuf);
 		notesBuf << readUntil(currentString, separator);
 
-		gasList.push_back(GasStop{ mileBuf, gallonsBuf, ppgBuf, notesBuf.str()});
+		veh.NewGasStop(mileBuf, gallonsBuf, ppgBuf, notesBuf.str());
 	}
 }
 
@@ -277,8 +277,7 @@ void Application::Startup() {
 
 		//Opens file, reads text, outputs to fileText
 		if (!FileSystem::readFile(fileName, fileText)) {
-			//If vehicle file couldn't be opened to read
-			//Do nothing
+			//If vehicle file couldn't be opened to read, do nothing
 		}
 		else { //File opened, save the text and iterate. Writes Vehicle and repairs and gas stops
 
@@ -290,26 +289,10 @@ void Application::Startup() {
 				Log(LogCode::WARNING, "Vehilce data format error for " + fileName);
 			}
 			else {
-				//Reads vehInfoBuf and writes found repairs to repairBuffer
-				std::vector<Repair> repairBuffer;
-				makeRepair(vehInfoBuf, repairBuffer);		//Make repairs from the remaining text
+				makeRepair(vehInfoBuf, vehicleBuffer);		//Make repairs from the remaining text and add to vehicle
+				makeGasStop(vehInfoBuf, vehicleBuffer);		//Make Gas stop from the remaining text
 
-				//Add the repairBuffer members to the vehicleBuffer
-				for (Repair& rep : repairBuffer) {
-					vehicleBuffer.NewRepair(rep);
-					Log(LogCode::ROUTINE, "Added a repair to " + vehicleBuffer.getName());
-				}
-
-				//Reads vehInfoBuf and writes found gas stops to gasBuffer
-				std::vector<GasStop> gasBuffer;
-				makeGasStop(vehInfoBuf, gasBuffer);		//Make Gas stop from the remaining text
-
-				//Add the gasBuffer members to vehicleBuffer
-				for (GasStop& gas : gasBuffer) {
-					vehicleBuffer.NewGasStop(gas);
-					Log(LogCode::ROUTINE, "Added a gas stop to " + vehicleBuffer.getName());
-				}
-				NewVehicle(vehicleBuffer); //Add vehicleBuffer to the master m_vehicleList
+				NewVehicle(vehicleBuffer);					//Add vehicleBuffer to the master application m_vehicleList
 			}
 		}
 		Log(LogCode::LOG, "Done reading " + fileName);

@@ -14,17 +14,17 @@ public:
 	void run();
 
 	//Add vehicle to the list of known vehicles
-	inline void NewVehicle(Vehicle& vehicle);
+	inline void NewVehicle(Vehicle& veh);
 	
-	//Saves vehicles by writing to file. The path is specified in the Application class
+	//Saves vehicles by writing to file. The path is specified in the Application class \return True if could save to file. False if could not.
 	bool const saveVehicles();
 
 	// Reads \param Text string from file. Deletes chars read \return Name
 	const std::string makeVehicle(std::string& text);
 	//Make a Repair from a text stream. \param repairList: Adds found repairs to this vector
-	const void makeRepair(std::string& text, std::vector<Repair>& repairList);
+	const void makeRepair(std::string& text, Vehicle& veh);
 	// Make a GasStop from a text stream. \param gasList : Adds found gas stops to this vector
-	const void makeGasStop(std::string& text, std::vector<GasStop>& gasList);
+	const void makeGasStop(std::string& text, Vehicle& veh);
 
 	friend bool const FileSystem::writeToFile(const std::string setPath, Vehicle& vehicle);
 
@@ -52,13 +52,13 @@ private:
 	void Startup();
 
 
-	//===Used for creating data from module files
+	//===Used for creating data from module files===============
 
 	//Reads text until limit and deletes characters read \param text: what will be read, limit: char to read until, returnType: will be overwritten with the data
 	void readUntil(std::string& text, const char limit, auto& returnType);
 	//Reads text until limit, and deletes characters read \param text: what will be read limit: char to read until \return String of read text
 	std::string readUntil(std::string& text, const char limit);
-	//=====================================
+	//==========================================================
 
 	std::vector<Vehicle> m_vehicleList;
 };
