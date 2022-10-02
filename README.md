@@ -13,7 +13,7 @@ How to run:
 3. Pull this branch into that folder
 4. Open folder in VS Code
 5. In Application.h, in the private variables of the Application class, modify DIRECTORY_PATH to where you would like to keep the program files. 
-6. Build the application
+6. Build the application (Shortcut Ctrl + Shift + B)
 7. Run the .exe
 
 Please report any bugs, issues by creating a new Issue on GitHub.
