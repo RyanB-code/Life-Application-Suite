@@ -5,6 +5,7 @@ A way for me to practice and learn programming and software development by makin
 In order to run [Pre Version 1.0]:
 - Must be on Windows OS
 - Uses the console/terminal.
+- g++ installed
 - C++20
 
 How to run:
