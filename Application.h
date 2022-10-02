@@ -40,8 +40,8 @@ private:
 	Application* app{};
 
 	bool m_initialized{ false };
-	const std::filesystem::path 	DIRECTORY_PATH		{ "C:/Users/ryanb/Desktop/LAS Folder/" };
-	const std::filesystem::path	DEBUG_PATH		{ DIRECTORY_PATH.string() + "Debug/"};
+	const std::filesystem::path DIRECTORY_PATH		{ "C:/Users/ryanb/Desktop/LAS Folder/" };
+	const std::filesystem::path	DEBUG_PATH			{ DIRECTORY_PATH.string() + "Debug/"};
 	const std::filesystem::path	VEHICLE_PATH		{ DIRECTORY_PATH.string() + "Vehicles/"};
 	std::filesystem::path 		m_currentInstanceLogFile{ };
 	
