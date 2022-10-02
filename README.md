@@ -5,11 +5,13 @@ A way for me to practice and learn programming and software development by makin
 In order to run [Pre Version 1.0]:
 - Must be on Windows OS
 - Uses the console/terminal.
+- C++20
 
 How to run:
-1. Download source files
+1. Download source files, put into VS Code Projects folder
 2. In Application.h, in the private variables of the Application class, modify DIRECTORY_PATH to where you would like to keep the program files. 
-3. Save and then run the application.
+3. Build the application
+4. Run the .exe
 
 Please report any bugs, issues by creating a new Issue on GitHub.
 For feature frequests, create a new Issue on GitHub with the tag 'enhancement'.
