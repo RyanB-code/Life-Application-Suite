@@ -40,12 +40,12 @@ private:
 	Application* app{};
 
 	bool m_initialized{ false };
-	const std::filesystem::path DIRECTORY_PATH		{ "C:/Users/ryanb/Desktop/LAS Folder/" };
-	const std::filesystem::path	DEBUG_PATH			{ DIRECTORY_PATH.string() + "Debug/"};
+	const std::filesystem::path 	DIRECTORY_PATH		{ "C:/Users/ryanb/Desktop/LAS Folder/" };
+	const std::filesystem::path	DEBUG_PATH		{ DIRECTORY_PATH.string() + "Debug/"};
 	const std::filesystem::path	VEHICLE_PATH		{ DIRECTORY_PATH.string() + "Vehicles/"};
-	std::filesystem::path m_currentInstanceLogFile	{};
+	std::filesystem::path 		m_currentInstanceLogFile{ };
 	
-	//Displays the date for Log file as: SUN, SEP 25, 2022
+	//Displays the date for Log file. Ex: SUN, SEP 25, 2022
 	std::ostringstream LogFileName();
 
 	//Once the application is initialized, start reading files.
