@@ -100,8 +100,8 @@ const std::string Application::makeVehicle(std::string& text) {
 	return vehNameBuf;
 }
 const void Application::makeRepair(std::string& text, Vehicle& veh) {
-	std::string repBuf;						//Buffer of characters being read from text
-	std::vector<std::string> repairStrings; //Vector of strings of repair info not yet formatted
+	std::string repBuf;					//Buffer of characters being read from text
+	std::vector<std::string> repairStrings; 		//Vector of strings of repair info not yet formatted
 
 	bool writeChar{ false };
 	for (char& c : text) {					//Reads between < > to find repair information and writes to foundRepBuf;
@@ -139,7 +139,7 @@ const void Application::makeRepair(std::string& text, Vehicle& veh) {
 }
 const void Application::makeGasStop(std::string& text, Vehicle& veh) {
 	std::string foundGasBuf;				//Buffer of characters being read from text
-	std::vector<std::string> gasStrings;	//Vector of gas stops not yet formatted
+	std::vector<std::string> gasStrings;			//Vector of gas stops not yet formatted
 
 	bool writeChar{ false };
 	for (char& c : text) {					//Read between [ ], write to gasStrings to be formatted to GasStops
