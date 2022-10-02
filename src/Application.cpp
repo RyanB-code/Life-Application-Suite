@@ -40,10 +40,6 @@ void Application::run() {
 	return;
 }
 
-inline void Application::NewVehicle(Vehicle& veh) {
-	m_vehicleList.push_back(veh);
-	Log(LogCode::ROUTINE, "Added " + veh.getName() + " to list of vehicles.");
-}
 bool const Application::saveVehicles() {
 	bool success{ false };
 	for (Vehicle& currentVehicle : m_vehicleList) {
@@ -331,5 +327,7 @@ std::string Application::readUntil(std::string& text, const char limit) {
 			return bufferText;
 		}
 	}
+
+	return bufferText;
 }
 //===========================

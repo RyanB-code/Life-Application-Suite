@@ -14,7 +14,10 @@ public:
 	void run();
 
 	//Add vehicle to the list of known vehicles
-	inline void NewVehicle(Vehicle& veh);
+	inline void NewVehicle(Vehicle& veh){
+		m_vehicleList.push_back(veh);
+		Log(LogCode::ROUTINE, "Added " + veh.getName() + " to list of vehicles.");
+	}
 	
 	//Saves vehicles by writing to file. The path is specified in the Application class \return True if could save to file. False if could not.
 	bool const saveVehicles();

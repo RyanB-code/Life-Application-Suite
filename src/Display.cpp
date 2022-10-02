@@ -40,6 +40,8 @@ namespace Display {
 		return input;
 	}
 	bool getBoolInput() {
+		bool success{false};
+
 		bool exit{ false };
 		while (!exit) {
 			std::cout << "(y/n) >";
@@ -50,11 +52,13 @@ namespace Display {
 			switch (input) {
 			case 'y': case 'Y':
 				std::cin.ignore(10000, '\n');
-				return true;
+				success = true;
+				exit = true;
 				break;
 			case 'n': case 'N':
 				std::cin.ignore(10000, '\n');
-				return false;
+				success = false;
+				exit = true;
 				break;
 			default:
 				std::cin.ignore(10000, '\n');
@@ -67,9 +71,11 @@ namespace Display {
 				std::cin.ignore(10000, '\n');
 			}
 			else {
-				
+				//Do Nothing
 			}
 		}
+
+		return success;
 	}
 
 	//===========Menus/Screens=====================
@@ -79,7 +85,7 @@ namespace Display {
 		do {
 			Log(LogCode::LOG, "Home Screen called");
 
-			DisplayBanner("Life Application Suite");
+			DisplayBanner("Life Application Suite", "A place for all of life's needs");
 			std::cout << "\nOptions: \n";
 			std::cout << "1. Vehicle Manager\n";
 			std::cout << "2. Settings\n";
@@ -317,6 +323,8 @@ namespace Display {
 	}
 	
 	bool AddVehicle(Application* app) {
+		bool returnValue{false};
+		
 		std::string nameBuf;
 		uint32_t mileBuf;
 		DisplayBanner("Create Vehicle", "To create a new vehicle, we need some information.\n");
@@ -350,12 +358,17 @@ namespace Display {
 		if (getBoolInput()) {
 			Vehicle newVehicle{ nameBuf, mileBuf };
 			app->NewVehicle(newVehicle);
+
+			returnValue = true;
 		}
 		else {
-
+			returnValue = false;
 		}
+
+		return returnValue;
 	}
 	bool AddRepair(Vehicle* veh) {
+		bool success{false};
 
 		uint32_t mileBuf{ 0 };
 		std::string typeBuf;
@@ -366,7 +379,6 @@ namespace Display {
 		bool exit0{ false };
 		do {
 			DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
-
 
 			bool exit1{ false };
 			do {
@@ -431,6 +443,7 @@ namespace Display {
 					}
 				}
 				else {
+					success = true;
 					exit0 = true;
 				}
 			}
@@ -438,8 +451,12 @@ namespace Display {
 				exit0 = true;
 			}
 		} while (!exit0);
+
+		return success;
+
 	}
 	bool AddGasStop(Vehicle* veh) {
+		bool success{false};
 
 		uint32_t mileBuf{ 0 };
 		short galBuf;
@@ -516,6 +533,7 @@ namespace Display {
 					}
 				}
 				else {
+					success = true;
 					exit0 = true;
 				}
 			}
@@ -523,6 +541,8 @@ namespace Display {
 				exit0 = true;
 			}
 		} while (!exit0);
+
+		return success;
 	}
 
 

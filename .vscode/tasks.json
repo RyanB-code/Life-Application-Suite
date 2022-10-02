@@ -8,9 +8,9 @@
                 "-fdiagnostics-color=always",
                 "-g",
                 "${workspaceFolder}/src/*.cpp", //This will build all cpp files in the current folder
-                "${workspaceFolder}/src/*.h",   //This will build all h files in the current folder
                 "-o",
-                "${workspaceFolder}\\Life-Application-Suite.exe"
+                "${workspaceFolder}\\Life-Application-Suite.exe",
+                "-std=c++20",
             ],
             "options": {
                 "cwd": "${fileDirname}"
