@@ -11,4 +11,6 @@ How to run:
 2. In Application.h, in the private variables of the Application class, modify DIRECTORY_PATH to where you would like to keep the program files. 
 3. Save and then run the application.
 
-Please report any bugs, issues, or feature requests by creating a new Issue on GitHub.
+Please report any bugs, issues by creating a new Issue on GitHub.
+For feature frequests, create a new Issue on GitHub with the tag 'enhancement'.
+Any feedback is appreciated. This has been a great learning experience and I look forward to learning more
