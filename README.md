@@ -8,10 +8,13 @@ In order to run [Pre Version 1.0]:
 - C++20
 
 How to run:
-1. Download source files, put into VS Code Projects folder
-2. In Application.h, in the private variables of the Application class, modify DIRECTORY_PATH to where you would like to keep the program files. 
-3. Build the application
-4. Run the .exe
+1. Create a new folder (recommended to be with other VS Code Projects)
+2. Initialize git in that folder
+3. Pull this branch into that folder
+4. Open folder in VS Code
+5. In Application.h, in the private variables of the Application class, modify DIRECTORY_PATH to where you would like to keep the program files. 
+6. Build the application
+7. Run the .exe
 
 Please report any bugs, issues by creating a new Issue on GitHub.
 For feature frequests, create a new Issue on GitHub with the tag 'enhancement'.
