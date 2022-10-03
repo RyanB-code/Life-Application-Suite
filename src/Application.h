@@ -11,7 +11,9 @@ public:
 	~Application() {
 
 	}
-	void run();
+	
+	//Once the application is initialized, start reading files.
+	void Startup();
 
 	//Add vehicle to the list of known vehicles
 	inline void NewVehicle(Vehicle& veh){
@@ -21,9 +23,6 @@ public:
 	
 	//Saves vehicles by writing to file. The path is specified in the Application class \return True if could save to file. False if could not.
 	bool const saveVehicles();
-
-
-	friend bool const FileSystem::writeToFile(const std::string setPath, Vehicle& vehicle);
 
 	std::vector<Vehicle>& getVehicleList() { return m_vehicleList; };
 
@@ -44,9 +43,6 @@ private:
 	
 	//Displays the date for Log file. Ex: SUN, SEP 25, 2022
 	std::ostringstream LogFileName();
-
-	//Once the application is initialized, start reading files.
-	void Startup();
 
 	// Reads name\param Text string from file, deletes read characters
 	const std::string makeVehicleName(std::string& text);

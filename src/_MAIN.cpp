@@ -8,7 +8,7 @@ int main() {
 	Application* app = new Application();
 
 	try {
-		app->run();
+		app->Startup();
 		Display::Home(app);
 	}
 	catch (Log& log) {

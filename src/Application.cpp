@@ -26,20 +26,43 @@ Application::Application() {
 		}
 	}
 }
+void Application::Startup() {
 
-void Application::run() {
 	if (!m_initialized) {
 		throw Log(LogCode::FATAL, "Application initialization failed.");
 		return;
 	}
 	else {
 		app = this;
-		Startup();
+		
+		//Go through the vehicle folder and store the names of the files
+		std::vector <std::string> vehicleFiles;
+		FileSystem::filesInDirectory(VEHICLE_PATH.string(), vehicleFiles);
+
+		//Iterate through the files in the folder found and create Vehicle types
+		for (const std::string& fileName : vehicleFiles) {
+			std::ostringstream fileText;
+
+			//Opens file, reads text, outputs to fileText
+			if (!FileSystem::readFile(fileName, fileText)) {
+				//If vehicle file couldn't be opened to read, do nothing
+			}
+			else { //File opened, save the text and iterate. Writes Vehicle and repairs and gas stops
+
+				std::string vehInfoBuf{ fileText.str() };
+
+				Vehicle vehicleBuffer{ makeVehicleName(vehInfoBuf), makeVehicleMiles(vehInfoBuf) };
+
+				makeRepair(vehInfoBuf, vehicleBuffer);		//Make repairs from the remaining text and add to vehicle
+				makeGasStop(vehInfoBuf, vehicleBuffer);		//Make Gas stop from the remaining text
+
+				NewVehicle(vehicleBuffer);					//Add vehicleBuffer to the master application m_vehicleList
+			}
+			Log(LogCode::LOG, "Done reading " + fileName);
+		}
+		Log(LogCode::ROUTINE, "Startup processes finised.");
 	}
-
-	return;
 }
-
 bool const Application::saveVehicles() {
 	bool success{ false };
 	for (Vehicle& currentVehicle : m_vehicleList) {
@@ -62,129 +85,9 @@ bool const Application::saveVehicles() {
 	return success;
 }
 
-std::ostringstream Application::LogFileName() {
-	time_t now{ time(0) };
-	tm* ltm = localtime(&now);
-
-	std::ostringstream date;
-
-	date << std::setw(2) << std::setfill('0') << ltm->tm_mday << '-';
-	switch (ltm->tm_mon) {
-	case 0:
-		date << "JAN";
-		break;
-	case 1:
-		date << "FED";
-		break;
-	case 2:
-		date << "MAR";
-		break;
-	case 3:
-		date << "APR";
-		break;
-	case 4:
-		date << "MAY";
-		break;
-	case 5:
-		date << "JUN";
-		break;
-	case 6:
-		date << "JUL";
-		break;
-	case 7:
-		date << "AUG";
-		break;
-	case 8:
-		date << "SEP";
-		break;
-	case 9:
-		date << "OCT";
-		break;
-	case 10:
-		date << "NOV";
-		break;
-	case 11:
-		date << "DEC";
-		break;
-	default:
-		date << "MMM";
-	}
-
-
-	int year{ ltm->tm_year + 1900 };
-
-	date << '-' << year;
-
-	// THIS DISPLAYS THE TIME IN HH-MM-SS format
-
-	date << "_"
-		<< std::setw(2) << std::setfill('0') << ltm->tm_hour << '-'
-		<< std::setw(2) << std::setfill('0') << ltm->tm_min << '-'
-		<< std::setw(2) << std::setfill('0') << ltm->tm_sec;
-	/*
-	switch (ltm->tm_wday) {
-	case 0:
-		date << "SUN";
-		break;
-	case 1:
-		date << "MON";
-		break;
-	case 2:
-		date << "TUE";
-		break;
-	case 3:
-		date << "WED";
-		break;
-	case 4:
-		date << "THU";
-		break;
-	case 5:
-		date << "FRI";
-		break;
-	case 6:
-		date << "SAT";
-		break;
-	default:
-		date << "DDD";
-	}
-	date << "-";
-	*/
-	return date;
-}
 //========END PUBLIC=========
 
 //==========PRIVATE==========
-
-void Application::Startup() {
-
-	//Go through the vehicle folder and store the names of the files
-	std::vector <std::string> vehicleFiles;
-	FileSystem::filesInDirectory(VEHICLE_PATH.string(), vehicleFiles);
-
-	//Iterate through the files in the folder found and create Vehicle types
-	for (const std::string& fileName : vehicleFiles) {
-		std::ostringstream fileText;
-
-		//Opens file, reads text, outputs to fileText
-		if (!FileSystem::readFile(fileName, fileText)) {
-			//If vehicle file couldn't be opened to read, do nothing
-		}
-		else { //File opened, save the text and iterate. Writes Vehicle and repairs and gas stops
-
-			std::string vehInfoBuf{ fileText.str() };
-
-			Vehicle vehicleBuffer{ makeVehicleName(vehInfoBuf), makeVehicleMiles(vehInfoBuf) };
-	
-			makeRepair(vehInfoBuf, vehicleBuffer);		//Make repairs from the remaining text and add to vehicle
-			makeGasStop(vehInfoBuf, vehicleBuffer);		//Make Gas stop from the remaining text
-
-			NewVehicle(vehicleBuffer);					//Add vehicleBuffer to the master application m_vehicleList
-		}
-		Log(LogCode::LOG, "Done reading " + fileName);
-	}
-	Log(LogCode::ROUTINE, "Startup processes finised.");
-}
-
 const std::string Application::makeVehicleName(std::string& text) {
 	if (text == "") { //Check if the text string exists
 		return "";
@@ -359,5 +262,68 @@ std::string Application::readUntil(std::string& text, const char limit) {
 	}
 
 	return bufferText;
+}
+
+std::ostringstream Application::LogFileName() {
+	time_t now{ time(0) };
+	tm* ltm = localtime(&now);
+
+	std::ostringstream date;
+
+	date << std::setw(2) << std::setfill('0') << ltm->tm_mday << '-';
+	switch (ltm->tm_mon) {
+	case 0:
+		date << "JAN";
+		break;
+	case 1:
+		date << "FED";
+		break;
+	case 2:
+		date << "MAR";
+		break;
+	case 3:
+		date << "APR";
+		break;
+	case 4:
+		date << "MAY";
+		break;
+	case 5:
+		date << "JUN";
+		break;
+	case 6:
+		date << "JUL";
+		break;
+	case 7:
+		date << "AUG";
+		break;
+	case 8:
+		date << "SEP";
+		break;
+	case 9:
+		date << "OCT";
+		break;
+	case 10:
+		date << "NOV";
+		break;
+	case 11:
+		date << "DEC";
+		break;
+	default:
+		date << "MMM";
+	}
+
+
+	int year{ ltm->tm_year + 1900 };
+
+	date << '-' << year;
+
+	// THIS DISPLAYS THE TIME IN HH-MM-SS format
+
+	date << "_"
+		<< std::setw(2) << std::setfill('0') << ltm->tm_hour << '-'
+		<< std::setw(2) << std::setfill('0') << ltm->tm_min << '-'
+		<< std::setw(2) << std::setfill('0') << ltm->tm_sec;
+
+	return date;
 }
 //===========================
