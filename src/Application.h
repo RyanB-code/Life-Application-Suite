@@ -22,12 +22,6 @@ public:
 	//Saves vehicles by writing to file. The path is specified in the Application class \return True if could save to file. False if could not.
 	bool const saveVehicles();
 
-	// Reads \param Text string from file. Deletes chars read \return Name
-	const std::string makeVehicle(std::string& text);
-	//Make a Repair from a text stream. \param repairList: Adds found repairs to this vector
-	const void makeRepair(std::string& text, Vehicle& veh);
-	// Make a GasStop from a text stream. \param gasList : Adds found gas stops to this vector
-	const void makeGasStop(std::string& text, Vehicle& veh);
 
 	friend bool const FileSystem::writeToFile(const std::string setPath, Vehicle& vehicle);
 
@@ -54,6 +48,14 @@ private:
 	//Once the application is initialized, start reading files.
 	void Startup();
 
+	// Reads name\param Text string from file, deletes read characters
+	const std::string makeVehicleName(std::string& text);
+	//Reads mileage \param Text string from file, deletes read characters
+	const uint32_t makeVehicleMiles(std::string& text);
+	//Make a Repair from a text stream. \param repairList: Adds found repairs to this vehicle
+	const void makeRepair(std::string& text, Vehicle& veh);
+	// Make a GasStop from a text stream. \param gasList : Adds found gas stops to this vehicle
+	const void makeGasStop(std::string& text, Vehicle& veh);
 
 	//===Used for creating data from module files===============
 

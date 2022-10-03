@@ -62,7 +62,9 @@ namespace FileSystem {
 		else {
 			std::ofstream file{ path }; //Open file to write
 
-			file << '(' << vehicle.getName() << ")\n";
+			file << '(' << vehicle.getName() << ')';
+			file << '{' << vehicle.getMileage() << "}\n";
+			
 			for (Repair& repair : vehicle.getRepairList()) {
 				file << '<';
 				file << repair;

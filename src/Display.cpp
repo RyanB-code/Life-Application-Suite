@@ -83,8 +83,6 @@ namespace Display {
 	{
 		bool exit{ false };
 		do {
-			Log(LogCode::LOG, "Home Screen called");
-
 			DisplayBanner("Life Application Suite", "A place for all of life's needs");
 			std::cout << "\nOptions: \n";
 			std::cout << "1. Vehicle Manager\n";
