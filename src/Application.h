@@ -33,7 +33,7 @@ public:
 	std::string showLogFilePath()		{ return m_currentInstanceLogFile.string(); };
 	//=======================================
 private:
-	Application* app{};
+	Application* app{ nullptr };
 
 	bool m_initialized{ false };
 	const std::filesystem::path DIRECTORY_PATH		{ "C:/Users/ryanb/Desktop/LAS Folder/" };

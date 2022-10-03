@@ -119,7 +119,7 @@ namespace Display {
 			if (app->getVehicleList().empty()) {
 				std::cout << "\nOptions:\n";
 				std::cout << "1. Add new Vehicle\n";
-				std::cout << "2. Go back\n";
+				std::cout << "2. LAS Home\n";
 				switch (getInput(1, 2)) {
 				case 1:
 					AddVehicle(app);
@@ -142,7 +142,7 @@ namespace Display {
 					std::cout << "2. View All Vehicle Info\n";
 					std::cout << "3. Add new Vehicle\n";
 					std::cout << "\n4. Save all Vehicles\n\n";
-					std::cout << "5. Go back\n";
+					std::cout << "5. LAS Home\n";
 
 					switch (getInput(1, 5)) {
 					case 1:
@@ -177,16 +177,16 @@ namespace Display {
 					std::cout << "\nSelected Vehicle > " << selectedVehicle->getName() << "\n";
 					std::cout << "\nOptions: \n";
 					std::cout << "1. Deselect Vehicle\n";
-					std::cout << "2. Add new Vehicle\n";
+					std::cout << "2. Add New Vehicle\n";
 					std::cout << "\n";
-					std::cout << "3. View Selected Vehicle Info\n";
-					std::cout << "4. Add a new repair\n";
-					std::cout << "5. Add a new gas stop\n";
+					std::cout << "3. View Vehicle Info\n";
+					std::cout << "4. Add a New Repair\n";
+					std::cout << "5. Add a New Gas Stop\n";
 					std::cout << "6. Edit name\n";
 					std::cout << "\n";
-					std::cout << "7. Save all vehicles\n";
+					std::cout << "7. Save All Vehicles\n";
 					std::cout << "\n";
-					std::cout << "8. Go back\n";
+					std::cout << "8. LAS Home\n";
 
 					switch (getInput(1, 8)) {
 					case 1:
@@ -234,13 +234,21 @@ namespace Display {
 		} //end while loop
 	}
 	void Settings(Application* app) {
-		DisplayBanner("LAS -> Settings");
+		DisplayBanner("LAS -> Settings", "Here are your current settings\n");
 		std::cout << "Main Directory:\t\t" << app->showMainDirectory() << "\n";
 		std::cout << "Debug Directory:\t" << app->showDebugDirectory() << "\n";
 		std::cout << "Debug File:\t\t" << app->showLogFilePath() << "\n";
 		std::cout << "Vehicle Directory:\t" << app->showVehicleDirectory() << "\n";
 		std::cout << "\n";
-		system("pause");
+		
+		std::cout << "Would you like to edit?\n";
+		if(getBoolInput()){
+			std::cout << "Does nothing now\n";
+			Sleep(2000);
+		}
+		else{
+			return;
+		}
 	}
 
 	void ShowFullVehicleInformation(std::vector<Vehicle>& vehList) {
@@ -267,8 +275,9 @@ namespace Display {
 			short gallonsWidth{ 8 };
 			int tableLineGas{ mileageWidth + gallonsWidth + costWidth + notesWidth + 9 };
 
-			os << std::setw(veh->maxVehicleNameSize + 1) << std::left << veh->getName() << std::setw(6) << std::right << veh->getMileage() << " miles\n";
+			os << veh->getName() << " with " << veh->getMileage() << " miles\n";
 
+			//The table header
 			os << std::setw((tableLineRepairs / 2) + 7) << std::right << "===REPAIRS===" << std::left << '\n'; //make repairs be in the middle
 			os << "   " << std::setw(mileageWidth) << "Miles"; os << " | ";
 			os << std::setw(typeWidth) << "Type"; os << " | ";
@@ -278,6 +287,7 @@ namespace Display {
 			os << std::setw(tableLineRepairs) << std::setfill('=');
 			os << "\n   " << std::setfill(' ');
 
+			//Fills in the table
 			for (Repair& rep : veh->getRepairList()) {
 				int				mileBuf;
 				std::string		typeBuf;
@@ -287,12 +297,13 @@ namespace Display {
 				rep.getRepairInfo(mileBuf, typeBuf, costBuf, notesBuf, thirdPartyBuf);
 				os << "\n   " << std::setw(mileageWidth) << std::right << mileBuf; os << " | ";
 				os << std::setw(typeWidth) << typeBuf; os << " | ";
-				os << std::setw(costWidth) << costBuf; os << " | ";
+				os << '$' << std::setw(costWidth-1) << std::setprecision(2) << std::fixed << costBuf; os << " | ";
 				os << std::setw(thirdPartyWidth) << std::boolalpha << thirdPartyBuf; os << " | ";
 				os << std::setw(notesWidth) << std::left << notesBuf;
 			}
 			os << "\n\n";
 
+			//The table header
 			os << std::setw((tableLineGas / 2) + 8) << std::right << "===GAS STOPS===" << std::left << '\n'; //make text be in the middle
 			os << "   " << std::setw(mileageWidth) << "Miles"; os << " | ";
 			os << std::setw(gallonsWidth) << "Gallons"; os << " | ";
@@ -301,7 +312,7 @@ namespace Display {
 			os << std::setw(tableLineGas) << std::setfill('=');
 			os << "\n   " << std::setfill(' ');
 
-
+			//Fills in the table
 			for (GasStop& gas : veh->getGasStopList()) {
 				int			mileBuf;
 				double		galBuf;
@@ -309,8 +320,8 @@ namespace Display {
 				std::string notesBuf;
 				gas.getGasStopInfo(mileBuf, galBuf, costBuf, notesBuf);
 				os << "\n   " << std::setw(mileageWidth) << std::right << mileBuf; os << " | ";
-				os << std::setw(gallonsWidth) << galBuf; os << " | ";
-				os << std::setw(costWidth) << costBuf; os << " | ";
+				os << std::setw(gallonsWidth) << std::setprecision(2) << std::fixed << galBuf; os << " | ";
+				os <<  '$' << std::setw(costWidth-1) << std::setprecision(2) << std::fixed << costBuf; os << " | ";
 				os << std::setw(notesWidth) << std::left << notesBuf;
 			}
 
@@ -380,7 +391,7 @@ namespace Display {
 
 			bool exit1{ false };
 			do {
-				std::cout << "Mileage done >";
+				std::cout << "What mileage was the repair done at?\n>";
 				std::cin >> mileBuf;
 				clearLineAfterInput();
 				if (std::cin.fail()) {
@@ -402,7 +413,7 @@ namespace Display {
 			bool exit2{ false };
 			do {
 				DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
-				std::cout << "Cost >";
+				std::cout << "How much did it cost in total?\n>";
 				std::cin >> costBuf;
 				clearLineAfterInput();
 				if (std::cin.fail()) {
@@ -416,7 +427,7 @@ namespace Display {
 			} while (!exit2);
 
 			DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
-			std::cout << "Notes. [Max characters " << veh->maxNotesSize << "]\n>";
+			std::cout << "Enter any notes here. [Max characters " << veh->maxNotesSize << "]\n>";
 			std::cin.ignore(10000, '\n');
 			std::getline(std::cin, notesBuf);
 
@@ -466,7 +477,7 @@ namespace Display {
 			bool exit1{ false };
 			do {
 				DisplayBanner("Edit -> " + veh->getName(), "To add a new gas stop we need some information.\n\n");
-				std::cout << "Mileage done >";
+				std::cout << "What mileage did you fill up at?\n>";
 				std::cin >> mileBuf;
 				clearLineAfterInput();
 				if (std::cin.fail()) {
@@ -482,7 +493,7 @@ namespace Display {
 			DisplayBanner("Edit -> " + veh->getName(), "To add a new gas stop we need some information.\n\n");
 			bool exit2{ false };
 			do {
-				std::cout << "Gallons >";
+				std::cout << "How many gallons did you fill up?\n>";
 				std::cin >> galBuf;
 				clearLineAfterInput();
 				if (std::cin.fail()) {
@@ -498,7 +509,7 @@ namespace Display {
 			bool exit3{ false };
 			do {
 				DisplayBanner("Edit -> " + veh->getName(), "To add a new gas stop we need some information.\n\n");
-				std::cout << "Price Per Gallon >";
+				std::cout << "What was the price per gallon?\n>";
 				std::cin >> ppgBuf;
 				clearLineAfterInput();
 				if (std::cin.fail()) {
@@ -512,7 +523,7 @@ namespace Display {
 			} while (!exit3);
 
 			DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
-			std::cout << "Notes. [Max characters " << veh->maxNotesSize << "]\n>";
+			std::cout << "Enter any notes here. [Max characters " << veh->maxNotesSize << "]\n>";
 			std::cin.ignore(10000, '\n');
 			std::getline(std::cin, notesBuf);
 
