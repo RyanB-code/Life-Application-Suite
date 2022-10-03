@@ -304,7 +304,7 @@ namespace Display {
 
 			for (GasStop& gas : veh->getGasStopList()) {
 				int			mileBuf;
-				short		galBuf;
+				double		galBuf;
 				double		costBuf;
 				std::string notesBuf;
 				gas.getGasStopInfo(mileBuf, galBuf, costBuf, notesBuf);
@@ -457,7 +457,7 @@ namespace Display {
 		bool success{false};
 
 		uint32_t mileBuf{ 0 };
-		short galBuf;
+		double galBuf{ 0.0 };
 		double ppgBuf{ 0.0 };
 		std::string notesBuf;
 

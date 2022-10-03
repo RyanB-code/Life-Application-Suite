@@ -37,7 +37,7 @@ private:
 // \param Mileage, Gallons Filled, Price Per Gallon, Notes,
 class GasStop {
 public:
-	GasStop(uint32_t setMileage, short setGallons, double setPricePerGallon, std::string setNotes)
+	GasStop(uint32_t setMileage, double setGallons, double setPricePerGallon, std::string setNotes)
 		: mileageDone{ setMileage },
 		gallons{setGallons},
 		pricePerGallon{setPricePerGallon},
@@ -49,13 +49,13 @@ public:
 
 	}
 	//Overwrites the parameters with the info of the gas stop
-	const void getGasStopInfo(int& mileage, short& gal, double& ppg, std::string& notesVar);
+	const void getGasStopInfo(int& mileage, double& gal, double& ppg, std::string& notesVar);
 	const uint32_t getMileage() { return mileageDone; }
 	friend std::ostream& operator<<(std::ostream& os, const GasStop& gasStop);
 
 private:
 	uint32_t	mileageDone;
-	short		gallons;
+	double		gallons;
 	double		pricePerGallon;
 	std::string notes;
 };
@@ -99,7 +99,7 @@ public:
 	//Given individual types, it will error check ranges and data before adding to the vehicle's list
 	bool NewRepair(uint32_t setMiles, std::string setType, double setCost, std::string setNotes, bool setThirdParty);
 	//Given individual types, it will error check ranges and data before adding to the vehicle's list
-	bool NewGasStop(uint32_t setMiles, short setGal, double setPPG, std::string setNotes);
+	bool NewGasStop(uint32_t setMiles, double setGal, double setPPG, std::string setNotes);
 
 	std::vector<Repair>& getRepairList()	{ return repairList; }
 	std::vector<GasStop>& getGasStopList()	{ return gasList; }

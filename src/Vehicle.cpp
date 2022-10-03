@@ -8,7 +8,7 @@ const void Repair::getRepairInfo(int& mileage, std::string& typeStr, double& cos
 	wasThirdParty = isThirdPartyRepair;
 	return;
 }
-const void GasStop::getGasStopInfo(int& mileage, short& gal, double& ppg, std::string& notesVar) {
+const void GasStop::getGasStopInfo(int& mileage, double& gal, double& ppg, std::string& notesVar) {
 	mileage = mileageDone;
 	gal = gallons;
 	ppg = pricePerGallon;
@@ -80,7 +80,7 @@ bool Vehicle::NewRepair(uint32_t setMiles, std::string setType, double setCost, 
 	}
 
 }
-bool Vehicle::NewGasStop(uint32_t setMiles, short setGal, double setPPG, std::string setNotes) {
+bool Vehicle::NewGasStop(uint32_t setMiles, double setGal, double setPPG, std::string setNotes) {
 	bool milesAccepted{ false }, galAccepted{ false }, ppgAccepted{ false }, notesAccepted{ false };
 	if (setMiles > 0) {
 		milesAccepted = true;

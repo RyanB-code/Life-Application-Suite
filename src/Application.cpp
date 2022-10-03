@@ -19,7 +19,7 @@ Application::Application() {
 		else {
 			//All was initialized successfully
 			m_currentInstanceLogFile = debugFilePath.str();
-			Log::m_path = m_currentInstanceLogFile.string();
+			Log::m_path = m_currentInstanceLogFile.string();  //Sets the Log class m_path to m_currentInstanceLogFile in order for new log messages to be displayed there
 
 			m_initialized = true;
 			Log(LogCode::LOG, "Initialization successful.");
@@ -47,21 +47,19 @@ void Application::Startup() {
 			if (!FileSystem::readFile(fileName, fileText)) {
 				//If vehicle file couldn't be opened to read, do nothing
 			}
-			else { //File opened, save the text and iterate. Writes Vehicle and repairs and gas stops
-
-				std::string vehInfoBuf{ fileText.str() };
-
+			else {
+				std::string vehInfoBuf{ fileText.str() };	//Stores the file text in string format
 				Vehicle vehicleBuffer{ makeVehicleName(vehInfoBuf), makeVehicleMiles(vehInfoBuf) };
-
+				
 				makeRepair(vehInfoBuf, vehicleBuffer);		//Make repairs from the remaining text and add to vehicle
 				makeGasStop(vehInfoBuf, vehicleBuffer);		//Make Gas stop from the remaining text
 
 				NewVehicle(vehicleBuffer);					//Add vehicleBuffer to the master application m_vehicleList
 			}
-			Log(LogCode::LOG, "Done reading " + fileName);
 		}
-		Log(LogCode::ROUTINE, "Startup processes finised.");
 	}
+
+	Log(LogCode::ROUTINE, "Startup processes finised.");
 }
 bool const Application::saveVehicles() {
 	bool success{ false };
@@ -115,7 +113,7 @@ const std::string Application::makeVehicleName(std::string& text) {
 			for (int i{ 0 }; i < charactersRead; ++i) {
 				text.erase(0, 1);
 			}
-			return vehNameBuf;
+			return vehNameBuf; 
 		}
 
 	}
@@ -217,7 +215,7 @@ const void Application::makeGasStop(std::string& text, Vehicle& veh) {
 	char separator{ '|' };
 	for (std::string currentString : gasStrings) {	//Reads unformatted gasStrings, formats them into GasStop types and adds to gasList vector
 		uint32_t			mileBuf{};
-		short				gallonsBuf{};
+		double				gallonsBuf{};
 		double				ppgBuf{};
 		std::ostringstream	notesBuf{};
 
@@ -234,13 +232,16 @@ const void Application::makeGasStop(std::string& text, Vehicle& veh) {
 
 void Application::readUntil(std::string& text, const char limit, auto& returnType) {
 	std::stringstream bufferText;
-	
+
+	int charRead{0};
 	for (char& c : text) {
+		++charRead;
 		if (c != limit) {
 			bufferText << c;
 		}
 		else {
 			bufferText >> returnType;
+			text.erase(0, charRead);
 			return;
 		}
 	}
@@ -248,15 +249,16 @@ void Application::readUntil(std::string& text, const char limit, auto& returnTyp
 std::string Application::readUntil(std::string& text, const char limit) {
 	std::string bufferText;
 	int charRead{ 0 };
-	for (const char& c : text) {
+	for (char& c : text) {
 		++charRead;
-		if (c != limit && charRead < text.length()) {
+		if (c != limit && charRead < text.length()) {	//Make sure c is not the limit, and that it does not go over the end of the string.
 			bufferText += c;
 		}
 		else {
-			if (c != limit) {
+			if (c != limit) {	
 				bufferText += c;
 			}
+			text.erase(0, charRead);
 			return bufferText;
 		}
 	}
