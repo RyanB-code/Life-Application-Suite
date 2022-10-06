@@ -7,10 +7,15 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${workspaceFolder}/src/*.cpp", //This will build all cpp files in the current folder
+                "${workspaceFolder}/src/*.cpp",                 //This will build all cpp files in the current workspace folder
+                "${workspaceFolder}/include/DearImGUI/*.cpp",   //This will build all files in the DearImGUI folder
+                "${workspaceFolder}/src/glad.c",
+                "-I${workspaceFolder}/include",
+		        "-L${workspaceFolder}/lib",
                 "-o",
                 "${workspaceFolder}\\Life-Application-Suite.exe",
                 "-std=c++20",
+                "-lglfw3dll",
             ],
             "options": {
                 "cwd": "${fileDirname}"
