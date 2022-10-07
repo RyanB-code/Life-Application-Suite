@@ -79,30 +79,68 @@ namespace Display {
 	}
 
 	//===========Menus/Screens=====================
+	void Run(Application* app)
+	{
+		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f); //for testing
+
+		while (!glfwWindowShouldClose(app->m_window))
+		{
+			// Poll and handle events (inputs, window resize, etc.)
+			// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
+			// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
+			// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
+			// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+			glfwPollEvents();
+
+			// Start the Dear ImGui frame
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
+
+			// My code goes here for window calls ------------
+			Home(app);
+			//---------------------------------------------------
+
+			// Rendering
+			ImGui::Render(); // ERROR in callng glViewport <------------
+			glfwGetFramebufferSize(app->m_window, &app->m_window_x, &app->m_window_y);
+			glViewport(0, 0, app->m_window_x, app->m_window_y);
+			glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+			glClear(GL_COLOR_BUFFER_BIT);
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+			
+			// Update and Render additional Platform Windows
+			// (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
+			//  For this specific demo app we could also call glfwMakeContextCurrent(window) directly)
+			if (app->m_io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+			{
+				GLFWwindow* backup_current_context = glfwGetCurrentContext();
+				ImGui::UpdatePlatformWindows();
+				ImGui::RenderPlatformWindowsDefault();
+				glfwMakeContextCurrent(backup_current_context);
+			}
+			glfwSwapBuffers(app->m_window);
+		}
+		std::ostringstream txt;
+		txt << "Width: " << app->m_window_x << " Height: " << app->m_window_y;
+		Log(LogCode::LOG, txt.str());
+
+		// Cleanup
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
+
+		glfwDestroyWindow(app->m_window);
+		glfwTerminate();
+
+		return;
+	}
+
 	void Home(Application* app)
 	{
-		bool exit{ false };
-		do {
-			DisplayBanner("Life Application Suite", "A place for all of life's needs");
-			std::cout << "\nOptions: \n";
-			std::cout << "1. Vehicle Manager\n";
-			std::cout << "2. Settings\n";
-			std::cout << "3. Exit\n";
-
-
-			switch (getInput(1, 3)) {
-			case 1:
-				VehicleHome(app);
-				break;
-			case 2:
-				Settings(app);
-				break;
-			case 3:
-				exit = true;
-				break;
-			}
-
-		} while (!exit);
+		
+		
+		return;
 	}
 	void VehicleHome(Application* app) {
 		Log(LogCode::LOG, "Vehicle Home Screen called");
