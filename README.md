@@ -9,4 +9,3 @@ Priorities of work
 2. Support for MacOS, Windows, and linux.
 3. Debug and release Version 1.0 with just the Vehicle Manager as the module.
 4. Add other modules
-
