@@ -97,12 +97,10 @@ namespace Display {
 			// Start the Dear ImGui frame
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
-			ImGui::NewFrame();			
-
+			ImGui::NewFrame();
 			// My code goes here for window calls ------------
 			Home(app);
 			//---------------------------------------------------
-
 			// Rendering
 			ImGui::Render();
 			glfwGetFramebufferSize(app->m_window, &app->m_window_x, &app->m_window_y);
@@ -114,7 +112,8 @@ namespace Display {
 			// Update and Render additional Platform Windows
 			// (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
 			//  For this specific demo app we could also call glfwMakeContextCurrent(window) directly)
-			if (app->m_io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+			ImGuiIO& io = ImGui::GetIO();
+			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 			{
 				GLFWwindow* backup_current_context = glfwGetCurrentContext();
 				ImGui::UpdatePlatformWindows();
@@ -137,42 +136,64 @@ namespace Display {
 
 	void Home(Application* app)
 	{
-		static ImGuiWindowFlags flags;
-		flags |= ImGuiWindowFlags_NoCollapse;
-		flags |= ImGuiWindowFlags_MenuBar;
-		flags |= ImGuiWindowFlags_NoTitleBar;
-		flags |= ImGuiWindowFlags_NoResize;
+		// MenuBar variables
+		static bool showVehicleManager = false;
+		static bool showSettings = false;
 
-		static bool vehWinShown = false;
-		ImGui::SetNextWindowPos(ImVec2(0,0)); 									// Make window in the top left
-		ImGui::SetNextWindowSize(ImVec2(app->m_window_x, app->m_window_y));		// Make window take full draw area of OpenGL
 
-		static float mainWinSizeX;
-		static float mainWinSizeY;
-		ImGui::Begin(app->getWindowTitle().c_str(), nullptr, flags);
-		mainWinSizeX = ImGui::GetWindowSize().x;
-		mainWinSizeY = ImGui::GetWindowSize().y;
+		// Setup dockspace for whole window
+		const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImGui::SetNextWindowViewport(viewport->ID);
+		
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar;
+        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoScrollbar;
 
-		if(ImGui::BeginMenuBar()){
+
+		if( ImGui::Begin("Main Dockspace", nullptr, window_flags)) {
+			ImGuiID dockspace_id = ImGui::GetID("MainDockSpace");
+        	ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
+
+			if(ImGui::BeginMenuBar()){
 				if(ImGui::BeginMenu("Modules")){
-					ImGui::MenuItem("Vehicle Manager", nullptr, &vehWinShown);
-					ImGui::MenuItem("Also show Vehicle Manager", nullptr, &vehWinShown);
+					ImGui::MenuItem("Vehicle Manager", nullptr, &showVehicleManager);
+					ImGui::MenuItem("Settings", nullptr, &showSettings);
 					ImGui::EndMenu();
 				}
-			ImGui::EndMenuBar();
+				ImGui::EndMenuBar();
+			}
+			ImGui::End();
 		}
+		// --------------------------------
 
-		ImGui::Text("Current Dear ImGui context X size: (%f)", mainWinSizeX);
-		ImGui::Text("Current Dear ImGui context y size: (%f)", mainWinSizeY);
-
-		ImGui::BeginChild("Child", ImVec2(mainWinSizeX / 3, mainWinSizeY / 2), true);
-		ImGui::Text("Child window");
-		ImGui::EndChild();
-		
-		ImGui::End();
+		if(showVehicleManager){
+			if( ImGui::Begin("Vehicle Manager", &showVehicleManager, 0)){
+				ImGui::Text("Just text");
+					
+				ImGui::Text("Text 2");
+				ImGui::End();
+			}
+		}
+		if(showSettings){
+			if( ImGui::Begin("Settings", &showSettings, 0)){
+				ImGui::Text("Another settings window");
+				ImGui::End();
+			}
+		}
 		
 		return;
 	}
+
+	
+	
+	
+	
+	
+	
+	
+	
 	void VehicleHome(Application* app) {
 		Log(LogCode::LOG, "Vehicle Home Screen called");
 

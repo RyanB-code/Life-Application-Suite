@@ -41,7 +41,6 @@ public:
 	// =======================================
 
 	GLFWwindow* 	m_window 		{nullptr};
-	ImGuiIO 		m_io			{};
 	int 			m_window_x		{1280};
 	int 			m_window_y		{720};
 	const ImVec2 	MIN_WIN_SIZE	{1280, 720};

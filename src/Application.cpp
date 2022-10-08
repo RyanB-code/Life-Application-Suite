@@ -107,11 +107,11 @@ bool Application::SetupImGUI(){
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	m_io = ImGui::GetIO();
-	m_io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;     	// Enable Gamepad Controls
-	m_io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
-	m_io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     	// Enable Docking
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
 	//io.ConfigViewportsNoAutoMerge = true;
 	//io.ConfigViewportsNoTaskBarIcon = true;					
 
@@ -120,14 +120,14 @@ bool Application::SetupImGUI(){
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
 	appStyle = &ImGui::GetStyle();
-	if (m_io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 	{
 		appStyle->WindowRounding = 0.0f;
-		appStyle->WindowMinSize = MIN_WIN_SIZE;
-
+		appStyle->WindowBorderSize = 1.0f;
 		appStyle->FramePadding = ImVec2(8, 4);
 
 		appStyle->Colors[ImGuiCol_MenuBarBg] = ImColor(0, 162, 237, 255);
+		appStyle->TabRounding = 0.0f;
 	}
 
 	return true;

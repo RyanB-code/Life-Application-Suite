@@ -18,6 +18,7 @@ namespace Display
 
 	void Run(Application* app);
 	void Home(Application* app);
+
 	void VehicleHome(Application* app);
 	void Settings(Application* app);
 
