@@ -14,10 +14,8 @@
 class Application
 {
 public:
-	Application();
-	~Application() {
-
-	}
+	Application(){};
+	~Application(){};
 	
 	// Once the application is initialized, start reading files.
 	void Startup();
@@ -62,6 +60,7 @@ private:
 
 	std::filesystem::path 		m_currentInstanceLogFile{ };
 
+	bool SetupFileSystem();
 	bool SetupGLFW();
 	bool SetupImGUI();
 	void SetupVehicleManager();

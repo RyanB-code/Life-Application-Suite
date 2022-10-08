@@ -9,45 +9,21 @@ static void glfw_error_callback(int error, const char* description)
    	Log(LogCode::WARNING, logText.str());
 }
 
-
-Application::Application() {
-	if (!FileSystem::createDirectory(DIRECTORY_PATH.string()) 
-		|| !FileSystem::createDirectory(DEBUG_PATH.string()) 
-		|| !FileSystem::createDirectory(VEHICLE_PATH.string()))
-	{
-		Log(LogCode::FATAL, "Could not initialize the file system.");
-	}
-	else {
-		//Once the app folders are made,
-		std::ostringstream debugFilePath{ DEBUG_PATH.string() + LogFileName().str() + ".dat" };	//Make debug log file for the instance
-
-		if (!FileSystem::createFile(debugFilePath.str())) {
-			Log(LogCode::FATAL, "Could not create debug log file.");
-		}
-		else {			
-			//All was initialized successfully
-			app = this;
-			m_currentInstanceLogFile = debugFilePath.str();
-			Log::m_path = m_currentInstanceLogFile.string();  //Sets the Log class m_path to m_currentInstanceLogFile in order for new log messages to be displayed there
-
-			m_initialized = true;
-			Log(LogCode::LOG, "Initialization successful.");
-		}
-	}
-}
 void Application::Startup() {
-	if (!m_initialized) {
-		throw Log(LogCode::FATAL, "Application initialization failed.");
-		return;
-	}
-	else {		
+	app = this;
+	if (SetupFileSystem()) {
 		if(SetupGLFW()){
 			if(SetupImGUI()){
 				SetupVehicleManager();
+				m_initialized = true;
 			}
 		}
 	}
-	Log(LogCode::ROUTINE, "Startup processes finised.");
+	
+	if(!m_initialized){
+		throw Log(LogCode::FATAL, "Application initialization failed.");
+		return;
+	}
 }
 bool const Application::saveVehicles() {
 	bool success{ false };
@@ -74,11 +50,37 @@ bool const Application::saveVehicles() {
 //========END PUBLIC=========
 
 //==========PRIVATE==========
+bool Application::SetupFileSystem(){
+	bool success{false};
+	if (!FileSystem::createDirectory(DIRECTORY_PATH.string()) 
+		|| !FileSystem::createDirectory(DEBUG_PATH.string()) 
+		|| !FileSystem::createDirectory(VEHICLE_PATH.string()))
+	{
+		Log(LogCode::FATAL, "Could not initialize the file system.");
+	}
+	else {
+		//Once the app folders are made,
+		std::ostringstream debugFilePath{ DEBUG_PATH.string() + LogFileName().str() + ".dat" };	//Make debug log file for the instance
+
+		if (!FileSystem::createFile(debugFilePath.str())) {
+			Log(LogCode::FATAL, "Could not create debug log file.");
+		}
+		else {
+			m_currentInstanceLogFile = debugFilePath.str();
+			Log::m_path = m_currentInstanceLogFile.string();  //Sets the Log class m_path to m_currentInstanceLogFile in order for new log messages to be displayed there
+
+			success = true;
+			Log(LogCode::LOG, "Initialization successful.");
+		}
+	}
+
+	return success;
+}
 bool Application::SetupGLFW(){
+	bool success {false};
 	glfwSetErrorCallback(glfw_error_callback);
 	if (!glfwInit()){
 		throw Log(LogCode::FATAL, "GLFW could not be initialized");
-		return false;
 	}
 	else{
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -89,17 +91,16 @@ bool Application::SetupGLFW(){
 		m_window = glfwCreateWindow(m_window_x, m_window_y, WINDOW_TITLE.c_str(), NULL, NULL);
 		if(!m_window){
 			throw Log(LogCode::FATAL, "GLFW could not create window");
-			return false;
 		}
 		else {
 			glfwMakeContextCurrent(m_window);
 			glfwSetWindowSizeLimits(m_window, MIN_WIN_SIZE.x, MIN_WIN_SIZE.y, GLFW_DONT_CARE, GLFW_DONT_CARE);
 			gladLoadGL(); 
 			glfwSwapInterval(m_vsync); // Enable vsync
-			return true;
+			success = true;
 		}
 	}
-	return false;
+	return success;
 }
 bool Application::SetupImGUI(){
 	const char* glsl_version = "#version 460";
