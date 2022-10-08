@@ -78,6 +78,8 @@ namespace Display {
 		return success;
 	}
 
+
+	
 	//===========Menus/Screens=====================
 	void Run(Application* app)
 	{
@@ -95,14 +97,14 @@ namespace Display {
 			// Start the Dear ImGui frame
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
-			ImGui::NewFrame();
+			ImGui::NewFrame();			
 
 			// My code goes here for window calls ------------
 			Home(app);
 			//---------------------------------------------------
 
 			// Rendering
-			ImGui::Render(); // ERROR in callng glViewport <------------
+			ImGui::Render();
 			glfwGetFramebufferSize(app->m_window, &app->m_window_x, &app->m_window_y);
 			glViewport(0, 0, app->m_window_x, app->m_window_y);
 			glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
@@ -121,9 +123,6 @@ namespace Display {
 			}
 			glfwSwapBuffers(app->m_window);
 		}
-		std::ostringstream txt;
-		txt << "Width: " << app->m_window_x << " Height: " << app->m_window_y;
-		Log(LogCode::LOG, txt.str());
 
 		// Cleanup
 		ImGui_ImplOpenGL3_Shutdown();
@@ -138,7 +137,39 @@ namespace Display {
 
 	void Home(Application* app)
 	{
+		static ImGuiWindowFlags flags;
+		flags |= ImGuiWindowFlags_NoCollapse;
+		flags |= ImGuiWindowFlags_MenuBar;
+		flags |= ImGuiWindowFlags_NoTitleBar;
+		flags |= ImGuiWindowFlags_NoResize;
+
+		static bool vehWinShown = false;
+		ImGui::SetNextWindowPos(ImVec2(0,0)); 									// Make window in the top left
+		ImGui::SetNextWindowSize(ImVec2(app->m_window_x, app->m_window_y));		// Make window take full draw area of OpenGL
+
+		static float mainWinSizeX;
+		static float mainWinSizeY;
+		ImGui::Begin(app->getWindowTitle().c_str(), nullptr, flags);
+		mainWinSizeX = ImGui::GetWindowSize().x;
+		mainWinSizeY = ImGui::GetWindowSize().y;
+
+		if(ImGui::BeginMenuBar()){
+				if(ImGui::BeginMenu("Modules")){
+					ImGui::MenuItem("Vehicle Manager", nullptr, &vehWinShown);
+					ImGui::MenuItem("Also show Vehicle Manager", nullptr, &vehWinShown);
+					ImGui::EndMenu();
+				}
+			ImGui::EndMenuBar();
+		}
+
+		ImGui::Text("Current Dear ImGui context X size: (%f)", mainWinSizeX);
+		ImGui::Text("Current Dear ImGui context y size: (%f)", mainWinSizeY);
+
+		ImGui::BeginChild("Child", ImVec2(mainWinSizeX / 3, mainWinSizeY / 2), true);
+		ImGui::Text("Child window");
+		ImGui::EndChild();
 		
+		ImGui::End();
 		
 		return;
 	}

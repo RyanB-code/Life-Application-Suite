@@ -41,79 +41,12 @@ void Application::Startup() {
 		return;
 	}
 	else {		
-	glfwSetErrorCallback(glfw_error_callback);		// Setup window
-	if (!glfwInit()){
-		throw Log(LogCode::FATAL, "GLFW could not be initialized");
-	}
-	else{
-		const char* glsl_version = "#version 460";
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
-
-		m_window = glfwCreateWindow(m_window_x, m_window_y, WINDOW_TITLE.c_str(), NULL, NULL);
-		if(!m_window){
-			throw Log(LogCode::FATAL, "GLFW could not create window");
-		}
-			else {
-				glfwMakeContextCurrent(m_window);
-				gladLoadGL(); 
-				glfwSwapInterval(m_vsync); // Enable vsync	
-
-				// Setup Dear ImGui context
-				IMGUI_CHECKVERSION();
-				ImGui::CreateContext();
-				m_io = ImGui::GetIO();
-			//	m_io = ImGui::GetIO(); (void)m_io; 							// I changed this to init m_io in App default constructor
-				m_io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-				//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;     	// Enable Gamepad Controls
-				m_io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
-				m_io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
-				//io.ConfigViewportsNoAutoMerge = true;
-				//io.ConfigViewportsNoTaskBarIcon = true;
-				ImGui::StyleColorsDark(); 									//Sets ImGUI style to dark
-
-				// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
-				ImGuiStyle& style = ImGui::GetStyle();
-				if (m_io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-				{
-					style.WindowRounding = 0.0f;
-					style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-				}
-
-				// Setup Platform/Renderer backends
-				ImGui_ImplGlfw_InitForOpenGL(m_window, true);
-				ImGui_ImplOpenGL3_Init(glsl_version);
-
-				// -----------First party setup------------------
-
-				//Go through the vehicle folder and store the names of the files
-				std::vector <std::string> vehicleFiles;
-				FileSystem::filesInDirectory(VEHICLE_PATH.string(), vehicleFiles);
-
-				//Iterate through the files in the folder found and create Vehicle types
-				for (const std::string& fileName : vehicleFiles) {
-					std::ostringstream fileText;
-
-					//Opens file, reads text, outputs to fileText
-					if (!FileSystem::readFile(fileName, fileText)) {
-						//If vehicle file couldn't be opened to read, do nothing
-					}
-					else {
-						std::string vehInfoBuf{ fileText.str() };	//Stores the file text in string format
-						Vehicle vehicleBuffer{ makeVehicleName(vehInfoBuf), makeVehicleMiles(vehInfoBuf) };
-					
-						makeRepair(vehInfoBuf, vehicleBuffer);		//Make repairs from the remaining text and add to vehicle
-						makeGasStop(vehInfoBuf, vehicleBuffer);		//Make Gas stop from the remaining text
-
-						NewVehicle(vehicleBuffer);					//Add vehicleBuffer to the master application m_vehicleList
-					}
-				}		
+		if(SetupGLFW()){
+			if(SetupImGUI()){
+				SetupVehicleManager();
 			}
 		}
 	}
-
 	Log(LogCode::ROUTINE, "Startup processes finised.");
 }
 bool const Application::saveVehicles() {
@@ -141,6 +74,90 @@ bool const Application::saveVehicles() {
 //========END PUBLIC=========
 
 //==========PRIVATE==========
+bool Application::SetupGLFW(){
+	glfwSetErrorCallback(glfw_error_callback);
+	if (!glfwInit()){
+		throw Log(LogCode::FATAL, "GLFW could not be initialized");
+		return false;
+	}
+	else{
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
+
+		m_window = glfwCreateWindow(m_window_x, m_window_y, WINDOW_TITLE.c_str(), NULL, NULL);
+		if(!m_window){
+			throw Log(LogCode::FATAL, "GLFW could not create window");
+			return false;
+		}
+		else {
+			glfwMakeContextCurrent(m_window);
+			glfwSetWindowSizeLimits(m_window, MIN_WIN_SIZE.x, MIN_WIN_SIZE.y, GLFW_DONT_CARE, GLFW_DONT_CARE);
+			gladLoadGL(); 
+			glfwSwapInterval(m_vsync); // Enable vsync
+			return true;
+		}
+	}
+	return false;
+}
+bool Application::SetupImGUI(){
+	const char* glsl_version = "#version 460";
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	m_io = ImGui::GetIO();
+	m_io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;     	// Enable Gamepad Controls
+	m_io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+	m_io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+	//io.ConfigViewportsNoAutoMerge = true;
+	//io.ConfigViewportsNoTaskBarIcon = true;					
+
+	// Setup Platform/Renderer backends
+	ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+	ImGui_ImplOpenGL3_Init(glsl_version);
+
+	appStyle = &ImGui::GetStyle();
+	if (m_io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		appStyle->WindowRounding = 0.0f;
+		appStyle->WindowMinSize = MIN_WIN_SIZE;
+
+		appStyle->FramePadding = ImVec2(8, 4);
+
+		appStyle->Colors[ImGuiCol_MenuBarBg] = ImColor(0, 162, 237, 255);
+	}
+
+	return true;
+}
+void Application::SetupVehicleManager(){
+	//Go through the vehicle folder and store the names of the files
+		std::vector <std::string> vehicleFiles;
+		FileSystem::filesInDirectory(VEHICLE_PATH.string(), vehicleFiles);
+
+		//Iterate through the files in the folder found and create Vehicle types
+		for (const std::string& fileName : vehicleFiles) {
+			std::ostringstream fileText;
+
+			//Opens file, reads text, outputs to fileText
+			if (!FileSystem::readFile(fileName, fileText)) {
+				//If vehicle file couldn't be opened to read, do nothing
+			}
+			else {
+				std::string vehInfoBuf{ fileText.str() };	//Stores the file text in string format
+				Vehicle vehicleBuffer{ makeVehicleName(vehInfoBuf), makeVehicleMiles(vehInfoBuf) };
+			
+				makeRepair(vehInfoBuf, vehicleBuffer);		//Make repairs from the remaining text and add to vehicle
+				makeGasStop(vehInfoBuf, vehicleBuffer);		//Make Gas stop from the remaining text
+
+				NewVehicle(vehicleBuffer);					//Add vehicleBuffer to the master application m_vehicleList
+		}
+	}		
+}
+
+
+
 const std::string Application::makeVehicleName(std::string& text) {
 	if (text == "") { //Check if the text string exists
 		return "";

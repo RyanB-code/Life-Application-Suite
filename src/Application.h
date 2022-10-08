@@ -42,10 +42,12 @@ public:
 	const std::string& getWindowTitle()			{ return WINDOW_TITLE; };
 	// =======================================
 
-	GLFWwindow* m_window {nullptr};
-	ImGuiIO m_io{};
-	int 	m_window_x		{1280};
-	int 	m_window_y		{720};
+	GLFWwindow* 	m_window 		{nullptr};
+	ImGuiIO 		m_io			{};
+	int 			m_window_x		{1280};
+	int 			m_window_y		{720};
+	const ImVec2 	MIN_WIN_SIZE	{1280, 720};
+	ImGuiStyle* 	appStyle		{nullptr};
 private:
 	Application* app{ nullptr };
 
@@ -54,15 +56,18 @@ private:
 	const std::filesystem::path	DEBUG_PATH			{ DIRECTORY_PATH.string() + "Debug/"};
 	const std::filesystem::path	VEHICLE_PATH		{ DIRECTORY_PATH.string() + "Vehicles/"};
 
-
-	const std::string WINDOW_TITLE 		{"Life Application Suite"};
+	const std::string 	WINDOW_TITLE 		{"Life Application Suite"};
 	bool m_vsync {true};
 
+
 	std::filesystem::path 		m_currentInstanceLogFile{ };
+
+	bool SetupGLFW();
+	bool SetupImGUI();
+	void SetupVehicleManager();
 	
 	//Displays the date for Log file. Ex: SUN, SEP 25, 2022
 	std::ostringstream LogFileName();
-
 	// Reads name\param Text string from file, deletes read characters
 	const std::string makeVehicleName(std::string& text);
 	//Reads mileage \param Text string from file, deletes read characters
