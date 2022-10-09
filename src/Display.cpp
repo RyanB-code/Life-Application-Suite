@@ -3,6 +3,18 @@
 #pragma warning(disable : 4996)
 
 namespace Display {
+	static void HelpMarker(const char* desc)
+	{
+		ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+		{
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::TextUnformatted(desc);
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
+	}
 
 	void clear()
 	{
@@ -137,16 +149,14 @@ namespace Display {
 		// MenuBar variables. Must pass these variables to MenuBar();
 		static bool showVehicleManager = false;
 		static bool showSettings = false;
-		static bool dockingEnabled = false;
 		static bool showDemoWindow = false;
 		static bool showDebugLog = false;
 
-		ImGuiIO& io = ImGui::GetIO();
-		dockingEnabled ? io.ConfigFlags |= ImGuiConfigFlags_DockingEnable : io.ConfigFlags = io.ConfigFlags & ~ImGuiConfigFlags_DockingEnable;
 		if(showDemoWindow) ImGui::ShowDemoWindow();
 
 		// Docking
-		if(dockingEnabled){
+		ImGuiIO& io = ImGui::GetIO();
+		if(io.ConfigFlags & ImGuiConfigFlags_DockingEnable){
 			const ImGuiViewport* viewport = ImGui::GetMainViewport();
 			ImGui::SetNextWindowPos(viewport->WorkPos);
 			ImGui::SetNextWindowSize(viewport->WorkSize);
@@ -162,7 +172,7 @@ namespace Display {
 				ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
 
 				if(ImGui::BeginMenuBar()){
-					MenuBar(showVehicleManager, showSettings, dockingEnabled, showDemoWindow, showDebugLog);
+					MenuBar(showVehicleManager, showSettings, showDemoWindow, showDebugLog);
 					ImGui::EndMenuBar();
 				}
 				ImGui::End();
@@ -170,7 +180,7 @@ namespace Display {
 		}
 		else {
 			if(ImGui::BeginMainMenuBar()){
-				MenuBar(showVehicleManager, showSettings, dockingEnabled, showDemoWindow, showDebugLog);
+				MenuBar(showVehicleManager, showSettings, showDemoWindow, showDebugLog);
 				ImGui::EndMainMenuBar();
 			}
 		}
@@ -192,7 +202,7 @@ namespace Display {
 	}
 
 
-	void MenuBar(bool& showVehMan, bool& showSettings, bool& dockingEnabled, bool &demoWindow, bool &debugLog){
+	void MenuBar(bool& showVehMan, bool& showSettings, bool &demoWindow, bool &debugLog){
 		if(ImGui::BeginMenu("Modules")){
 			ImGui::MenuItem("Vehicle Manager", nullptr, &showVehMan);
 			ImGui::MenuItem("Debug Log", nullptr, &debugLog);
@@ -200,7 +210,6 @@ namespace Display {
 			ImGui::EndMenu();
 		}
 		if(ImGui::BeginMenu("View")){
-			ImGui::MenuItem("Docking", nullptr, &dockingEnabled);
 			ImGui::MenuItem("Demo Window", nullptr, &demoWindow);
 			ImGui::EndMenu();
 		}
@@ -208,13 +217,79 @@ namespace Display {
 
 	void VehicleManager(Application* app, bool &shown){
 		if(ImGui::Begin("Vehicle Manager", &shown, 0)){
-			Vehicle* selectedVehicle{ListSelectableVehicles(app->getVehicleList())};
+			static bool viewVeh = false;
+			static bool editVeh = false;
+
+			static Vehicle* selectedVehicle{nullptr};
+
+			ImGui::TextWrapped(	"This Vehicle Manager stores all relevant information about a vehicle such as its name,"
+								" mileage, and repair and gas stop information. ");
+			ImGui::Spacing();
+			ImGui::TextWrapped("A repair can track:");
+
+			ImGui::BulletText("Mileage it was done");
+			ImGui::BulletText("The type of repair it was (oil change, light replacement, washer fluid fill, etc.)");
+			ImGui::BulletText("How much the total cost was");
+			ImGui::BulletText("Was it done by a third party?");
+			ImGui::BulletText("And any notes you would like to add");
+
+			ImGui::Spacing();
+
+			if(app->getVehicleList().empty()){
+				ImGui::Text("There are no tracked vehicles");
+			}
+			else{	// This draws the child window
+				float childX = ImGui::GetWindowContentRegionMax().x - 10;
+				float childY = 200;
+				if(ImGui::GetContentRegionMax().x > 510){
+					ImGui::Text("Tracked Vehicles");
+					ImGui::SameLine(); HelpMarker("Right click a vehicle to show its options");
+					ImGui::BeginChild("#Current Vehicles", ImVec2(500, childY), true, ImGuiWindowFlags_AlwaysAutoResize);
+				}
+				else{
+					ImGui::Text("Tracked Vehicles");
+					ImGui::BeginChild("#Current Vehicles", ImVec2(childX, childY), true, ImGuiWindowFlags_AlwaysAutoResize);
+				}
+				selectedVehicle = ListSelectableVehicles(app->getVehicleList());		//Display selectable list of vehicles
+				ImGui::EndChild();
+			}
+
+			//Once vehicle is selected, these buttons appear
+			if(selectedVehicle){
+				static ImVec2 buttonSize {75, 30};
+				ImGui::Spacing();
+				if(ImGui::Button("View", buttonSize)){
+					editVeh = false;
+					viewVeh = true;
+				}
+				ImGui::SameLine(buttonSize.x + 20); //20 more than the button width
+				if(ImGui::Button("Edit", buttonSize)){
+					viewVeh = false;
+					editVeh = true;
+				}
+				ImGui::SameLine(buttonSize.x + 105);  	// Need to add the second buttons width to it, plus the first spacing, 
+				ImGui::Button("Delete", buttonSize);	// and then 20 more for the second space
+			}
+			
+
+			//What happens when a vehicle action button is hit
+			if(viewVeh){
+				ImGui::Text("Viewing %s", selectedVehicle->getName().c_str());
+			}
+			if(editVeh){
+				ImGui::Text("Editing %s", selectedVehicle->getName().c_str());
+			}
+
+
 		}
 		ImGui::End();
 	}
 	void Settings(Application* app, bool &shown){
 		if( ImGui::Begin("Settings", &shown, 0)){
-			ImGui::Text("Another settings window");
+			ImGui::Text("Main path:  \t\t%s", app->showMainDirectory().c_str());
+			ImGui::Text("Debug path: \t\t%s", app->showDebugDirectory().c_str());
+			ImGui::Text("Vehicle path:   \t%s", app->showVehicleDirectory().c_str());
+			ImGui::Text("Log File:   \t\t%s", app->showLogFilePath().c_str());
 		}
 		ImGui::End();
 	}
@@ -298,9 +373,9 @@ namespace Display {
 
 	Vehicle* ListSelectableVehicles(std::vector<Vehicle>& vehList) 
 	{
-		Vehicle* selVeh{nullptr};
+		static Vehicle* selVeh{nullptr};
 		if(vehList.size() > 0){
-			if (ImGui::TreeNodeEx("Current Vehicles", ImGuiTreeNodeFlags_DefaultOpen)) 
+			if (ImGui::BeginListBox("Current Vehicles", ImVec2(ImGui::GetWindowSize().x, ImGui::GetWindowSize().y-10))) 
 			{
 				static int selected = -1;
 				int vehNum{0};
@@ -316,7 +391,7 @@ namespace Display {
 					}
 					ImGui::SameLine(200); ImGui::Text("%d miles", currentVehicle.getMileage()); 
 				}
-				ImGui::TreePop();
+				ImGui::EndListBox();
 			}
 		}
 		else{
