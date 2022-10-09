@@ -110,7 +110,6 @@ bool Application::SetupImGUI(){
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;     	// Enable Gamepad Controls
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     	// Enable Docking
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
 	//io.ConfigViewportsNoAutoMerge = true;
 	//io.ConfigViewportsNoTaskBarIcon = true;					
@@ -126,7 +125,18 @@ bool Application::SetupImGUI(){
 		appStyle->WindowBorderSize = 1.0f;
 		appStyle->FramePadding = ImVec2(8, 4);
 
-		appStyle->Colors[ImGuiCol_MenuBarBg] = ImColor(0, 162, 237, 255);
+		appStyle->Colors[ImGuiCol_MenuBarBg] 		= ImColor(0, 162, 237, 255);
+		appStyle->Colors[ImGuiCol_HeaderHovered] 	= ImColor(30, 30, 30, 255);
+
+		appStyle->Colors[ImGuiCol_TitleBg] 			= ImColor(115, 115, 115, 255);
+		appStyle->Colors[ImGuiCol_TitleBgActive] 	= ImColor(115, 115, 115, 255);
+		appStyle->Colors[ImGuiCol_TitleBgCollapsed] = ImColor(115, 115, 115, 135);
+
+		appStyle->Colors[ImGuiCol_TabUnfocused] 		= ImColor(60, 60, 60, 255);
+		appStyle->Colors[ImGuiCol_TabUnfocusedActive] 	= ImColor(60, 60, 60, 255);
+		appStyle->Colors[ImGuiCol_TabHovered] 			= ImColor(60, 60, 60, 135);
+		appStyle->Colors[ImGuiCol_TabActive] 			= ImColor(30, 30, 30, 255);
+		appStyle->Colors[ImGuiCol_Tab] 					= ImColor(60, 60, 60, 255);
 		appStyle->TabRounding = 0.0f;
 	}
 

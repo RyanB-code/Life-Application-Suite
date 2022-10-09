@@ -77,8 +77,6 @@ namespace Display {
 
 		return success;
 	}
-
-
 	
 	//===========Menus/Screens=====================
 	void Run(Application* app)
@@ -136,216 +134,196 @@ namespace Display {
 
 	void Home(Application* app)
 	{
-		// MenuBar variables
+		// MenuBar variables. Must pass these variables to MenuBar();
 		static bool showVehicleManager = false;
 		static bool showSettings = false;
+		static bool dockingEnabled = false;
+		static bool showDemoWindow = false;
+		static bool showDebugLog = false;
+
+		ImGuiIO& io = ImGui::GetIO();
+		dockingEnabled ? io.ConfigFlags |= ImGuiConfigFlags_DockingEnable : io.ConfigFlags = io.ConfigFlags & ~ImGuiConfigFlags_DockingEnable;
+		if(showDemoWindow) ImGui::ShowDemoWindow();
+
+		// Docking
+		if(dockingEnabled){
+			const ImGuiViewport* viewport = ImGui::GetMainViewport();
+			ImGui::SetNextWindowPos(viewport->WorkPos);
+			ImGui::SetNextWindowSize(viewport->WorkSize);
+			ImGui::SetNextWindowViewport(viewport->ID);
+			
+			ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar;
+			window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+			window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoScrollbar;
 
 
-		// Setup dockspace for whole window
-		const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->WorkPos);
-        ImGui::SetNextWindowSize(viewport->WorkSize);
-        ImGui::SetNextWindowViewport(viewport->ID);
-		
-		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar;
-        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoScrollbar;
+			if(ImGui::Begin("Main Dockspace", nullptr, window_flags)) {
+				ImGuiID dockspace_id = ImGui::GetID("MainDockSpace");
+				ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
 
-
-		if( ImGui::Begin("Main Dockspace", nullptr, window_flags)) {
-			ImGuiID dockspace_id = ImGui::GetID("MainDockSpace");
-        	ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
-
-			if(ImGui::BeginMenuBar()){
-				if(ImGui::BeginMenu("Modules")){
-					ImGui::MenuItem("Vehicle Manager", nullptr, &showVehicleManager);
-					ImGui::MenuItem("Settings", nullptr, &showSettings);
-					ImGui::EndMenu();
+				if(ImGui::BeginMenuBar()){
+					MenuBar(showVehicleManager, showSettings, dockingEnabled, showDemoWindow, showDebugLog);
+					ImGui::EndMenuBar();
 				}
-				ImGui::EndMenuBar();
+				ImGui::End();
 			}
-			ImGui::End();
 		}
-		// --------------------------------
+		else {
+			if(ImGui::BeginMainMenuBar()){
+				MenuBar(showVehicleManager, showSettings, dockingEnabled, showDemoWindow, showDebugLog);
+				ImGui::EndMainMenuBar();
+			}
+		}
+		// -- End docking code
+		
 
 		if(showVehicleManager){
-			if( ImGui::Begin("Vehicle Manager", &showVehicleManager, 0)){
-				ImGui::Text("Just text");
-					
-				ImGui::Text("Text 2");
-				ImGui::End();
-			}
+			VehicleManager(app, showVehicleManager);
 		}
 		if(showSettings){
-			if( ImGui::Begin("Settings", &showSettings, 0)){
-				ImGui::Text("Another settings window");
-				ImGui::End();
-			}
+			Settings(app, showSettings);
+		}
+		if(showDebugLog){
+			DebugLog(showDebugLog);
 		}
 		
+
 		return;
 	}
 
-	
-	
-	
-	
-	
-	
-	
-	
-	void VehicleHome(Application* app) {
-		Log(LogCode::LOG, "Vehicle Home Screen called");
 
-		Vehicle* selectedVehicle{ nullptr };
-
-		bool exit{ false };
-		while (!exit) {
-			DisplayBanner("Vehicles -> Home", "Remember to save hit save before exiting...\n");
-
-			std::cout << "Vehicles:\n";
-			std::cout << ListVehicles(app->getVehicleList()).str();
-
-			if (app->getVehicleList().empty()) {
-				std::cout << "\nOptions:\n";
-				std::cout << "1. Add new Vehicle\n";
-				std::cout << "2. LAS Home\n";
-				switch (getInput(1, 2)) {
-				case 1:
-					AddVehicle(app);
-					selectedVehicle = nullptr;
-					break;
-				case 2:
-					exit = true;
-					break;
-				default:
-					std::cout << "\nInvalid number. Restarting...\n";
-					Sleep(2000);
-					break;
-				}
-			}
-
-			else {
-				if (!selectedVehicle) {
-					std::cout << "\nOptions: \n";
-					std::cout << "1. Select Vehicle\n";
-					std::cout << "2. View All Vehicle Info\n";
-					std::cout << "3. Add new Vehicle\n";
-					std::cout << "\n4. Save all Vehicles\n\n";
-					std::cout << "5. LAS Home\n";
-
-					switch (getInput(1, 5)) {
-					case 1:
-						selectedVehicle = SelectVehicle(app->getVehicleList());
-						break;
-					case 2:
-						ShowFullVehicleInformation(app->getVehicleList());
-						break;
-					case 3:
-						AddVehicle(app);
-						selectedVehicle = nullptr;
-						break;
-					case 4:
-						if (app->saveVehicles()) {
-							std::cout << "\nSaved all vehicle information.\n";
-						}
-						else {
-							std::cout << "\nCould not save all vehicle information.\n";
-						}
-						Sleep(2000);
-						break;
-					case 5:
-						exit = true;
-						break;
-					default:
-						std::cout << "\nInvalid number. Restarting...\n";
-						Sleep(2000);
-						break;
-					}
-				}
-				else {
-					std::cout << "\nSelected Vehicle > " << selectedVehicle->getName() << "\n";
-					std::cout << "\nOptions: \n";
-					std::cout << "1. Deselect Vehicle\n";
-					std::cout << "2. Add New Vehicle\n";
-					std::cout << "\n";
-					std::cout << "3. View Vehicle Info\n";
-					std::cout << "4. Add a New Repair\n";
-					std::cout << "5. Add a New Gas Stop\n";
-					std::cout << "6. Edit name\n";
-					std::cout << "\n";
-					std::cout << "7. Save All Vehicles\n";
-					std::cout << "\n";
-					std::cout << "8. LAS Home\n";
-
-					switch (getInput(1, 8)) {
-					case 1:
-						selectedVehicle = nullptr;
-						break;
-					case 2:
-						AddVehicle(app);
-						selectedVehicle = nullptr;
-						break;
-					case 3:
-						DisplayBanner("Vehicle -> View");
-						std::cout << ShowFullVehicleInformation(selectedVehicle).str();
-						system("pause");
-						break;
-					case 4:
-						AddRepair(selectedVehicle);
-						break;
-					case 5:
-						AddGasStop(selectedVehicle);
-						break;
-					case 6:
-						std::cout << "\nIn Edit name\n";
-						Sleep(2000);
-						break;
-					case 7:
-						if (app->saveVehicles()) {
-							std::cout << "\nSaved all vehicle information.\n";
-						}
-						else {
-							std::cout << "\nCould not save all vehicle information.\n";
-						}
-						Sleep(2000);
-						break;
-					case 8:
-						exit = true;
-						break;
-					default:
-						std::cout << "\nInvalid number. Restarting...\n";
-						Sleep(2000);
-						break;
-					} //end switch
-
-				}
-			}
-		} //end while loop
+	void MenuBar(bool& showVehMan, bool& showSettings, bool& dockingEnabled, bool &demoWindow, bool &debugLog){
+		if(ImGui::BeginMenu("Modules")){
+			ImGui::MenuItem("Vehicle Manager", nullptr, &showVehMan);
+			ImGui::MenuItem("Debug Log", nullptr, &debugLog);
+			ImGui::MenuItem("Settings", nullptr, &showSettings);
+			ImGui::EndMenu();
+		}
+		if(ImGui::BeginMenu("View")){
+			ImGui::MenuItem("Docking", nullptr, &dockingEnabled);
+			ImGui::MenuItem("Demo Window", nullptr, &demoWindow);
+			ImGui::EndMenu();
+		}
 	}
-	void Settings(Application* app) {
-		DisplayBanner("LAS -> Settings", "Here are your current settings\n");
-		std::cout << "Main Directory:\t\t" << app->showMainDirectory() << "\n";
-		std::cout << "Debug Directory:\t" << app->showDebugDirectory() << "\n";
-		std::cout << "Debug File:\t\t" << app->showLogFilePath() << "\n";
-		std::cout << "Vehicle Directory:\t" << app->showVehicleDirectory() << "\n";
-		std::cout << "\n";
-		
-		std::cout << "Would you like to edit?\n";
-		if(getBoolInput()){
-			std::cout << "Does nothing now\n";
-			Sleep(2000);
+
+	void VehicleManager(Application* app, bool &shown){
+		if(ImGui::Begin("Vehicle Manager", &shown, 0)){
+			Vehicle* selectedVehicle{ListSelectableVehicles(app->getVehicleList())};
+		}
+		ImGui::End();
+	}
+	void Settings(Application* app, bool &shown){
+		if( ImGui::Begin("Settings", &shown, 0)){
+			ImGui::Text("Another settings window");
+		}
+		ImGui::End();
+	}
+	void DebugLog(bool &shown){
+		ImGuiTextBuffer     Buf;
+   	 	ImGuiTextFilter     Filter;
+    	ImVector<int>       LineOffsets; // Index to lines offset. We maintain this with AddLog() calls.
+    	static bool         AutoScroll;  // Keep scrolling if already at the bottom.
+
+		if(ImGui::Begin("Debug Log", &shown)){
+			// Options menu
+			if (ImGui::BeginPopup("Options"))
+			{
+				ImGui::Checkbox("Auto-scroll", &AutoScroll);
+				ImGui::EndPopup();
+			}
+
+			// Main window
+			if (ImGui::Button("Options"))
+				ImGui::OpenPopup("Options");
+			ImGui::SameLine();
+			bool clear = ImGui::Button("Clear");
+			ImGui::SameLine();
+			bool copy = ImGui::Button("Copy");
+			ImGui::SameLine();
+			Filter.Draw("Filter", -100.0f);
+
+			ImGui::Separator();
+
+			if (ImGui::BeginChild("scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar))
+			{	
+				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+				const char* buf = Buf.begin();
+				const char* buf_end = Buf.end();
+				if (Filter.IsActive())
+				{
+					// In this example we don't use the clipper when Filter is enabled.
+					// This is because we don't have random access to the result of our filter.
+					// A real application processing logs with ten of thousands of entries may want to store the result of
+					// search/filter.. especially if the filtering function is not trivial (e.g. reg-exp).
+					for (int line_no = 0; line_no < LineOffsets.Size; line_no++)
+					{
+						const char* line_start = buf + LineOffsets[line_no];
+						const char* line_end = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
+						if (Filter.PassFilter(line_start, line_end))
+							ImGui::TextUnformatted(line_start, line_end);
+					}
+            	}
+				else
+				{
+					ImGui::TextUnformatted("Currently does not work");
+					/*
+					ImGuiListClipper clipper;
+					clipper.Begin(LineOffsets.Size);
+					while (clipper.Step())
+					{
+						for (int line_no = clipper.DisplayStart; line_no < clipper.DisplayEnd; line_no++)
+						{
+							const char* line_start = buf + LineOffsets[line_no];
+							const char* line_end = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
+							ImGui::TextUnformatted(line_start, line_end);
+						}
+					}
+                	clipper.End();
+					*/
+				}
+
+				ImGui::PopStyleVar();
+
+				if (AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()){
+					ImGui::SetScrollHereY(1.0f);
+				}
+				ImGui::EndChild();
+       		}
+
+		}
+		ImGui::End();
+
+	}
+
+
+	Vehicle* ListSelectableVehicles(std::vector<Vehicle>& vehList) 
+	{
+		Vehicle* selVeh{nullptr};
+		if(vehList.size() > 0){
+			if (ImGui::TreeNodeEx("Current Vehicles", ImGuiTreeNodeFlags_DefaultOpen)) 
+			{
+				static int selected = -1;
+				int vehNum{0};
+				for (Vehicle& currentVehicle : vehList )
+				{	
+					++vehNum;
+					char buf[32];
+					sprintf(buf, "%d. %s", vehNum, currentVehicle.getName().c_str());
+					if (ImGui::Selectable(buf, selected == vehNum))
+					{
+						selected = vehNum;
+						selVeh = &currentVehicle;
+					}
+					ImGui::SameLine(200); ImGui::Text("%d miles", currentVehicle.getMileage()); 
+				}
+				ImGui::TreePop();
+			}
 		}
 		else{
-			return;
+			ImGui::Text("There are no tracked vehicles");
 		}
-	}
-
-	void ShowFullVehicleInformation(std::vector<Vehicle>& vehList) {
-		DisplayBanner("Vehicles -> Detailed View");
-		std::cout << ListVehicles(vehList, true).str();
-		system("pause");
-		return;
+	
+		return selVeh;
 	}
 
 	std::ostringstream ShowFullVehicleInformation(Vehicle* veh) {
@@ -426,7 +404,6 @@ namespace Display {
 		
 		std::string nameBuf;
 		uint32_t mileBuf;
-		DisplayBanner("Create Vehicle", "To create a new vehicle, we need some information.\n");
 
 		std::cout << "Name\n>";
 		std::cin.ignore(10000, '\n');
@@ -434,7 +411,6 @@ namespace Display {
 
 		bool exit{ false };
 		do {
-			DisplayBanner("Create Vehicle", "To create a new vehicle, we need some information.\n");
 			std::cout << "Mileage >";
 			std::cin >> mileBuf;
 			clearLineAfterInput();
@@ -449,7 +425,6 @@ namespace Display {
 
 		} while (!exit);
 
-		DisplayBanner("Create Vehicle", "Review before submitting...\n");
 		std::cout << "Name:\t\t" << nameBuf << std::endl;
 		std::cout << "Mileage:\t" << mileBuf << std::endl;
 
@@ -477,8 +452,6 @@ namespace Display {
 
 		bool exit0{ false };
 		do {
-			DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
-
 			bool exit1{ false };
 			do {
 				std::cout << "What mileage was the repair done at?\n>";
@@ -494,7 +467,6 @@ namespace Display {
 
 			} while (!exit1);
 
-			DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
 			std::cout << "The Type of repair. [Max characters " << veh->maxRepairTypeSize << "]\nExamples: 'Oil Change', 'Power Steering', 'Body Work', etc...\n>";
 			std::cin.ignore(10000, '\n');
 			std::getline(std::cin, typeBuf);
@@ -502,7 +474,6 @@ namespace Display {
 
 			bool exit2{ false };
 			do {
-				DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
 				std::cout << "How much did it cost in total?\n>";
 				std::cin >> costBuf;
 				clearLineAfterInput();
@@ -516,17 +487,14 @@ namespace Display {
 
 			} while (!exit2);
 
-			DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
 			std::cout << "Enter any notes here. [Max characters " << veh->maxNotesSize << "]\n>";
 			std::cin.ignore(10000, '\n');
 			std::getline(std::cin, notesBuf);
 
 		
-			DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
 			std::cout << "Did a third party perform the repair?" << std::endl;
 			thirdPartyBuf = getBoolInput();
 
-			DisplayBanner("Edit -> " + veh->getName(), "Review before saving.");
 			std::cout << "Miles:\t\t" << mileBuf << std::endl;
 			std::cout << "Type:\t\t" << typeBuf << std::endl;
 			std::cout << "Cost:\t\t" << costBuf << std::endl;
@@ -566,7 +534,6 @@ namespace Display {
 		do {
 			bool exit1{ false };
 			do {
-				DisplayBanner("Edit -> " + veh->getName(), "To add a new gas stop we need some information.\n\n");
 				std::cout << "What mileage did you fill up at?\n>";
 				std::cin >> mileBuf;
 				clearLineAfterInput();
@@ -580,7 +547,6 @@ namespace Display {
 
 			} while (!exit1);
 
-			DisplayBanner("Edit -> " + veh->getName(), "To add a new gas stop we need some information.\n\n");
 			bool exit2{ false };
 			do {
 				std::cout << "How many gallons did you fill up?\n>";
@@ -598,7 +564,6 @@ namespace Display {
 
 			bool exit3{ false };
 			do {
-				DisplayBanner("Edit -> " + veh->getName(), "To add a new gas stop we need some information.\n\n");
 				std::cout << "What was the price per gallon?\n>";
 				std::cin >> ppgBuf;
 				clearLineAfterInput();
@@ -612,12 +577,10 @@ namespace Display {
 
 			} while (!exit3);
 
-			DisplayBanner("Edit -> " + veh->getName(), "To add a new repair we need some information.\n\n");
 			std::cout << "Enter any notes here. [Max characters " << veh->maxNotesSize << "]\n>";
 			std::cin.ignore(10000, '\n');
 			std::getline(std::cin, notesBuf);
 
-			DisplayBanner("Edit -> " + veh->getName(), "Review before saving.");
 			std::cout << std::setw(17) << std::right << "Miles:\t" << mileBuf << std::endl;
 			std::cout << std::setw(17) << std::right << "Gallons:\t" << galBuf << std::endl;
 			std::cout << std::setw(17) << std::right << "Price Per Gallon:\t" << ppgBuf << std::endl;
@@ -642,176 +605,5 @@ namespace Display {
 		} while (!exit0);
 
 		return success;
-	}
-
-
-	Vehicle* SelectVehicle(std::vector<Vehicle>& vehList) {
-		if (vehList.empty()) {
-			return nullptr;
-		}
-		else {
-			Vehicle* selVeh{ nullptr };
-
-			bool exit{ false };
-			while (!exit) {
-				clear();
-				DisplayBanner("Vehicles -> Select Vehicle");
-				std::cout << ListVehicles(vehList).str();
-
-				std::cout << ">";
-
-				unsigned short input;
-				std::cin >> input;
-
-				if (std::cin.fail()) {
-					std::cin.clear();
-					std::cin.ignore(10000, '\n');
-				}
-				else {
-					if (input - 1 < vehList.size()) {
-						selVeh = &vehList[input - 1];
-						exit = true;
-					}
-					else {
-
-					}
-				}
-			}
-			Log(LogCode::ROUTINE, "Selected vehicle " + selVeh->getName());
-			return selVeh;
-		}
-
-	}
-	//============END MENU/SCREENS==================
-
-	const std::ostringstream ListVehicles(std::vector<Vehicle>& vehList, bool detailed) {
-		std::ostringstream os;
-		if (vehList.empty()) {
-			os << "No vehicles found.\n";
-		}
-		else
-		{
-			int i{ 1 };
-
-			for (Vehicle& currentVehicle : vehList) {
-				if (detailed) {		//If set to detailed view, display repairs and gas lists
-					os << i << ". ";
-					os << ShowFullVehicleInformation(&currentVehicle).str();
-				}
-				else {
-					os << i << ". " << std::setw(currentVehicle.maxVehicleNameSize + 1) << std::left << currentVehicle.getName() << std::setw(6) << std::right << currentVehicle.getMileage() << " miles\n";
-				}
-				++i;
-			}
-		}
-
-		return os;
-	}
-	std::ostringstream readableDayMonthYear() {
-		time_t now{ time(0) };
-		tm* ltm = localtime(&now);
-
-		std::ostringstream date;
-
-		switch (ltm->tm_wday) {
-		case 0:
-			date << "SUN";
-			break;
-		case 1:
-			date << "MON";
-			break;
-		case 2:
-			date << "TUE";
-			break;
-		case 3:
-			date << "WED";
-			break;
-		case 4:
-			date << "THU";
-			break;
-		case 5:
-			date << "FRI";
-			break;
-		case 6:
-			date << "SAT";
-			break;
-		default:
-			date << "DDD";
-		}
-		date << ", ";
-
-		switch (ltm->tm_mon) {
-		case 0:
-			date << "JAN";
-			break;
-		case 1:
-			date << "FED";
-			break;
-		case 2:
-			date << "MAR";
-			break;
-		case 3:
-			date << "APR";
-			break;
-		case 4:
-			date << "MAY";
-			break;
-		case 5:
-			date << "JUN";
-			break;
-		case 6:
-			date << "JUL";
-			break;
-		case 7:
-			date << "AUG";
-			break;
-		case 8:
-			date << "SEP";
-			break;
-		case 9:
-			date << "OCT";
-			break;
-		case 10:
-			date << "NOV";
-			break;
-		case 11:
-			date << "DEC";
-			break;
-		default:
-			date << "MMM";
-		}
-
-
-		int year{ ltm->tm_year + 1900 };
-
-		date << ' ' << std::setw(2) << std::setfill('0') << ltm->tm_mday << ", " << year << '\n';
-
-		/*
-		
-		THIS DISPLAYS THE TIME IN HH:MM:SS format
-
-		std::cout << "   ["
-			<< std::setw(2) << std::setfill('0') << ltm->tm_hour << ':'
-			<< std::setw(2) << std::setfill('0') << ltm->tm_min << ':'
-			<< std::setw(2) << std::setfill('0') << ltm->tm_sec << "]";
-
-		std::cout << '\n';
-		*/
-
-		return date;
-	}
-	void DisplayBanner(const std::string title, const std::string subheading) {
-		clear();
-		unsigned short screenWidth{ 50 };
-		std::ostringstream date{ readableDayMonthYear() };
-
-		std::cout << std::setw(screenWidth/2) << std::left << title << std::setw(screenWidth/2) << std::right << date.str();
-		for (int i{ 1 }; i < screenWidth; ++i) {
-			std::cout << "=";
-		}
-		std::cout << "\n";
-		if (subheading != "") {
-			std::cout << subheading << "\n";
-		}
 	}
 }

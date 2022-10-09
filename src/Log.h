@@ -24,7 +24,6 @@ public:
 	std::string m_msg;
 
 	static std::string m_path;
-	static std::vector<Log> buffer;
 
 };
 

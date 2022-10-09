@@ -19,27 +19,18 @@ namespace Display
 	void Run(Application* app);
 	void Home(Application* app);
 
-	void VehicleHome(Application* app);
-	void Settings(Application* app);
+	void MenuBar(bool& showVehMan, bool& showSettings, bool& dockingEnabled, bool &demoWindow, bool &debugLog);
 
-	//Shows all vehicles in the vector
-	void ShowFullVehicleInformation(std::vector<Vehicle>& vehList);
+	void VehicleManager(Application* app, bool &shown);
+	void Settings(Application* app, bool &shown);
+	void DebugLog(bool &shown);
+
 	//Shows just one vehicle
 	std::ostringstream ShowFullVehicleInformation(Vehicle* veh);
 	bool AddRepair(Vehicle* veh);
 	bool AddGasStop(Vehicle* veh);
 	bool AddVehicle(Application* app);
-	//Vehicle sub-menu. Choose a vehicle from vehList \return Pointer to vehicle chosen
-	Vehicle* SelectVehicle(std::vector<Vehicle>& vehList);
-	//=============================================
-
-	//List vehicles. \param detailed: if set to true, displays full data. If false, just displays the name and miles \return Stream of formatted list
-	std::ostringstream const ListVehicles(std::vector<Vehicle>& vehList, bool detailed=false);
-
-	//Displays in format DDD MMM XX, YYYY -> XX meaning day number ie. 12th or 1st of the month
-	std::ostringstream readableDayMonthYear();
-
-	// Displays the date and title text \param The banner text
-	void DisplayBanner(const std::string title, const std::string subheading = "");
+	
+	Vehicle* ListSelectableVehicles(std::vector<Vehicle>& vehList);
 }
 
