@@ -262,13 +262,41 @@ namespace Display {
 						editVeh = false;
 						viewVeh = true;
 					}
-					ImGui::SameLine(); //20 more than the button width
+					ImGui::SameLine();
 					if(ImGui::Button("Edit", buttonSize)){
 						viewVeh = false;
 						editVeh = true;
 					}
-					ImGui::SameLine();  	// Need to add the second buttons width to it, plus the first spacing, 
-					ImGui::Button("Delete", buttonSize);	// and then 20 more for the second space
+					ImGui::SameLine();  
+					if(ImGui::Button("Delete", buttonSize)){
+						ImGui::OpenPopup("Delete?");
+					}
+					// Delete Popup Modal
+					// Always center this window when appearing
+					ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+					ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+					if (ImGui::BeginPopupModal("Delete?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+					{
+						ImGui::Text("This will delete all of the Vehicle's information\nThis operation cannot be undone!\n\n(Does not delete file currently)\n");
+						ImGui::Separator();
+
+						if (ImGui::Button("OK", ImVec2(120, 0))) 
+						{
+							int pos{0};
+							for(Vehicle& veh : app->getVehicleList()){
+								if(selectedVehicle == &veh){
+									app->getVehicleList().erase(app->getVehicleList().begin() + pos);
+								}
+								++pos;
+							}
+							ImGui::CloseCurrentPopup(); 
+						}
+						ImGui::SetItemDefaultFocus();
+						ImGui::SameLine();
+						if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+						ImGui::EndPopup();
+					}
 
 					if(viewVeh || editVeh){
 						ImGui::SameLine(); 
@@ -441,7 +469,7 @@ namespace Display {
 		ImGui::Spacing();
 		if(ImGui::BeginTable("Repairs", 5, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg , outer_size ))
 		{
-            ImGui::TableSetupColumn("Miles", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+			ImGui::TableSetupColumn("Miles", ImGuiTableColumnFlags_WidthFixed, 100.0f);
 			ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, 100.0f);
 			ImGui::TableSetupColumn("Cost", ImGuiTableColumnFlags_WidthFixed, 100.0f);
 			ImGui::TableSetupColumn("Third Party", ImGuiTableColumnFlags_WidthFixed, 100.0f);
@@ -449,7 +477,7 @@ namespace Display {
 			ImGui::TableHeadersRow();
 
 			for (Repair& rep : veh->getRepairList())
-            {
+			{
 				ImGui::TableNextRow();
 				int				mileBuf;
 				std::string		typeBuf;
@@ -482,20 +510,21 @@ namespace Display {
 		ImGui::EndTable();
 		}
 
-		ImGui::Spacing();
+	ImGui::Spacing();
+
 		ImGui::Text("Gas Stops");
 		ImGui::Spacing();
 
 		if(ImGui::BeginTable("Gas Stops", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg , outer_size ))
 		{
-            ImGui::TableSetupColumn("Miles", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+			ImGui::TableSetupColumn("Miles", ImGuiTableColumnFlags_WidthFixed, 100.0f);
 			ImGui::TableSetupColumn("Gallons", ImGuiTableColumnFlags_WidthFixed, 100.0f);
 			ImGui::TableSetupColumn("Per Gal", ImGuiTableColumnFlags_WidthFixed, 100.0f);
 			ImGui::TableSetupColumn("Notes", ImGuiTableColumnFlags_WidthFixed, 100.0f);
 			ImGui::TableHeadersRow();
 
 			for (GasStop& gas : veh->getGasStopList())
-            {
+			{
 				ImGui::TableNextRow();
 
 				int			mileBuf;
@@ -523,7 +552,6 @@ namespace Display {
 			}
 		ImGui::EndTable();
 		}
-
 		return;
 	}
 	
