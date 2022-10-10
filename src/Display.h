@@ -27,11 +27,12 @@ namespace Display
 	void DebugLog(bool &shown);
 
 	//Shows just one vehicle
-	std::ostringstream ShowFullVehicleInformation(Vehicle* veh);
+	void ShowFullVehicleInformation(Vehicle* veh);
+	Vehicle* ListSelectableVehicles(std::vector<Vehicle>& vehList);
+
 	bool AddRepair(Vehicle* veh);
 	bool AddGasStop(Vehicle* veh);
 	bool AddVehicle(Application* app);
-	
-	Vehicle* ListSelectableVehicles(std::vector<Vehicle>& vehList);
+
 }
 

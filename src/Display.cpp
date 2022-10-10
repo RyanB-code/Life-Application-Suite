@@ -247,40 +247,73 @@ namespace Display {
 					ImGui::BeginChild("#Current Vehicles", ImVec2(500, childY), true, ImGuiWindowFlags_AlwaysAutoResize);
 				}
 				else{
-					ImGui::Text("Tracked Vehicles");
+					ImGui::Text("Vehicles");
+					ImGui::SameLine(); HelpMarker("Select a vehicle");
 					ImGui::BeginChild("#Current Vehicles", ImVec2(childX, childY), true, ImGuiWindowFlags_AlwaysAutoResize);
 				}
 				selectedVehicle = ListSelectableVehicles(app->getVehicleList());		//Display selectable list of vehicles
 				ImGui::EndChild();
-			}
 
-			//Once vehicle is selected, these buttons appear
-			if(selectedVehicle){
-				static ImVec2 buttonSize {75, 30};
-				ImGui::Spacing();
-				if(ImGui::Button("View", buttonSize)){
-					editVeh = false;
-					viewVeh = true;
+				//Once vehicle is selected, these buttons appear
+				if(selectedVehicle){
+					static ImVec2 buttonSize {100, 30};
+					ImGui::Spacing();
+					if(ImGui::Button("View", buttonSize)){
+						editVeh = false;
+						viewVeh = true;
+					}
+					ImGui::SameLine(); //20 more than the button width
+					if(ImGui::Button("Edit", buttonSize)){
+						viewVeh = false;
+						editVeh = true;
+					}
+					ImGui::SameLine();  	// Need to add the second buttons width to it, plus the first spacing, 
+					ImGui::Button("Delete", buttonSize);	// and then 20 more for the second space
+
+					if(viewVeh || editVeh){
+						ImGui::SameLine(); 
+						if(ImGui::Button("Close", buttonSize)){
+							viewVeh = false;
+							editVeh = false;
+						}
+					}
 				}
-				ImGui::SameLine(buttonSize.x + 20); //20 more than the button width
-				if(ImGui::Button("Edit", buttonSize)){
-					viewVeh = false;
-					editVeh = true;
+
+				//What happens when a vehicle action button is hit
+				if(viewVeh){
+					ImGui::Spacing();
+					ImGui::Spacing();
+					ImGui::Spacing();
+					static float bigWindowX = ImGui::GetWindowContentRegionMax().x;				
+
+					static float childX {700};
+					static float childY {410};
+					if(bigWindowX > 710){
+
+					}
+					else{
+						childX = bigWindowX - 20;
+					}
+
+					ImGui::Text("View %s", selectedVehicle->getName().c_str());
+					ImGui::SameLine(); HelpMarker("This shows all the vehicle information");
+					ImGui::SameLine(); 
+					if(ImGui::Button("Inc Width", (ImVec2 (90, 20)))){
+						childX += 10;
+					}
+					ImGui::SameLine(); 
+					if(ImGui::Button("Dec Width", (ImVec2 (90, 20)))){
+						childX -= 10;
+					}
+					ImGui::BeginChild("#View Full Vehicle Info", ImVec2(childX, childY), false);
+					ShowFullVehicleInformation(selectedVehicle);
+					ImGui::EndChild();
 				}
-				ImGui::SameLine(buttonSize.x + 105);  	// Need to add the second buttons width to it, plus the first spacing, 
-				ImGui::Button("Delete", buttonSize);	// and then 20 more for the second space
-			}
-			
 
-			//What happens when a vehicle action button is hit
-			if(viewVeh){
-				ImGui::Text("Viewing %s", selectedVehicle->getName().c_str());
+				if(editVeh){
+					ImGui::Text("Editing %s", selectedVehicle->getName().c_str());
+				}
 			}
-			if(editVeh){
-				ImGui::Text("Editing %s", selectedVehicle->getName().c_str());
-			}
-
-
 		}
 		ImGui::End();
 	}
@@ -375,7 +408,7 @@ namespace Display {
 	{
 		static Vehicle* selVeh{nullptr};
 		if(vehList.size() > 0){
-			if (ImGui::BeginListBox("Current Vehicles", ImVec2(ImGui::GetWindowSize().x, ImGui::GetWindowSize().y-10))) 
+			if (ImGui::BeginListBox("Current Vehicles", ImVec2(ImGui::GetWindowSize().x, ImGui::GetWindowSize().y-20))) 
 			{
 				static int selected = -1;
 				int vehNum{0};
@@ -400,78 +433,98 @@ namespace Display {
 	
 		return selVeh;
 	}
+	void ShowFullVehicleInformation(Vehicle* veh) {
+		static const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+		ImVec2 outer_size = ImVec2(0.0f, TEXT_BASE_HEIGHT * 8);
 
-	std::ostringstream ShowFullVehicleInformation(Vehicle* veh) {
-		std::ostringstream os;
+		ImGui::Text("Repairs");
+		ImGui::Spacing();
+		if(ImGui::BeginTable("Repairs", 5, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg , outer_size ))
+		{
+            ImGui::TableSetupColumn("Miles", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+			ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+			ImGui::TableSetupColumn("Cost", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+			ImGui::TableSetupColumn("Third Party", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+			ImGui::TableSetupColumn("Notes", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+			ImGui::TableHeadersRow();
 
-		if (!veh) {
-			Log(LogCode::WARNING, "Could not show full vehicle information. Null pointer.");
-		}
-		else {
-			short mileageWidth{ 8 };
-			short typeWidth{ 15 };
-			short costWidth{ 8 };
-			short thirdPartyWidth{ 8 };
-			short notesWidth{ 30 };
-			int tableLineRepairs{ mileageWidth + typeWidth + costWidth + thirdPartyWidth + notesWidth + 12 }; //last number is number of separators
-
-			short gallonsWidth{ 8 };
-			int tableLineGas{ mileageWidth + gallonsWidth + costWidth + notesWidth + 9 };
-
-			os << veh->getName() << " with " << veh->getMileage() << " miles\n";
-
-			//The table header
-			os << std::setw((tableLineRepairs / 2) + 7) << std::right << "===REPAIRS===" << std::left << '\n'; //make repairs be in the middle
-			os << "   " << std::setw(mileageWidth) << "Miles"; os << " | ";
-			os << std::setw(typeWidth) << "Type"; os << " | ";
-			os << std::setw(costWidth) << "Cost"; os << " | ";
-			os << std::setw(thirdPartyWidth) << "By Me?"; os << " | ";
-			os << std::setw(notesWidth) << "Notes";
-			os << std::setw(tableLineRepairs) << std::setfill('=');
-			os << "\n   " << std::setfill(' ');
-
-			//Fills in the table
-			for (Repair& rep : veh->getRepairList()) {
+			for (Repair& rep : veh->getRepairList())
+            {
+				ImGui::TableNextRow();
 				int				mileBuf;
 				std::string		typeBuf;
 				double			costBuf;
 				std::string		notesBuf;
 				bool			thirdPartyBuf;
 				rep.getRepairInfo(mileBuf, typeBuf, costBuf, notesBuf, thirdPartyBuf);
-				os << "\n   " << std::setw(mileageWidth) << std::right << mileBuf; os << " | ";
-				os << std::setw(typeWidth) << typeBuf; os << " | ";
-				os << '$' << std::setw(costWidth-1) << std::setprecision(2) << std::fixed << costBuf; os << " | ";
-				os << std::setw(thirdPartyWidth) << std::boolalpha << thirdPartyBuf; os << " | ";
-				os << std::setw(notesWidth) << std::left << notesBuf;
+
+				int column{0};
+
+				ImGui::TableSetColumnIndex(column);
+				ImGui::Text("%d", mileBuf);
+				++column;
+
+				ImGui::TableSetColumnIndex(column);
+				ImGui::Text("%s", typeBuf.c_str());
+				++column;
+				
+				ImGui::TableSetColumnIndex(column);
+				ImGui::Text("%f", costBuf);
+				++column;
+				
+				ImGui::TableSetColumnIndex(column);
+				ImGui::Text("%s", thirdPartyBuf ? "true" : "false");
+				++column;
+
+				ImGui::TableSetColumnIndex(column);
+				ImGui::Text("%s", notesBuf.c_str());	
 			}
-			os << "\n\n";
+		ImGui::EndTable();
+		}
 
-			//The table header
-			os << std::setw((tableLineGas / 2) + 8) << std::right << "===GAS STOPS===" << std::left << '\n'; //make text be in the middle
-			os << "   " << std::setw(mileageWidth) << "Miles"; os << " | ";
-			os << std::setw(gallonsWidth) << "Gallons"; os << " | ";
-			os << std::setw(costWidth) << "PPG"; os << " | ";
-			os << std::setw(notesWidth) << "Notes";
-			os << std::setw(tableLineGas) << std::setfill('=');
-			os << "\n   " << std::setfill(' ');
+		ImGui::Spacing();
+		ImGui::Text("Gas Stops");
+		ImGui::Spacing();
 
-			//Fills in the table
-			for (GasStop& gas : veh->getGasStopList()) {
+		if(ImGui::BeginTable("Gas Stops", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg , outer_size ))
+		{
+            ImGui::TableSetupColumn("Miles", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+			ImGui::TableSetupColumn("Gallons", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+			ImGui::TableSetupColumn("Per Gal", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+			ImGui::TableSetupColumn("Notes", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+			ImGui::TableHeadersRow();
+
+			for (GasStop& gas : veh->getGasStopList())
+            {
+				ImGui::TableNextRow();
+
 				int			mileBuf;
 				double		galBuf;
 				double		costBuf;
 				std::string notesBuf;
 				gas.getGasStopInfo(mileBuf, galBuf, costBuf, notesBuf);
-				os << "\n   " << std::setw(mileageWidth) << std::right << mileBuf; os << " | ";
-				os << std::setw(gallonsWidth) << std::setprecision(2) << std::fixed << galBuf; os << " | ";
-				os <<  '$' << std::setw(costWidth-1) << std::setprecision(2) << std::fixed << costBuf; os << " | ";
-				os << std::setw(notesWidth) << std::left << notesBuf;
-			}
 
-			os << "\n\n";
+				int column{0};
+
+				ImGui::TableSetColumnIndex(column);
+				ImGui::Text("%d", mileBuf);
+				++column;
+
+				ImGui::TableSetColumnIndex(column);
+				ImGui::Text("%f", galBuf);
+				++column;
+				
+				ImGui::TableSetColumnIndex(column);
+				ImGui::Text("%f", costBuf);
+				++column;
+				
+				ImGui::TableSetColumnIndex(column);
+				ImGui::Text("%s", notesBuf.c_str());	
+			}
+		ImGui::EndTable();
 		}
 
-		return os;
+		return;
 	}
 	
 	bool AddVehicle(Application* app) {
