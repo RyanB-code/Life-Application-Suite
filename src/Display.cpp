@@ -238,23 +238,31 @@ namespace Display {
 			if(app->getVehicleList().empty()){
 				ImGui::Text("There are no tracked vehicles");
 			}
-			else{	// This draws the child window
-				float childX = ImGui::GetWindowContentRegionMax().x - 10;
+			else{	// This draws the child window for the vehicle list
+
+				float bigWindowX = ImGui::GetWindowContentRegionMax().x;
 				float childY = 200;
-				if(ImGui::GetContentRegionMax().x > 510){
-					ImGui::Text("Tracked Vehicles");
-					ImGui::SameLine(); HelpMarker("Right click a vehicle to show its options");
-					ImGui::BeginChild("#Current Vehicles", ImVec2(500, childY), true, ImGuiWindowFlags_AlwaysAutoResize);
+
+				static float childX {500};
+				if(bigWindowX > 510){
+					// Do nothing therefore keep window at 500 pixels
 				}
 				else{
-					ImGui::Text("Vehicles");
-					ImGui::SameLine(); HelpMarker("Select a vehicle");
-					ImGui::BeginChild("#Current Vehicles", ImVec2(childX, childY), true, ImGuiWindowFlags_AlwaysAutoResize);
+					// If smaller than 510, rersize to the window size minus 10 pixels
+					childX = bigWindowX - 10;
 				}
-				selectedVehicle = ListSelectableVehicles(app->getVehicleList());		//Display selectable list of vehicles
+
+				//Draw Tracked Vehicles window
+				if(ImGui::GetContentRegionMax().x > 510){
+					ImGui::Text("Tracked Vehicles");
+					ImGui::SameLine(); HelpMarker("Select a vehicle then choose from the options below");
+					ImGui::BeginChild("#Current Vehicles", ImVec2(childX, childY), false, ImGuiWindowFlags_AlwaysAutoResize);
+				
+					selectedVehicle = ListSelectableVehicles(app->getVehicleList());		// Display selectable list of vehicles
+				}
 				ImGui::EndChild();
 
-				//Once vehicle is selected, these buttons appear
+				// Once/if vehicle is selected, these buttons appear
 				if(selectedVehicle){
 					static ImVec2 buttonSize {100, 30};
 					ImGui::Spacing();
@@ -271,7 +279,8 @@ namespace Display {
 					if(ImGui::Button("Delete", buttonSize)){
 						ImGui::OpenPopup("Delete?");
 					}
-					// Delete Popup Modal
+
+					// Code for popup modal
 					// Always center this window when appearing
 					ImVec2 center = ImGui::GetMainViewport()->GetCenter();
 					ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -286,6 +295,9 @@ namespace Display {
 							int pos{0};
 							for(Vehicle& veh : app->getVehicleList()){
 								if(selectedVehicle == &veh){
+									selectedVehicle = nullptr;
+									viewVeh = false;
+									editVeh = false;
 									app->getVehicleList().erase(app->getVehicleList().begin() + pos);
 								}
 								++pos;
@@ -296,8 +308,10 @@ namespace Display {
 						ImGui::SameLine();
 						if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
 						ImGui::EndPopup();
-					}
+					} // End popup modal code 
 
+
+					// Button to close the detailed info window
 					if(viewVeh || editVeh){
 						ImGui::SameLine(); 
 						if(ImGui::Button("Close", buttonSize)){
@@ -305,7 +319,8 @@ namespace Display {
 							editVeh = false;
 						}
 					}
-				}
+				} 
+
 
 				//What happens when a vehicle action button is hit
 				if(viewVeh){
@@ -323,9 +338,12 @@ namespace Display {
 						childX = bigWindowX - 20;
 					}
 
+					//Starting new child window with vehicle info
 					ImGui::Text("View %s", selectedVehicle->getName().c_str());
 					ImGui::SameLine(); HelpMarker("This shows all the vehicle information");
 					ImGui::SameLine(); 
+
+
 					if(ImGui::Button("Inc Width", (ImVec2 (90, 20)))){
 						childX += 10;
 					}
@@ -339,7 +357,7 @@ namespace Display {
 				}
 
 				if(editVeh){
-					ImGui::Text("Editing %s", selectedVehicle->getName().c_str());
+					EditVehicle(selectedVehicle);
 				}
 			}
 		}
@@ -430,7 +448,11 @@ namespace Display {
 		ImGui::End();
 
 	}
+	void EditVehicle(Vehicle* veh){
+		ImGui::Text("Editing %s", veh->getName().c_str());
 
+		return;
+	}
 
 	Vehicle* ListSelectableVehicles(std::vector<Vehicle>& vehList) 
 	{

@@ -7,15 +7,15 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${workspaceFolder}/src/*.cpp",                 //This will build all cpp files in the current workspace folder
-                "${workspaceFolder}/include/DearImGUI/*.cpp",   //This will build all files in the DearImGUI folder
+                "${workspaceFolder}/src/*.cpp",                     // This will build all cpp files in the current workspace folder
+                "${workspaceFolder}/include/DearImGUI/*.cpp",       // This will build all files in the DearImGUI folder
                 "${workspaceFolder}/src/glad.c",
-                "-I${workspaceFolder}/include",
-		        "-L${workspaceFolder}/lib",
+                "-I${workspaceFolder}/include",                     // Specifies include folder for g++
+		        "-L${workspaceFolder}/lib",                         // Specifies include lib path for g++
                 "-o",
                 "${workspaceFolder}\\Life-Application-Suite.exe",
-                "-std=c++20",
-                "-lglfw3dll",
+                "-std=c++20",                                       // Tells g++ to use C++20
+                "-lglfw3dll",                                       // Tells g++ to use this library for compilation
             ],
             "options": {
                 "cwd": "${fileDirname}"

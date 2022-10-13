@@ -28,6 +28,7 @@ namespace Display
 
 	//Shows just one vehicle
 	void ShowFullVehicleInformation(Vehicle* veh);
+	void EditVehicle(Vehicle* veh);
 	Vehicle* ListSelectableVehicles(std::vector<Vehicle>& vehList);
 
 	bool AddRepair(Vehicle* veh);
