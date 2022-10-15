@@ -287,26 +287,26 @@ namespace Display {
 
 					if (ImGui::BeginPopupModal("Delete?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 					{
-						ImGui::Text("This will delete all of the Vehicle's information\nThis operation cannot be undone!\n\n(Does not delete file currently)\n");
+						ImGui::Text("This will delete all of the Vehicle's information\nThis operation cannot be undone!\n\n");
 						ImGui::Separator();
 
 						if (ImGui::Button("OK", ImVec2(120, 0))) 
 						{
-							int pos{0};
-							for(Vehicle& veh : app->getVehicleList()){
-								if(selectedVehicle == &veh){
-									selectedVehicle = nullptr;
-									viewVeh = false;
-									editVeh = false;
-									app->getVehicleList().erase(app->getVehicleList().begin() + pos);
-								}
-								++pos;
+							Vehicle* vehBufferToDel = selectedVehicle;
+							selectedVehicle = nullptr;
+							viewVeh = false;
+							editVeh = false;
+							if(!app->deleteVehicle(vehBufferToDel)){
+								
 							}
 							ImGui::CloseCurrentPopup(); 
 						}
 						ImGui::SetItemDefaultFocus();
 						ImGui::SameLine();
-						if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+						if (ImGui::Button("Cancel", ImVec2(120, 0))) 
+						{ 
+							ImGui::CloseCurrentPopup(); 
+						}
 						ImGui::EndPopup();
 					} // End popup modal code 
 

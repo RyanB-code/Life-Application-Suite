@@ -25,7 +25,8 @@ public:
 		m_vehicleList.push_back(veh);
 		Log(LogCode::ROUTINE, "Added " + veh.getName() + " to list of vehicles.");
 	}
-	
+	const bool deleteVehicle(Vehicle* veh);
+
 	// Saves vehicles by writing to file. The path is specified in the Application class \return True if could save to file. False if could not.
 	bool const saveVehicles();
 

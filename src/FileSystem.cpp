@@ -51,7 +51,17 @@ namespace FileSystem {
 			return false;
 		}
 	}
-
+	bool deleteFile(const std::string path){
+		std::filesystem::path file{path};
+		if(std::filesystem::remove(file)){
+			Log(LogCode::LOG, "Deleted file " + file.string());
+			return true;
+		}
+		else{
+			Log(LogCode::WARNING, "Could not delete file " + file.string());
+			return false;
+		}
+	}
 
 	bool const writeToFile(const std::string path, Vehicle& vehicle) {
 		//If the file doesnt exist, try to create and it and then write again. If that fails, returns false

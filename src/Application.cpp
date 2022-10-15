@@ -47,6 +47,19 @@ bool const Application::saveVehicles() {
 	return success;
 }
 
+const bool Application::deleteVehicle(Vehicle* veh){
+	bool success{false};
+		int pos{0};
+		for(Vehicle& currVeh : app->getVehicleList()){
+			if(veh == &currVeh){ //vehicle to delete was found
+				app->getVehicleList().erase(app->getVehicleList().begin() + pos); //remove vehicle from app list
+				success = FileSystem::deleteFile(VEHICLE_PATH.string() + veh->getName() + ".dat");
+			}
+			++pos;
+		}
+
+		return success;
+	}
 //========END PUBLIC=========
 
 //==========PRIVATE==========

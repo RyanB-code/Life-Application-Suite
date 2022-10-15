@@ -13,6 +13,8 @@ namespace FileSystem {
 
 	bool	doesFileExist	(const std::string path);
 
+	bool	deleteFile		(const std::string path);
+
 	//Through operator overloading, the goal is to call the read and write functions depending on file format
 	// \param setPath: path of file to write, vehicle: what will be written to the file
 	bool const writeToFile	(const std::string setPath, Vehicle& vehicle);
