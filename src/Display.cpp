@@ -323,7 +323,7 @@ namespace Display {
 
 
 				//What happens when a vehicle action button is hit
-				if(viewVeh){
+				if(viewVeh || editVeh){
 					ImGui::Spacing();
 					ImGui::Spacing();
 					ImGui::Spacing();
@@ -339,7 +339,8 @@ namespace Display {
 					}
 
 					//Starting new child window with vehicle info
-					ImGui::Text("View %s", selectedVehicle->getName().c_str());
+					if(viewVeh) ImGui::Text("View %s", selectedVehicle->getName().c_str());
+					if(editVeh) ImGui::Text("Edit %s", selectedVehicle->getName().c_str());
 					ImGui::SameLine(); HelpMarker("This shows all the vehicle information");
 					ImGui::SameLine(); 
 
@@ -351,18 +352,30 @@ namespace Display {
 					if(ImGui::Button("Dec Width", (ImVec2 (90, 20)))){
 						childX -= 10;
 					}
-					ImGui::BeginChild("#View Full Vehicle Info", ImVec2(childX, childY), false);
-					ShowFullVehicleInformation(selectedVehicle);
-					ImGui::EndChild();
-				}
 
-				if(editVeh){
-					EditVehicle(selectedVehicle);
+					if(viewVeh){
+						if(ImGui::BeginChild("#View Full Vehicle Info", ImVec2(childX, childY), false)){
+							ShowFullVehicleInformation(selectedVehicle);
+						}
+						ImGui::EndChild();
+						
+					}
+
+					if(editVeh){
+						if(ImGui::BeginChild("#Edit Vehicle Info", ImVec2(childX, childY), false)){
+							EditVehicle(selectedVehicle);
+						}
+						ImGui::EndChild();
+					}
+
+
 				}
 			}
 		}
-		ImGui::End();
+		ImGui::End(); //End Vehicle Manager window
+		return;
 	}
+
 	void Settings(Application* app, bool &shown){
 		if( ImGui::Begin("Settings", &shown, 0)){
 			ImGui::Text("Main path:  \t\t%s", app->showMainDirectory().c_str());
@@ -449,7 +462,10 @@ namespace Display {
 
 	}
 	void EditVehicle(Vehicle* veh){
-		ImGui::Text("Editing %s", veh->getName().c_str());
+		ImGui::Text("Name: \t%s", veh->getName().c_str());
+		ImGui::Text("Miles: %d", veh->getMileage());
+		ImGui::Text("Number of repairs \t   %d", veh->getRepairList().size());
+		ImGui::Text("Number of gas stops: \t%d", veh->getGasStopList().size());
 
 		return;
 	}
