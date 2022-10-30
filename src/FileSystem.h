@@ -17,7 +17,7 @@ namespace FileSystem {
 
 	//Through operator overloading, the goal is to call the read and write functions depending on file format
 	// \param setPath: path of file to write, vehicle: what will be written to the file
-	bool const writeToFile	(const std::string setPath, Vehicle& vehicle);
+	bool writeToFile(const std::string setPath, Vehicle& vehicle);
 	// \param Path of file, Where output of the file will be passed to \return Overrides output stream with text of the file. True if could read, false if could not
 	bool const readFile(const std::string setPath, std::ostringstream& output);
 

@@ -90,7 +90,7 @@ namespace Display {
 		return success;
 	}
 	
-	//===========Menus/Screens=====================
+	//-----------Menus/Screens--------------
 	void Run(Application* app)
 	{
 		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f); //for testing
@@ -292,12 +292,12 @@ namespace Display {
 
 						if (ImGui::Button("OK", ImVec2(120, 0))) 
 						{
-							Vehicle* vehBufferToDel = selectedVehicle;
+							Vehicle vehBufferToDel = *selectedVehicle;
 							selectedVehicle = nullptr;
 							viewVeh = false;
 							editVeh = false;
 							if(!app->deleteVehicle(vehBufferToDel)){
-								
+								Log(LogCode::WARNING, "Failed to delete vehicle. In Display.cpp");
 							}
 							ImGui::CloseCurrentPopup(); 
 						}
@@ -505,8 +505,9 @@ namespace Display {
 
 		ImGui::Text("Repairs");
 		ImGui::Spacing();
-		if(ImGui::BeginTable("Repairs", 5, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg , outer_size ))
+		if(ImGui::BeginTable("Repairs", 6, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg , outer_size ))
 		{
+			ImGui::TableSetupColumn("Date", ImGuiTableColumnFlags_WidthFixed, 100.0f);
 			ImGui::TableSetupColumn("Miles", ImGuiTableColumnFlags_WidthFixed, 100.0f);
 			ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, 100.0f);
 			ImGui::TableSetupColumn("Cost", ImGuiTableColumnFlags_WidthFixed, 100.0f);
@@ -522,9 +523,13 @@ namespace Display {
 				double			costBuf;
 				std::string		notesBuf;
 				bool			thirdPartyBuf;
-				rep.getRepairInfo(mileBuf, typeBuf, costBuf, notesBuf, thirdPartyBuf);
+				std::string		dateBuf;
+				rep.getRepairInfo(mileBuf, typeBuf, costBuf, notesBuf, thirdPartyBuf, dateBuf);
 
 				int column{0};
+				ImGui::TableSetColumnIndex(column);
+				ImGui::Text("%s", dateBuf.c_str());
+				++column;
 
 				ImGui::TableSetColumnIndex(column);
 				ImGui::Text("%d", mileBuf);
@@ -553,8 +558,9 @@ namespace Display {
 		ImGui::Text("Gas Stops");
 		ImGui::Spacing();
 
-		if(ImGui::BeginTable("Gas Stops", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg , outer_size ))
+		if(ImGui::BeginTable("Gas Stops", 5, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg , outer_size ))
 		{
+			ImGui::TableSetupColumn("Date", ImGuiTableColumnFlags_WidthFixed, 100.0f);
 			ImGui::TableSetupColumn("Miles", ImGuiTableColumnFlags_WidthFixed, 100.0f);
 			ImGui::TableSetupColumn("Gallons", ImGuiTableColumnFlags_WidthFixed, 100.0f);
 			ImGui::TableSetupColumn("Per Gal", ImGuiTableColumnFlags_WidthFixed, 100.0f);
@@ -564,14 +570,18 @@ namespace Display {
 			for (GasStop& gas : veh->getGasStopList())
 			{
 				ImGui::TableNextRow();
-
 				int			mileBuf;
 				double		galBuf;
 				double		costBuf;
 				std::string notesBuf;
-				gas.getGasStopInfo(mileBuf, galBuf, costBuf, notesBuf);
+				std::string dateBuf;
+				gas.getGasStopInfo(mileBuf, galBuf, costBuf, notesBuf, dateBuf);
 
 				int column{0};
+
+				ImGui::TableSetColumnIndex(column);
+				ImGui::Text("%s", dateBuf.c_str());
+				++column;
 
 				ImGui::TableSetColumnIndex(column);
 				ImGui::Text("%d", mileBuf);
@@ -635,7 +645,7 @@ namespace Display {
 
 		return returnValue;
 	}
-	bool AddRepair(Vehicle* veh) {
+/*	bool AddRepair(Vehicle* veh) {
 		bool success{false};
 
 		uint32_t mileBuf{ 0 };
@@ -716,7 +726,8 @@ namespace Display {
 		return success;
 
 	}
-	bool AddGasStop(Vehicle* veh) {
+*/
+/*  bool AddGasStop(Vehicle* veh) {
 		bool success{false};
 
 		uint32_t mileBuf{ 0 };
@@ -800,4 +811,5 @@ namespace Display {
 
 		return success;
 	}
+*/
 }

@@ -63,7 +63,7 @@ namespace FileSystem {
 		}
 	}
 
-	bool const writeToFile(const std::string path, Vehicle& vehicle) {
+	bool writeToFile(const std::string path, Vehicle& vehicle) {
 		//If the file doesnt exist, try to create and it and then write again. If that fails, returns false
 		if (!doesFileExist(path)) {
 			createFile(path);

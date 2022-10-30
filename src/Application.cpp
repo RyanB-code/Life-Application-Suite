@@ -25,9 +25,10 @@ void Application::Startup() {
 		return;
 	}
 }
-bool const Application::saveVehicles() {
+bool Application::saveVehicles() {
 	bool success{ false };
-	for (Vehicle& currentVehicle : m_vehicleList) {
+	
+	for (Vehicle& currentVehicle :  m_vehicleList) {
 		std::ostringstream saveFileName{ VEHICLE_PATH.string() + currentVehicle.getName() + ".dat"};
 		if (FileSystem::createFile(saveFileName.str())){	//Make/find file of the given name
 
@@ -47,15 +48,20 @@ bool const Application::saveVehicles() {
 	return success;
 }
 
-const bool Application::deleteVehicle(Vehicle* veh){
-		std::erase(m_vehicleList, *veh);
+bool Application::deleteVehicle(Vehicle& veh){
+		std::erase(m_vehicleList, veh);
+
 		
-		return FileSystem::deleteFile(VEHICLE_PATH.string() + veh->getName() + ".dat");
-
+		std::string deletePath{VEHICLE_PATH.string() + veh.getName() + ".dat"};
+		return FileSystem::deleteFile(deletePath);
 	}
-//========END PUBLIC=========
+//-----END PUBLIC-------
 
-//==========PRIVATE==========
+
+
+
+
+//-----PRIVATE-----
 bool Application::SetupFileSystem(){
 	bool success{false};
 	if (!FileSystem::createDirectory(DIRECTORY_PATH.string()) 
@@ -176,8 +182,21 @@ void Application::SetupVehicleManager(){
 }
 
 
+Date Application::makeDate(std::stringstream& text) const{
+	if(text.str() == ""){
+		return Date{0, 0, 0};
+	}
 
-const std::string Application::makeVehicleName(std::string& text) {
+	unsigned short day, month;
+	int year;
+
+	text >> day;
+	text >> month;
+	text >> year;
+
+	return Date{day, month, year};
+}
+std::string Application::makeVehicleName(std::string& text) const{
 	if (text == "") { //Check if the text string exists
 		return "";
 	}
@@ -210,7 +229,7 @@ const std::string Application::makeVehicleName(std::string& text) {
 	}
 	return vehNameBuf;
 }
-const uint32_t Application::makeVehicleMiles(std::string& text){
+uint32_t Application::makeVehicleMiles(std::string& text) const{
 	if (text == "") { //Check if the text string exists
 		return 0;
 	}
@@ -245,7 +264,7 @@ const uint32_t Application::makeVehicleMiles(std::string& text){
 	}
 	return mileBuf;
 }
-const void Application::makeRepair(std::string& text, Vehicle& veh) {
+void Application::makeRepair(std::string& text, Vehicle& veh){
 	std::string repBuf;					//Buffer of characters being read from text
 	std::vector<std::string> repairStrings; 		//Vector of strings of repair info not yet formatted
 
@@ -272,18 +291,65 @@ const void Application::makeRepair(std::string& text, Vehicle& veh) {
 		double					costBuf{};
 		std::ostringstream		notesBuf{};
 		bool					thirdPartyBuf{};
+		std::stringstream		dateStringBuf{};
 
 		readUntil(currentString, separator, mileBuf);
 		typeBuf << readUntil(currentString, separator);
 		readUntil(currentString, separator, costBuf);
 		readUntil(currentString, separator, thirdPartyBuf);
 		notesBuf << readUntil(currentString, separator);
+		dateStringBuf << readUntil (currentString, separator);
+
+		// Read the typeBuf string and evaluate it to RepairType enum
+		std::string typeBufString{typeBuf.str()};
+		RepairType enumTypeBuf;
+		{
+			if(typeBufString == "Battery Replacement"){
+				enumTypeBuf = RepairType::BATTERY_REPLACEMENT;
+			}
+			else if(typeBufString == "Lightbulb Replacement"){
+				enumTypeBuf = RepairType::LIGHTBULB_REPLACEMENT;
+			}
+			else if(typeBufString == "Bodywork"){
+				enumTypeBuf = RepairType::BODYWORK;
+			}
+			else if(typeBufString == "Mechanical"){
+				enumTypeBuf = RepairType::MECHANICAL;
+			}
+			else if(typeBufString == "Oil Change"){
+				enumTypeBuf = RepairType::OIL_CHANGE;
+			}
+			else if(typeBufString == "Other"){
+				enumTypeBuf = RepairType::OTHER;
+			}
+			else if(typeBufString == "Power Steering"){
+				enumTypeBuf = RepairType::POWER_STEERING_FLUID_EXCHANGE;
+			}
+			else if(typeBufString == "Tire Replacement"){
+				enumTypeBuf = RepairType::TIRE_REPLACEMENT;
+			}
+			else if(typeBufString == "Tire Rotation"){
+				enumTypeBuf = RepairType::TIRE_ROTATION;
+			}
+			else if(typeBufString == "Transmission Fluid"){
+				enumTypeBuf = RepairType::TRANSMISSION_FLUID_EXCHANGE;
+			}
+			else if(typeBufString == "Wiper Blade Replacement"){
+				enumTypeBuf = RepairType::WIPER_REPLACEMENT;
+			}
+			else{
+				enumTypeBuf = RepairType::OTHER;
+			}
+		}
 		
-		veh.NewRepair(mileBuf, typeBuf.str(), costBuf, notesBuf.str(), thirdPartyBuf);
+		// Read the dateStringBuf string and make a Date type
+		Date dateBuf {makeDate(dateStringBuf)};
+
+		veh.NewRepair(mileBuf, enumTypeBuf, costBuf, notesBuf.str(), thirdPartyBuf, dateBuf);
 	}
 
 }
-const void Application::makeGasStop(std::string& text, Vehicle& veh) {
+void Application::makeGasStop(std::string& text, Vehicle& veh){
 
 	std::string foundGasBuf;				//Buffer of characters being read from text
 	std::vector<std::string> gasStrings;			//Vector of gas stops not yet formatted
@@ -309,13 +375,18 @@ const void Application::makeGasStop(std::string& text, Vehicle& veh) {
 		double				gallonsBuf{};
 		double				ppgBuf{};
 		std::ostringstream	notesBuf{};
+		std::stringstream	dateStringBuf{};
 
 		readUntil(currentString, separator, mileBuf);
 		readUntil(currentString, separator, ppgBuf);
 		readUntil(currentString, separator, gallonsBuf);
 		notesBuf << readUntil(currentString, separator);
+		dateStringBuf << readUntil (currentString, separator);
 
-		veh.NewGasStop(mileBuf, gallonsBuf, ppgBuf, notesBuf.str());
+		// Read the dateStringBuf string and make a Date type
+		Date dateBuf {makeDate(dateStringBuf)};
+
+		veh.NewGasStop(mileBuf, gallonsBuf, ppgBuf, notesBuf.str(), dateBuf);
 	}
 
 	return;
@@ -369,7 +440,7 @@ std::ostringstream Application::LogFileName() {
 		date << "JAN";
 		break;
 	case 1:
-		date << "FED";
+		date << "FEB";
 		break;
 	case 2:
 		date << "MAR";
@@ -419,4 +490,4 @@ std::ostringstream Application::LogFileName() {
 
 	return date;
 }
-//===========================
+//--------------------

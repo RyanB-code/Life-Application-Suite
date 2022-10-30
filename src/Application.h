@@ -25,20 +25,20 @@ public:
 		m_vehicleList.push_back(veh);
 		Log(LogCode::ROUTINE, "Added " + veh.getName() + " to list of vehicles.");
 	}
-	const bool deleteVehicle(Vehicle* veh);
+	bool deleteVehicle(Vehicle& veh);
 
 	// Saves vehicles by writing to file. The path is specified in the Application class \return True if could save to file. False if could not.
-	bool const saveVehicles();
+	bool saveVehicles();
 
 	std::vector<Vehicle>& getVehicleList() { return m_vehicleList; };
 
 	// Show prviate variables =============
-	const std::string showMainDirectory()		{ return DIRECTORY_PATH.string(); };
-	const std::string showDebugDirectory()		{ return DEBUG_PATH.string(); };
-	const std::string showVehicleDirectory()	{ return VEHICLE_PATH.string(); };
-	const std::string showLogFilePath()			{ return m_currentInstanceLogFile.string(); };
+	std::string showMainDirectory()		const	{ return DIRECTORY_PATH.string(); };
+	std::string showDebugDirectory()	const	{ return DEBUG_PATH.string(); };
+	std::string showVehicleDirectory()	const	{ return VEHICLE_PATH.string(); };
+	std::string showLogFilePath()		const	{ return m_currentInstanceLogFile.string(); };
 
-	const std::string& getWindowTitle()			{ return WINDOW_TITLE; };
+	std::string getWindowTitle()		const	{ return WINDOW_TITLE; };
 	// =======================================
 
 	GLFWwindow* 	m_window 		{nullptr};
@@ -46,6 +46,10 @@ public:
 	int 			m_window_y		{720};
 	const ImVec2 	MIN_WIN_SIZE	{1280, 720};
 	ImGuiStyle* 	appStyle		{nullptr};
+
+
+
+
 private:
 	Application* app{ nullptr };
 
@@ -67,14 +71,16 @@ private:
 	
 	//Displays the date for Log file. Ex: SUN, SEP 25, 2022
 	std::ostringstream LogFileName();
+	// Makes date\param Text string from file
+	Date makeDate(std::stringstream& text) const;
 	// Reads name\param Text string from file, deletes read characters
-	const std::string makeVehicleName(std::string& text);
+	std::string makeVehicleName(std::string& text) const;
 	//Reads mileage \param Text string from file, deletes read characters
-	const uint32_t makeVehicleMiles(std::string& text);
+	uint32_t makeVehicleMiles(std::string& text) const;
 	//Make a Repair from a text stream. \param repairList: Adds found repairs to this vehicle
-	const void makeRepair(std::string& text, Vehicle& veh);
+	void makeRepair(std::string& text, Vehicle& veh);
 	// Make a GasStop from a text stream. \param gasList : Adds found gas stops to this vehicle
-	const void makeGasStop(std::string& text, Vehicle& veh);
+	void makeGasStop(std::string& text, Vehicle& veh);
 
 	//===Used for creating data from module files===============
 
