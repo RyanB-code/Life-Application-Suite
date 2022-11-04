@@ -94,6 +94,7 @@ namespace Display {
 
 			static Vehicle* selectedVehicle{nullptr};
 
+			// Welcome message at top of window -------
 			ImGui::TextWrapped(	"This Vehicle Manager stores all relevant information about a vehicle such as its name,"
 								" mileage, and repair and gas stop information. ");
 			ImGui::Spacing();
@@ -106,34 +107,35 @@ namespace Display {
 			ImGui::BulletText("And any notes you would like to add");
 
 			ImGui::Spacing();
+			// ----------------------------------------
+
 
 			if(app->getVehicleList().empty()){
 				ImGui::Text("There are no tracked vehicles");
 			}
 			else{	// This draws the child window for the vehicle list
 
+
+				// Algorithm for adjusting child window size --------
 				float bigWindowX = ImGui::GetWindowContentRegionMax().x;
 				float childY = 200;
 
 				static float childX {500};
 				if(bigWindowX > 510){
-					// Do nothing therefore keep window at 500 pixels
+					// Do nothing therefore keep window at 500 pixels if the parent window is larger than specified
 				}
 				else{
-					// If smaller than 510, rersize to the window size minus 10 pixels
-					childX = bigWindowX - 10;
+					childX = bigWindowX - 10;	// If smaller than 510, rersize to the window size minus 10 pixels
 				}
+				// -------------------------------------------------
 
-				//Draw Tracked Vehicles window
-				if(ImGui::GetContentRegionMax().x > 510){
-					ImGui::Text("Tracked Vehicles");
-					ImGui::SameLine(); HelpMarker("Select a vehicle then choose from the options below");
-					ImGui::BeginChild("#Current Vehicles", ImVec2(childX, childY), false, ImGuiWindowFlags_AlwaysAutoResize);
-				
-					selectedVehicle = ListSelectableVehicles(app->getVehicleList());		// Display selectable list of vehicles
-				}
+				// Create and draw the child window
+				ImGui::Text("Tracked Vehicles");
+				ImGui::SameLine(); HelpMarker("Select a vehicle then choose from the options below");
+				ImGui::BeginChild("#Current Vehicles", ImVec2(childX, childY), false, ImGuiWindowFlags_AlwaysAutoResize);
+				selectedVehicle = ListSelectableVehicles(app->getVehicleList());		// Display selectable list of vehicles
 				ImGui::EndChild();
-
+				
 				// Once/if vehicle is selected, these buttons appear
 				if(selectedVehicle){
 					static ImVec2 buttonSize {100, 30};
@@ -239,7 +241,6 @@ namespace Display {
 						}
 						ImGui::EndChild();
 					}
-
 
 				}
 			}

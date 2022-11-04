@@ -11,7 +11,7 @@ namespace Display
 	static void HelpMarker(const char* desc);
 
 	//===========Menus/Screens======================
-
+	
 	// Creates Home screen
 	void Home(Application* app);
 	void MenuBar(bool& showVehMan, bool& showSettings, bool &demoWindow, bool &debugLog);
