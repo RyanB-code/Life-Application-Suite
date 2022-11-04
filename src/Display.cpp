@@ -16,134 +16,7 @@ namespace Display {
 		}
 	}
 
-	void clear()
-	{
-		system("cls");
-	}
-	void clearLineAfterInput() {
-		printf("\033[A"); //goes up a line
-		printf("\33[2K"); //clears current line
-	}
-
-	int getInput(short low, short high) {
-		int input{ 0 };
-
-		bool exit{ false };
-		while (!exit) {
-			std::cout << ">";
-			std::cin >> input;
-
-			clearLineAfterInput();
-
-			if (std::cin.fail()) {
-				std::cin.clear();
-				std::cin.ignore(10000, '\n');
-			}
-			else {
-				if (input < low || input > high) {
-
-				}
-				else {
-					exit = true;
-				}
-			}
-		}
-
-		return input;
-	}
-	bool getBoolInput() {
-		bool success{false};
-
-		bool exit{ false };
-		while (!exit) {
-			std::cout << "(y/n) >";
-			char input;
-			std::cin >> input;
-			clearLineAfterInput();
-
-			switch (input) {
-			case 'y': case 'Y':
-				std::cin.ignore(10000, '\n');
-				success = true;
-				exit = true;
-				break;
-			case 'n': case 'N':
-				std::cin.ignore(10000, '\n');
-				success = false;
-				exit = true;
-				break;
-			default:
-				std::cin.ignore(10000, '\n');
-				exit = false;
-				break;
-			}
-
-			if (std::cin.fail()) {
-				std::cin.clear();
-				std::cin.ignore(10000, '\n');
-			}
-			else {
-				//Do Nothing
-			}
-		}
-
-		return success;
-	}
-	
 	//-----------Menus/Screens--------------
-	void Run(Application* app)
-	{
-		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f); //for testing
-
-		while (!glfwWindowShouldClose(app->m_window))
-		{
-			// Poll and handle events (inputs, window resize, etc.)
-			// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-			// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
-			// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
-			// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-			glfwPollEvents();
-
-			// Start the Dear ImGui frame
-			ImGui_ImplOpenGL3_NewFrame();
-			ImGui_ImplGlfw_NewFrame();
-			ImGui::NewFrame();
-			// My code goes here for window calls ------------
-			Home(app);
-			//---------------------------------------------------
-			// Rendering
-			ImGui::Render();
-			glfwGetFramebufferSize(app->m_window, &app->m_window_x, &app->m_window_y);
-			glViewport(0, 0, app->m_window_x, app->m_window_y);
-			glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-			glClear(GL_COLOR_BUFFER_BIT);
-			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-			
-			// Update and Render additional Platform Windows
-			// (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
-			//  For this specific demo app we could also call glfwMakeContextCurrent(window) directly)
-			ImGuiIO& io = ImGui::GetIO();
-			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-			{
-				GLFWwindow* backup_current_context = glfwGetCurrentContext();
-				ImGui::UpdatePlatformWindows();
-				ImGui::RenderPlatformWindowsDefault();
-				glfwMakeContextCurrent(backup_current_context);
-			}
-			glfwSwapBuffers(app->m_window);
-		}
-
-		// Cleanup
-		ImGui_ImplOpenGL3_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
-		ImGui::DestroyContext();
-
-		glfwDestroyWindow(app->m_window);
-		glfwTerminate();
-
-		return;
-	}
-
 	void Home(Application* app)
 	{
 		// MenuBar variables. Must pass these variables to MenuBar();
@@ -200,7 +73,6 @@ namespace Display {
 
 		return;
 	}
-
 
 	void MenuBar(bool& showVehMan, bool& showSettings, bool &demoWindow, bool &debugLog){
 		if(ImGui::BeginMenu("Modules")){
@@ -376,6 +248,7 @@ namespace Display {
 		return;
 	}
 
+	// ---
 	void Settings(Application* app, bool &shown){
 		if( ImGui::Begin("Settings", &shown, 0)){
 			ImGui::Text("Main path:  \t\t%s", app->showMainDirectory().c_str());
@@ -603,7 +476,7 @@ namespace Display {
 		return;
 	}
 	
-	bool AddVehicle(Application* app) {
+/* 	bool AddVehicle(Application* app) {
 		bool returnValue{false};
 		
 		std::string nameBuf;
@@ -645,6 +518,7 @@ namespace Display {
 
 		return returnValue;
 	}
+*/
 /*	bool AddRepair(Vehicle* veh) {
 		bool success{false};
 

@@ -19,6 +19,7 @@ public:
 	
 	// Once the application is initialized, start reading files.
 	void Startup();
+	void Run();
 
 	// Add vehicle to the list of known vehicles
 	inline void NewVehicle(Vehicle& veh){
@@ -48,10 +49,8 @@ public:
 	ImGuiStyle* 	appStyle		{nullptr};
 
 
-
-
 private:
-	Application* app{ nullptr };
+	Application* m_app{ nullptr };
 
 	bool m_initialized{ false };
 	const std::filesystem::path DIRECTORY_PATH		{ "C:/Users/ryanb/Desktop/LAS Folder/" };

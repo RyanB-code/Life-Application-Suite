@@ -8,7 +8,7 @@ int main(int, char**) {
 
     try{
         app->Startup();
-        Display::Run(app);
+        app->Run();
     }
     catch(Log){
         Log(LogCode::FATAL, "Fatal error in application was caught in main");

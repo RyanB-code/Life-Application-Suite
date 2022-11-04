@@ -2,6 +2,11 @@
 
 #pragma warning(disable : 4996)		// Disables use of time_t and tm in creating the Log file name
 
+//Forward declaration for Display::Home()
+namespace Display{
+	void Home(Application* app);
+}
+
 static void glfw_error_callback(int error, const char* description)
 {
 	std::ostringstream logText;
@@ -10,7 +15,7 @@ static void glfw_error_callback(int error, const char* description)
 }
 
 void Application::Startup() {
-	app = this;
+	m_app = this;
 	if (SetupFileSystem()) {
 		if(SetupGLFW()){
 			if(SetupImGUI()){
@@ -25,6 +30,61 @@ void Application::Startup() {
 		return;
 	}
 }
+void Application::Run()
+{
+	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f); //for testing
+
+	while (!glfwWindowShouldClose(m_app->m_window))
+	{
+		// Poll and handle events (inputs, window resize, etc.)
+		// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
+		// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
+		// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
+		// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+		glfwPollEvents();
+
+		// Start the Dear ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		// My code goes here for window calls ------------
+		Display::Home(m_app);
+		// -----------------------------------------------
+
+		// Rendering
+		ImGui::Render();
+		glfwGetFramebufferSize(m_app->m_window, &m_app->m_window_x, &m_app->m_window_y);
+		glViewport(0, 0, m_app->m_window_x, m_app->m_window_y);
+		glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+		glClear(GL_COLOR_BUFFER_BIT);
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		
+		// Update and Render additional Platform Windows
+		// (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
+		//  For this specific demo app we could also call glfwMakeContextCurrent(window) directly)
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			GLFWwindow* backup_current_context = glfwGetCurrentContext();
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+			glfwMakeContextCurrent(backup_current_context);
+		}
+		glfwSwapBuffers(m_app->m_window);
+	}
+
+	// Cleanup
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	glfwDestroyWindow(m_app->m_window);
+	glfwTerminate();
+
+	return;
+}
+
 bool Application::saveVehicles() {
 	bool success{ false };
 	
