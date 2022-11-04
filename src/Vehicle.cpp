@@ -78,7 +78,26 @@ void GasStop::getGasStopInfo(int& mileage, double& gal, double& ppg, std::string
 	return;
 }
 
+Vehicle::Vehicle(const std::string setName, uint32_t setMileage)
+{
+	if (setName.length() <= 0 || setName.length() > maxVehicleNameSize) {
+		std::ostringstream logText;
+		logText << "Vehicle name out of range. Max allowed is: " << maxVehicleNameSize << ". Current: " << setName.length();
+		Log(LogCode::WARNING, logText.str());
+		m_name = "Vehicle";
+	}
+	else {
+		m_name = setName;
+	}
 
+	if (setMileage < 0) {
+		Log(LogCode::WARNING, "Vehicle mileage out of range for " + m_name);
+		m_mileage = 0;
+	}
+	else {
+		m_mileage = setMileage;
+	}
+}
 bool Vehicle::NewRepair(uint32_t setMiles, RepairType setType, double setCost, std::string setNotes, bool setThirdParty, Date setDate) {
 	bool milesAccepted{ false }, costAccepted{ false }, notesAccepted{ false };
 	if (setMiles > 0) {
