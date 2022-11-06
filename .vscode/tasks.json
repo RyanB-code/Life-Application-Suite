@@ -7,9 +7,11 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${workspaceFolder}/src/*.cpp",                     // This will build all cpp files in the current workspace folder
-                "${workspaceFolder}/include/DearImGUI/*.cpp",       // This will build all files in the DearImGUI folder
-                "${workspaceFolder}/src/glad.c",
+                "${workspaceFolder}/include/DearImGUI/*.cpp",       // Build files in DearImGUI diectory
+                "${workspaceFolder}/src/Modules/*.cpp",             // Build files in Modules directory
+                "${workspaceFolder}/src/*.cpp",                     // Build all cpp files in the current workspace folder
+                "${workspaceFolder}/src/glad.c",                    // Just build glad.c
+
                 "-I${workspaceFolder}/include",                     // Specifies include folder for g++
 		        "-L${workspaceFolder}/lib",                         // Specifies include lib path for g++
                 "-o",

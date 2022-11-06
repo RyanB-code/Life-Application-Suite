@@ -1,4 +1,3 @@
-#include "Display.h"
 #include "Application.h"
 
 

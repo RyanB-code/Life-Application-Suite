@@ -1,7 +1,27 @@
 #include "FileSystem.h"
 
 
-namespace FileSystem {
+namespace FileSystem{
+	std::string readUntilString(std::string& text, const char limit) {
+		std::string bufferText;
+		int charRead{ 0 };
+		for (char& c : text) {
+			++charRead;
+			if (c != limit && charRead < text.length()) {	//Make sure c is not the limit, and that it does not go over the end of the string.
+				bufferText += c;
+			}
+			else {
+				if (c != limit) {	
+					bufferText += c;
+				}
+				text.erase(0, charRead);
+				return bufferText;
+			}
+		}
+
+		return bufferText;
+	}
+
 	bool createDirectory(const std::string path) {
 		bool success{ false };
 
@@ -62,36 +82,21 @@ namespace FileSystem {
 			return false;
 		}
 	}
-
-	bool writeToFile(const std::string path, Vehicle& vehicle) {
+	
+	bool writeToFile(const std::string path, const std::string& text){
 		//If the file doesnt exist, try to create and it and then write again. If that fails, returns false
 		if (!doesFileExist(path)) {
 			createFile(path);
-			return writeToFile(path, vehicle);
+			return writeToFile(path, text);
 		}
 		else {
 			std::ofstream file{ path }; //Open file to write
-
-			file << '(' << vehicle.getName() << ')';
-			file << '{' << vehicle.getMileage() << "}\n";
-			
-			for (Repair& repair : vehicle.getRepairList()) {
-				file << '<';
-				file << repair;
-				file << '>';
-				file << '\n';
-			}
-			for (GasStop& gasStop : vehicle.getGasStopList()) {
-				file << '[';
-				file << gasStop;
-				file << ']';
-				file << '\n';
-			}
+			file << text;
 			return true;
 		}
 		return false;
 	}
-	bool const readFile(const std::string setPath, std::ostringstream& output) {
+	bool readFile(const std::string setPath, std::ostringstream& output) {
 		std::ostringstream path{ setPath };
 
 		if (!doesFileExist(path.str())) {
@@ -148,4 +153,5 @@ namespace FileSystem {
 		Log(LogCode::ROUTINE, logText.str());
 
 	}
+
 }
