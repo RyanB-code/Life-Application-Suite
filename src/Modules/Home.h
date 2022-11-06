@@ -7,10 +7,10 @@
 
 #include "../Application.h"
 
-
-static void HelpMarker(const char* desc);
-
+// Creates the homepage for the application
 void Home(Application* app);
+
+// Handles menu bar funcationality at the top of the window
 void MenuBar(bool& showVehMan, bool& showSettings, bool &demoWindow, bool &debugLog);
 
 #endif

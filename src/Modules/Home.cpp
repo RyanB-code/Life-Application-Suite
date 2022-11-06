@@ -3,18 +3,27 @@
 
 void Home(Application* app)
 {
-	// MenuBar variables. Must pass these variables to MenuBar();
-	static bool showVehicleManager = false;
-	static bool showSettings = false;
-	static bool showDemoWindow = false;
-	static bool showDebugLog = false;
+	// State variables for displaying modules
+	static bool showVehicleManager 	= false;
+	static bool showSettings 		= false;
+	static bool showDebugLog 		= false;
 
-	if(showDemoWindow) ImGui::ShowDemoWindow();
+	// Intent to remove in release ---------
+	static bool showDemoWindow 		= false;
+	if(showDemoWindow) 			{ ImGui::ShowDemoWindow(); }
+	// -------------------------------------
 
-	// Docking
+	// Show modules
+	if(showVehicleManager)		{ VehicleManager(app, showVehicleManager); }
+	if(showSettings)			{ Settings(app, showSettings); }
+	if(showDebugLog)			{ DebugLog(showDebugLog); }
+	
+
+	// Enable Docking ----------------------------------------
 	ImGuiIO& io = ImGui::GetIO();
 	if(io.ConfigFlags & ImGuiConfigFlags_DockingEnable){
 		const ImGuiViewport* viewport = ImGui::GetMainViewport();
+
 		ImGui::SetNextWindowPos(viewport->WorkPos);
 		ImGui::SetNextWindowSize(viewport->WorkSize);
 		ImGui::SetNextWindowViewport(viewport->ID);
@@ -28,6 +37,8 @@ void Home(Application* app)
 			ImGuiID dockspace_id = ImGui::GetID("MainDockSpace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
 
+			// The difference in the call to BeginMenuBar() here comapred to the else statement's BeginMainMenuBar() is
+			// that the dockspace occludes the MainMenuBar since the dockspace is itself a window
 			if(ImGui::BeginMenuBar()){
 				MenuBar(showVehicleManager, showSettings, showDemoWindow, showDebugLog);
 				ImGui::EndMenuBar();
@@ -41,30 +52,21 @@ void Home(Application* app)
 			ImGui::EndMainMenuBar();
 		}
 	}
-	// -- End docking code
-	
-
-	if(showVehicleManager){
-		VehicleManager(app, showVehicleManager);
-	}
-	if(showSettings){
-		Settings(app, showSettings);
-	}
-	if(showDebugLog){
-		DebugLog(showDebugLog);
-	}
-	
+	// -----------------------------------------------------------
 
 	return;
 }
 
 void MenuBar(bool& showVehMan, bool& showSettings, bool &demoWindow, bool &debugLog){
+	// Creates Dropdown item in the menu bar labeled "Modules"
 	if(ImGui::BeginMenu("Modules")){
 		ImGui::MenuItem("Vehicle Manager", nullptr, &showVehMan);
 		ImGui::MenuItem("Debug Log", nullptr, &debugLog);
 		ImGui::MenuItem("Settings", nullptr, &showSettings);
 		ImGui::EndMenu();
 	}
+
+	// Creates Dropdown item in the menu bar labeled "View"
 	if(ImGui::BeginMenu("View")){
 		ImGui::MenuItem("Demo Window", nullptr, &demoWindow);
 		ImGui::EndMenu();
