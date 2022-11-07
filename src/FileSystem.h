@@ -34,7 +34,7 @@ namespace FileSystem {
 	bool	createDirectory	(const std::string path);
 	// \return True if file was found/created. False if file could not be created
 	bool	createFile		(const std::string path);
-
+	// \return True if exists. False if does not exist
 	bool	doesFileExist	(const std::string path);
 
 	bool	deleteFile		(const std::string path);

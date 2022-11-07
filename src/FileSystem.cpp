@@ -4,17 +4,16 @@
 namespace FileSystem{
 	std::string readUntilString(std::string& text, const char limit) {
 		std::string bufferText;
+
+		// Ignore delimiter, once a string is found return it
 		int charRead{ 0 };
 		for (char& c : text) {
 			++charRead;
-			if (c != limit && charRead < text.length()) {	//Make sure c is not the limit, and that it does not go over the end of the string.
-				bufferText += c;
-			}
+	
+			if (c != limit && charRead < text.length()) { bufferText += c; }	//Make sure c is not the limit, and that it does not go over the end of the string.
 			else {
-				if (c != limit) {	
-					bufferText += c;
-				}
-				text.erase(0, charRead);
+				if (c != limit) { bufferText += c; }
+				text.erase(0, charRead);					// Deletes read characters
 				return bufferText;
 			}
 		}
@@ -25,28 +24,34 @@ namespace FileSystem{
 	bool createDirectory(const std::string path) {
 		bool success{ false };
 
-		//Before creating, check if it already exists. If found, create
+		// Before creating, check if it already exists. If found, create
 		if (doesFileExist(path)) {
 			Log(LogCode::ROUTINE, path + " was found.");
 			success = true;
 		}
 		else {
-			if (!std::filesystem::create_directory(path)) {		//IF the directory could not be created, log and return false
-				Log(LogCode::WARNING, path + " could not be created.");
+			// IF the directory could not be created, log and return false
+			if (!std::filesystem::create_directory(path)) {
+				Log(LogCode::WARNING, "Directory " + path + " could not be created.");
 				success = false;
 			}
-			Log(LogCode::ROUTINE, path + " was created.");
-
-			success = true;
+			else{
+				Log(LogCode::ROUTINE, path + " was created.");
+				success = true;
+			}
 		}
+
 		return success;
 	}
 	
 	bool createFile(const std::string path) {
+		
+		// Error check if the file exists already
 		if (!doesFileExist(path)) {
-			std::ofstream file(path);	//Creates the files here
+			std::ofstream file(path);	// Creates the files here
 
-			if (!doesFileExist(path)) {//Ff the file still does not exist, return false		
+			// If the file still does not exist, return false		
+			if (!doesFileExist(path)) {
 				Log(LogCode::WARNING, "Could not create " + path);
 				return false;
 			}
@@ -60,6 +65,7 @@ namespace FileSystem{
 			return true;
 		}
 	}
+
 	bool doesFileExist(const std::string path) {
 		const std::filesystem::path checkFile(path);
 
@@ -71,6 +77,7 @@ namespace FileSystem{
 			return false;
 		}
 	}
+
 	bool deleteFile(const std::string path){
 		std::filesystem::path file{path};
 		if(std::filesystem::remove(file)){
@@ -96,6 +103,7 @@ namespace FileSystem{
 		}
 		return false;
 	}
+
 	bool readFile(const std::string setPath, std::ostringstream& output) {
 		std::ostringstream path{ setPath };
 
@@ -152,6 +160,7 @@ namespace FileSystem{
 		logText << "Found " << writeTo.size() << " file(s)";
 		Log(LogCode::ROUTINE, logText.str());
 
+		return;
 	}
 
 }

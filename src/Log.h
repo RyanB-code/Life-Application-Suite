@@ -1,4 +1,6 @@
-#pragma once
+#ifndef LOG_H
+#define LOG_H
+
 #include <string>
 #include <sstream>
 #include <iomanip>
@@ -29,3 +31,4 @@ public:
 
 std::ostream& operator<<(std::ostream& os, Log& log);
 
+#endif

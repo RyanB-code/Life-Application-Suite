@@ -13,6 +13,9 @@
 #include <DearImGUI/imgui.h>
 #include <DearImGUI/imgui_mods.h>
 
+
+
+// Classification for the kind of Repair
 enum class RepairType{
 	OIL_CHANGE = 1,
 	TRANSMISSION_FLUID_EXCHANGE,
@@ -25,17 +28,18 @@ enum class RepairType{
 	MECHANICAL,
 	BATTERY_REPLACEMENT,
 
-	OTHER //Other is always last
+	OTHER // Other will always last
 };
-std::ostream& operator<<(std::ostream& os, const RepairType& type);
+std::ostream& operator<<(std::ostream& os, const RepairType& type); 		// Used to output the RepairType in string format
 
+// Tracks useful information when a Vehicle is repaired. Should be assigned to a Vehicle after initialization
 class Repair {
 public:
-	// A Creation of a Repair
+	// Initialize a Repair
 	// \param setMileage Mileage the repair was done at \param setType The RepairType enum of the specific repair
 	// \param setNotes Any notes to add to the repair \param setThirdParty Was the repair done by another person (3rd Party) or done by the owner (1st Person)
 	// \param setDate The date the repair was done
-	Repair(uint32_t setMileage, RepairType setType, double setCost, std::string setNotes, bool setThirdParty, Date setDate)
+	Repair(uint32_t setMileage=0, RepairType setType=RepairType::OTHER, double setCost=0.00, std::string setNotes="", bool setThirdParty=false, Date setDate={1, 1, 1900})
 		: m_mileageDone{ setMileage },
 		m_type{ setType },
 		m_cost{ setCost },
@@ -49,9 +53,11 @@ public:
 
 	}
 
-	//Overwrites the parameters with the info of the repair
-	void getRepairInfo(int& mileage, std::string& typeStr, double& costDbl, std::string& notesVar, bool& wasThirdParty, std::string& dateVar) const;
-	uint32_t getMileage() const{ return m_mileageDone; }
+	// Overwrites the parameters with the info of the repair
+	void 		getRepairInfo(int& mileage, std::string& typeStr, double& costDbl, std::string& notesVar, bool& wasThirdParty, std::string& dateVar) const;
+	uint32_t 	getMileage() 	const	{ return m_mileageDone; }
+
+	 // Puts a Repair into a readable format
 	friend std::ostream& operator<<(std::ostream& os, const Repair& repair);
 
 private:
@@ -64,12 +70,18 @@ private:
 
 };
 
+
+
+
+
+
+// Tracks useful information when a Vehicle gets gas. Should be assigned to a Vehicle after initialization
 class GasStop {
 public:
 	// Create a Gas Stop
 	// \param setMileage The mileage the gas stop was done \param setGallons Amount of gallons filled up with 
 	// \param setNotes Notes to add about the Gas Stop \param setDate Date of the Gas Stop
-	GasStop(uint32_t setMileage, double setGallons, double setPricePerGallon, std::string setNotes, Date setDate)
+	GasStop(uint32_t setMileage=0, double setGallons=0.0, double setPricePerGallon=0.0, std::string setNotes="", Date setDate={1, 1, 1900})
 		: m_mileageDone{ setMileage },
 		m_gallons{setGallons},
 		m_pricePerGallon{setPricePerGallon},
@@ -84,6 +96,8 @@ public:
 	//Overwrites the parameters with the info of the gas stop
 	void 		getGasStopInfo(int& mileage, double& gal, double& ppg, std::string& notesVar, std::string& dateVar) const;
 	uint32_t 	getMileage() const { return m_mileageDone; }
+
+	 // Puts a Gas Stop into a readable format
 	friend std::ostream& operator<<(std::ostream& os, const GasStop& gasStop);
 
 private:
@@ -94,11 +108,14 @@ private:
 	Date 		m_date;
 };
 
+
+
+
+
+// Track useful information about a Vehicle. Stores lists of Repairs and Gas Stops as well as mileage of the Vehicle
 class Vehicle {
 public:
 	// Create a Vehicle
-	// \param setName Vehicle Name
-	// \param setMileage Vehicle's initial mileage
 	Vehicle(const std::string setName = "Vehicle", uint32_t setMileage = 0);
 	~Vehicle() 
 	{
@@ -108,29 +125,36 @@ public:
 	static constexpr int maxVehicleNameSize { 15 };
 	static constexpr int maxNotesSize		{ 45 };
 
-	//Specifically adds the vehicle to the master vehicleList
-	void 					addToVehicleList() 			{ s_vehicleList.push_back(*this); } 
-	std::vector<Vehicle> 	getVehicleList() 	const 	{ return s_vehicleList; }
-	void					delFromVehList() 			{ std::erase(s_vehicleList, *this); }
-	static bool				vehListIsEmpty()			{ return s_vehicleList.empty(); }
+	uint32_t 				getMileage() 		const 	{ return m_mileage; }
+	std::string 			getName() 			const 	{ return m_name; };
+	std::vector<Vehicle>& 	getVehicleList() 	const 	{ return s_vehicleList; }
 
-	// Saves vehicles by writing to file. The path is specified in the Application class \return True if could save to file. False if could not.
-	friend bool saveVehicles(const Application& app);
+	std::vector<Repair>& 	getRepairList()	 			{ return repairList; }  // FIX. Instead of this, make it be a getter/setter function
+	std::vector<GasStop>& 	getGasStopList() 			{ return gasList; }		// FIX
+
+	// Functions for interacting with s_vehicleList
+	void 					addToVehicleList() 			{ s_vehicleList.push_back(*this); Log(LogCode::ROUTINE, "Added " + this->getName() + " to list of vehicles."); } 	// Used to add A vehicle to the master list
+	void					delFromVehList() 			{ std::erase(s_vehicleList, *this); }	// Compares the Vehicle's m_name and deletes all Vehicles with the same m_name
+	static bool				vehListIsEmpty()			{ return s_vehicleList.empty(); }		// Check if the master list is empty
+
+
+
+	// Saves vehicles by writing to file. The path is specified in the Application class 
+	// \return True if could save to file. False if could not.
+	friend bool SaveVehicles(const Application& app);	
+
 	// Display selectable list of vehicles
+	// \return Pointer to the selected Vehicle. Null if none is selected
 	friend Vehicle* SelectableVehicleList();
 
-	uint32_t 	getMileage() 	const { return m_mileage; }
-	std::string getName() 		const { return m_name; };
 
-	//Given individual types, it will error check ranges and data before adding to the vehicle's list
-	bool NewRepair(uint32_t setMiles, RepairType setType, double setCost, std::string setNotes, bool setThirdParty, Date setDate);
-	//Given individual types, it will error check ranges and data before adding to the vehicle's list
-	bool NewGasStop(uint32_t setMiles, double setGal, double setPPG, std::string setNotes, Date setDate);
+	//Given individual types, it will error check ranges and data before adding to the vehicle's list of Repairs
+	bool NewRepair	(uint32_t setMiles, RepairType setType, double setCost, std::string setNotes, bool setThirdParty, Date setDate);
+	//Given individual types, it will error check ranges and data before adding to the vehicle's list of Gas Stops
+	bool NewGasStop	(uint32_t setMiles, double setGal, double setPPG, std::string setNotes, Date setDate);
 
-	std::vector<Repair>& 	getRepairList()	 { return repairList; }
-	std::vector<GasStop>& 	getGasStopList() { return gasList; }
-
-	friend bool operator==(const Vehicle& lhs, const Vehicle& rhs);		// Compare if Vehicle names are the same
+	// Compare if Vehicle names are the same
+	friend bool operator==(const Vehicle& lhs, const Vehicle& rhs);	
 
 private:
 	std::string m_name;
@@ -144,33 +168,29 @@ private:
 };
 
 
-// File Read/Write------------------------------
 
-// Reads name\param Text string from file, deletes read characters
-std::string makeVehicleName(std::string& text);
-// Reads mileage \param Text string from file, deletes read characters
-uint32_t makeVehicleMiles(std::string& text);
-// Make a Repair from a text stream. \param repairList: Adds found repairs to this vehicle
-void makeRepair(std::string& text, Vehicle& veh);
-// Make a GasStop from a text stream. \param gasList : Adds found gas stops to this vehicle
-void makeGasStop(std::string& text, Vehicle& veh);
-// Writes Vehicle information to a file with the Vehicle's name
-bool writeToFile(const Application& app, Vehicle& veh);
+bool WriteToFile(const Application& app, Vehicle& veh);		// Writes Vehicle information to a file with the Vehicle's name
+bool DeleteVehicle(Application* app, Vehicle& veh);			// Remove vehicle from the list, and file directory
 
 
-void NewVehicle(Application* app, Vehicle& veh);							// Add vehicle to the list of known vehicles
-bool DeleteVehicle(Application* app, Vehicle& veh);							// Remove vehicle from the list, and file directory
-//---------------------------------------------------------
+// Parsing raw text functions --------------------------------------------------------
+
+std::string MakeVehicleName		(std::string& text);						// Deletes read characters from parameter and returns with string of the text read
+uint32_t 	MakeVehicleMiles	(std::string& text);						// Deletes read character from the parameter and returns the int read
+void 		MakeRepair			(std::string& text, Vehicle& veh);			// Make a Repair from a text stream. Adds it to veh parameter
+void 		MakeGasStop			(std::string& text, Vehicle& veh);			// Make a GasStop from a text stream. Adds it to the veh parameter
+
+// -----------------------------------------------------------------------------------
 
 
-// ImGui Implementation below
-void VehicleManager(Application* app, bool &shown);
-void SetupVehicleManager(Application* app);
-//Shows just one vehicle
-void ShowFullVehicleInformation(Vehicle* veh);
-void EditVehicle(Vehicle* veh);
 
+// ImGui Implementation ---------------------------------------------------------------
 
+void VehicleManager				(Application* app, bool &shown);	// The Vehicle module window
+void ShowFullVehicleInformation	(Vehicle* veh);						// Shows all the parameter Vehicle's Repairs and GasStops in table format
+void EditVehicle				(Vehicle* veh);						// Handle changes to the parameter Vehicle
+
+// ------------------------------------------------------------------------------------
 /* 	bool AddVehicle(Application* app) {
 		bool returnValue{false};
 		

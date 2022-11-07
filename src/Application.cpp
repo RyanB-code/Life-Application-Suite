@@ -2,7 +2,7 @@
 
 #pragma warning(disable : 4996)		// Disables use of time_t and tm in creating the Log file name
 
-
+// Needed for GLFW Setup
 static void glfw_error_callback(int error, const char* description)
 {
 	std::ostringstream logText;
@@ -12,6 +12,7 @@ static void glfw_error_callback(int error, const char* description)
 
 void Application::Startup() {
 	m_app = this;
+
 	if (SetupFileSystem()) {
 		if(SetupGLFW()){
 			if(SetupImGUI()){
@@ -87,6 +88,8 @@ void Application::Run()
 //-----PRIVATE-----
 bool Application::SetupFileSystem(){
 	bool success{false};
+
+	// Creates directories for the files
 	if (!FileSystem::createDirectory(DIRECTORY_PATH.string()) 
 		|| !FileSystem::createDirectory(DEBUG_PATH.string()) 
 		|| !FileSystem::createDirectory(VEHICLE_PATH.string()))
@@ -94,15 +97,14 @@ bool Application::SetupFileSystem(){
 		Log(LogCode::FATAL, "Could not initialize the file system.");
 	}
 	else {
-		//Once the app folders are made,
-		std::ostringstream debugFilePath{ DEBUG_PATH.string() + LogFileName().str() + ".dat" };	//Make debug log file for the instance
+		// Once the app folders are made,
+		// Make debug log file for the instance
+		std::ostringstream debugFilePath{ DEBUG_PATH.string() + LogFileName().str() + ".dat" };	
 
-		if (!FileSystem::createFile(debugFilePath.str())) {
-			Log(LogCode::FATAL, "Could not create debug log file.");
-		}
+		if (!FileSystem::createFile(debugFilePath.str())) { Log(LogCode::FATAL, "Could not create debug log file."); }
 		else {
-			m_currentInstanceLogFile = debugFilePath.str();
-			Log::m_path = m_currentInstanceLogFile.string();  //Sets the Log class m_path to m_currentInstanceLogFile in order for new log messages to be displayed there
+			m_currentInstanceLogFile = debugFilePath.str(); 	// Sets the current Applications log file to the name created in this function
+			Log::m_path = m_currentInstanceLogFile.string();  	//Sets the Log class m_path to m_currentInstanceLogFile in order for new log messages to be displayed there
 
 			success = true;
 			Log(LogCode::LOG, "Initialization successful.");
@@ -113,6 +115,7 @@ bool Application::SetupFileSystem(){
 }
 bool Application::SetupGLFW(){
 	bool success {false};
+
 	glfwSetErrorCallback(glfw_error_callback);
 	if (!glfwInit()){
 		throw Log(LogCode::FATAL, "GLFW could not be initialized");
