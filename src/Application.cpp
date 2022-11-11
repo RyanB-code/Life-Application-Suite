@@ -94,15 +94,10 @@ bool Application::SetupFileSystem(){
 	// Gets the EXE file path
 	char buffer[MAX_PATH];
     GetModuleFileNameA(NULL, buffer, MAX_PATH);
-    std::string executablePath{buffer};  		// Assigns the path to the buffer
-
-	// Removes characters of the EXE_NAME length of the executable path 
-	for(int i{0}; i < EXE_NAME.size(); ++i){
-		executablePath.pop_back(); // Remove one character each time
-	}
+    std::filesystem::path executablePath{buffer};  		// Assigns the path to the buffer	
 	
 	// Assigns the variables to be used
-	DIRECTORY_PATH 	= executablePath;	// Makes the home directory the exePath's	(thats why we deleted the length of the exe name)
+	DIRECTORY_PATH 	= executablePath.parent_path();	DIRECTORY_PATH += "\\"; // Makes the home directory the exePath's
 	DEBUG_PATH 		= DIRECTORY_PATH.string() + "Debug\\";
 	VEHICLE_PATH	= DIRECTORY_PATH.string() + "Vehicles\\";
 

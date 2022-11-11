@@ -52,10 +52,11 @@ private:
 	std::filesystem::path 	m_currentInstanceLogFile	{ };
 
 	const 	std::string 			WINDOW_TITLE 		{"Life Application Suite"};
-	const	std::string				EXE_NAME 			{"Life-Application-Suite-0.0.1.exe"};
-			std::filesystem::path 	DIRECTORY_PATH;		// This is written to in SetupFileSystem() to make the directory there
-		 	std::filesystem::path	DEBUG_PATH;
-		 	std::filesystem::path	VEHICLE_PATH;
+	
+	// This is written to in SetupFileSystem() to make the file's directory's
+	std::filesystem::path 	DIRECTORY_PATH;
+	std::filesystem::path	DEBUG_PATH;
+	std::filesystem::path	VEHICLE_PATH;
 
 	// Setup functions. Does setup in the order listed here
 	bool SetupFileSystem();
