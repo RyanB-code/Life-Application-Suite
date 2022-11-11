@@ -16,8 +16,9 @@ void Application::Startup() {
 	if (SetupFileSystem()) {
 		if(SetupGLFW()){
 			if(SetupImGUI()){
-				SetupVehicleManager(m_app);
-				m_initialized = true;
+				if(SetupModules()){
+					m_initialized = true;
+				}
 			}
 		}
 	}
@@ -89,12 +90,30 @@ void Application::Run()
 bool Application::SetupFileSystem(){
 	bool success{false};
 
+
+	// Gets the EXE file path
+	char buffer[MAX_PATH];
+    GetModuleFileNameA(NULL, buffer, MAX_PATH);
+    std::string executablePath{buffer};  		// Assigns the path to the buffer
+
+	// Removes characters of the EXE_NAME length of the executable path 
+	for(int i{0}; i < EXE_NAME.size(); ++i){
+		executablePath.pop_back(); // Remove one character each time
+	}
+	
+	// Assigns the variables to be used
+	DIRECTORY_PATH 	= executablePath;	// Makes the home directory the exePath's	(thats why we deleted the length of the exe name)
+	DEBUG_PATH 		= DIRECTORY_PATH.string() + "Debug\\";
+	VEHICLE_PATH	= DIRECTORY_PATH.string() + "Vehicles\\";
+
+
 	// Creates directories for the files
 	if (!FileSystem::createDirectory(DIRECTORY_PATH.string()) 
 		|| !FileSystem::createDirectory(DEBUG_PATH.string()) 
 		|| !FileSystem::createDirectory(VEHICLE_PATH.string()))
 	{
 		Log(LogCode::FATAL, "Could not initialize the file system.");
+		success = false;
 	}
 	else {
 		// Once the app folders are made,
@@ -146,20 +165,22 @@ bool Application::SetupImGUI(){
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
+
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;     	// Enable Gamepad Controls
-	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
 	io.FontGlobalScale = (1.3f); 
 	//io.ConfigViewportsNoAutoMerge = true;
-	//io.ConfigViewportsNoTaskBarIcon = true;					
+	//io.ConfigViewportsNoTaskBarIcon = true;
+				
 
 	// Setup Platform/Renderer backends
 	ImGui_ImplGlfw_InitForOpenGL(m_window, true);
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
 	appStyle = &ImGui::GetStyle();
-	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	if (io.ConfigFlags)
 	{
 		appStyle->WindowRounding = 0.0f;
 		appStyle->WindowBorderSize = 1.0f;
@@ -181,6 +202,14 @@ bool Application::SetupImGUI(){
 	}
 
 	return true;
+}
+bool Application::SetupModules(){
+	bool success{false};
+
+	SetupVehicleManager(m_app); // FIX change SetupVehicleManager to setup within the module creation
+	success = true;
+
+	return success;
 }
 
 

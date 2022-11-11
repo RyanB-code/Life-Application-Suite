@@ -13,28 +13,24 @@ void Home(Application* app)
 	if(showDemoWindow) 			{ ImGui::ShowDemoWindow(); }
 	// -------------------------------------
 
-	// Show modules
-	if(showVehicleManager)		{ VehicleManager(app, showVehicleManager); }
-	if(showSettings)			{ Settings(app, showSettings); }
-	if(showDebugLog)			{ DebugLog(showDebugLog); }
-	
 
-	// Enable Docking ----------------------------------------
-	ImGuiIO& io = ImGui::GetIO();
+	static ImGuiIO& io = ImGui::GetIO();
+	// Create Docking Window over full viewport----------------------------------------
 	if(io.ConfigFlags & ImGuiConfigFlags_DockingEnable){
-		const ImGuiViewport* viewport = ImGui::GetMainViewport();
+		static const ImGuiViewport* viewport = ImGui::GetMainViewport();
 
 		ImGui::SetNextWindowPos(viewport->WorkPos);
 		ImGui::SetNextWindowSize(viewport->WorkSize);
 		ImGui::SetNextWindowViewport(viewport->ID);
 		
-		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar;
+		static ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar;
 		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
 		window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoScrollbar;
 
 
 		if(ImGui::Begin("Main Dockspace", nullptr, window_flags)) {
-			ImGuiID dockspace_id = ImGui::GetID("MainDockSpace");
+			static ImGuiID dockspace_id;
+			dockspace_id = ImGui::GetID("MainDockSpace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
 
 			// The difference in the call to BeginMenuBar() here comapred to the else statement's BeginMainMenuBar() is
@@ -45,14 +41,20 @@ void Home(Application* app)
 			}
 			ImGui::End();
 		}
-	}
+	} 
+	// -----------------------------------------------------------
+	// No Docking else statement
 	else {
 		if(ImGui::BeginMainMenuBar()){
 			MenuBar(showVehicleManager, showSettings, showDemoWindow, showDebugLog);
 			ImGui::EndMainMenuBar();
 		}
 	}
-	// -----------------------------------------------------------
+	
+	// Show modules
+	if(showVehicleManager)		{ VehicleManager(app, showVehicleManager); }
+	if(showSettings)			{ Settings(app, showSettings); }
+	if(showDebugLog)			{ DebugLog(showDebugLog); }
 
 	return;
 }

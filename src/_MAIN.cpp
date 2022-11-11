@@ -1,5 +1,5 @@
 #include "Application.h"
-
+#include <Windows.h>
 
 int main(int, char**) {
 
@@ -12,4 +12,5 @@ int main(int, char**) {
     catch(Log){
         Log(LogCode::FATAL, "Fatal error in application was caught in main");
     }
+
 }

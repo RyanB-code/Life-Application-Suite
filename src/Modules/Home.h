@@ -1,6 +1,7 @@
 #ifndef HOME_H
 #define HOME_H
 
+#include "Module.h"
 #include "DebugLog.h"
 #include "Vehicle.h"
 #include "Settings.h"
