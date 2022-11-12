@@ -53,16 +53,23 @@ private:
 
 	const 	std::string 			WINDOW_TITLE 		{"Life Application Suite"};
 	
-	// This is written to in SetupFileSystem() to make the file's directory's
+	// Paths necessary to run. The interaction and variables
+	std::string getExeParentPath() const;	// Returns the parent directory of the EXE path
+	void 		AssignPaths(std::string parentPath);
 	std::filesystem::path 	DIRECTORY_PATH;
 	std::filesystem::path	DEBUG_PATH;
 	std::filesystem::path	VEHICLE_PATH;
+
+
 
 	// Setup functions. Does setup in the order listed here
 	bool SetupFileSystem();
 	bool SetupGLFW();
 	bool SetupImGUI();
 	bool SetupModules();
+
+	bool FirstTimeSetup(); // Called from SetupFileSystem() could not find directories
+	
 	
 	std::vector<Module> m_moduleList;
 	

@@ -26,17 +26,17 @@ namespace FileSystem{
 
 		// Before creating, check if it already exists. If found, create
 		if (doesFileExist(path)) {
-			Log(LogCode::ROUTINE, path + " was found.");
+			Log(LogCode::ROUTINE, "Found " + path);
 			success = true;
 		}
 		else {
 			// IF the directory could not be created, log and return false
 			if (!std::filesystem::create_directory(path)) {
-				Log(LogCode::WARNING, "Directory " + path + " could not be created.");
+				Log(LogCode::WARNING, "Could not create directory " + path);
 				success = false;
 			}
 			else{
-				Log(LogCode::ROUTINE, path + " was created.");
+				Log(LogCode::ROUTINE, "Created directory " + path);
 				success = true;
 			}
 		}
@@ -61,7 +61,7 @@ namespace FileSystem{
 			}
 		}
 		else {
-			Log(LogCode::ROUTINE, path + " was already found.");
+			Log(LogCode::ROUTINE, "Already found " + path);
 			return true;
 		}
 	}

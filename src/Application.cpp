@@ -90,18 +90,16 @@ void Application::Run()
 bool Application::SetupFileSystem(){
 	bool success{false};
 
-
-	// Gets the EXE file path
-	char buffer[MAX_PATH];
-    GetModuleFileNameA(NULL, buffer, MAX_PATH);
-    std::filesystem::path executablePath{buffer};  		// Assigns the path to the buffer	
+	AssignPaths(getExeParentPath());
 	
-	// Assigns the variables to be used
-	DIRECTORY_PATH 	= executablePath.parent_path();	DIRECTORY_PATH += "\\"; // Makes the home directory the exePath's
-	DEBUG_PATH 		= DIRECTORY_PATH.string() + "Debug\\";
-	VEHICLE_PATH	= DIRECTORY_PATH.string() + "Vehicles\\";
-
-
+	// Checks if directories exist yet. If they do not exist, start first time setup
+	if (!FileSystem::doesFileExist(DIRECTORY_PATH.string()) 
+			|| !FileSystem::doesFileExist(DEBUG_PATH.string()) 
+			|| !FileSystem::doesFileExist(VEHICLE_PATH.string()))
+	{
+		if(!FirstTimeSetup()) { return false; }	// If first time setup was not successful, abort
+	}
+	
 	// Creates directories for the files
 	if (!FileSystem::createDirectory(DIRECTORY_PATH.string()) 
 		|| !FileSystem::createDirectory(DEBUG_PATH.string()) 
@@ -207,6 +205,109 @@ bool Application::SetupModules(){
 	return success;
 }
 
+
+std::string Application::getExeParentPath() const {
+	// Gets the EXE file path
+	char buffer[MAX_PATH];
+    GetModuleFileNameA(NULL, buffer, MAX_PATH);
+	std::filesystem::path pathBuffer{buffer}; // Gets the parent directory path
+
+	return pathBuffer.parent_path().string() + "\\";	
+}
+void Application::AssignPaths(std::string parentPath){
+	// Assigns the variables to be used
+	DIRECTORY_PATH 	= parentPath; // Makes the home directory the exePath's
+	DEBUG_PATH 		= DIRECTORY_PATH.string() + "Debug\\";
+	VEHICLE_PATH	= DIRECTORY_PATH.string() + "Vehicles\\";
+
+	Log(LogCode::LOG, "Set parent directory to " + parentPath);
+
+	return;
+}
+bool Application::FirstTimeSetup(){
+	Log(LogCode::WARNING, "Necessary directories were not found. Performing first time setup.");
+	bool success {false};
+
+	std::string desiredDirectoryBuffer{};
+
+	bool inputAccepted{false};
+	do {
+		bool confirmDesiredDirectoryAccepted{false};
+		char desiredDirectoryInput{};
+
+
+		system("cls");
+		char input{};
+		std::cout << "Required file directories were not found.\nWould you like to use default directories? (y/n)\n";
+		std::cout << "  Note: This creates necessary folders within the parent folder of this .exe\n> ";
+		std::cin  >> input;
+
+		switch(input){
+			case 'y': case 'Y':
+				inputAccepted = true;
+				success = true;
+				std::cin.clear();
+				std::cin.ignore(1000, '\n');
+				// Do nothing thereby using the already assignged folder paths of where the exe is
+			break;
+			case 'n': case 'N':
+				std::cin.clear();
+				std::cin.ignore(1000, '\n');
+
+				// Enter desired file path AND confirm it loop
+				do{
+					system("cls");
+					std::cout << "Enter desired parent directory for files: ";
+					std::getline(std::cin, desiredDirectoryBuffer);
+
+					// Ensure there is a backslash at the end
+					if(desiredDirectoryBuffer.back() != '\\' && desiredDirectoryBuffer.back() != '/'){
+						desiredDirectoryBuffer += "\\";
+					}
+							
+					std::cout << "\nDesired directory >\n" << desiredDirectoryBuffer << "\n\n";
+					std::cout << "Are you sure this is correct? (y/n)\n";
+					std::cin >> desiredDirectoryInput;
+
+					switch(desiredDirectoryInput){
+						case 'y': case 'Y':
+							confirmDesiredDirectoryAccepted = true;
+							success = true;
+							inputAccepted = true;
+							AssignPaths(desiredDirectoryBuffer); // Assign the paths to the confirmed string
+							std::cin.clear();
+							std::cin.ignore(1000, '\n');
+						break;
+						case 'n': case 'N':
+							confirmDesiredDirectoryAccepted = false;
+							std::cin.clear();
+							std::cin.ignore(1000, '\n');
+						break;
+						default:
+							std::cout << "\nInvalid input. Restarting...";
+							confirmDesiredDirectoryAccepted = false;
+							Sleep(2000);
+						break;
+					}
+				}
+				while(!confirmDesiredDirectoryAccepted);
+				
+			break;
+			default:
+				std::cout << "\nInvalid input. Restarting...";
+				inputAccepted = false;
+				std::cin.clear();
+				std::cin.ignore(1000, '\n');
+				Sleep(2000);
+			break;
+		}
+	}
+	while(!inputAccepted);
+
+	system("cls");
+
+	return success;
+}
 
 std::ostringstream Application::LogFileName() {
 	time_t now{ time(0) };

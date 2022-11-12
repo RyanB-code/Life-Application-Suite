@@ -4,13 +4,12 @@
 #include <string>
 #include <vector>
 
-// Forward declaration
 
 class Module{
 public:
     Module(const std::string setName);
     //virtual ~Module();
-    ~Module();
+    virtual ~Module();
 
     std::string getName()   const   { return m_name;    }
     bool        getShown()  const   { return m_shown;   }
