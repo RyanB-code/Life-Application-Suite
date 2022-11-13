@@ -1,10 +1,11 @@
-#pragma once
+#ifndef VEHICLE_H
+#define VEHICLE_H
 
 #include "../FileSystem.h"
 #include "../Log.h"
-#include "../Application.h"
 #include "../DateTime.h"
 
+#include "Module.h"
 
 #include <string>
 #include <vector>
@@ -70,11 +71,6 @@ private:
 
 };
 
-
-
-
-
-
 // Tracks useful information when a Vehicle gets gas. Should be assigned to a Vehicle after initialization
 class GasStop {
 public:
@@ -108,10 +104,6 @@ private:
 	Date 		m_date;
 };
 
-
-
-
-
 // Track useful information about a Vehicle. Stores lists of Repairs and Gas Stops as well as mileage of the Vehicle
 class Vehicle {
 public:
@@ -126,26 +118,11 @@ public:
 	static constexpr int maxNotesSize		{ 45 };
 
 	uint32_t 				getMileage() 		const 	{ return m_mileage; }
-	std::string 			getName() 			const 	{ return m_name; };
-	std::vector<Vehicle>& 	getVehicleList() 	const 	{ return s_vehicleList; }
+	std::string 			getName() 			const 	{ return m_name; }
 
 	std::vector<Repair>& 	getRepairList()	 			{ return repairList; }  // FIX. Instead of this, make it be a getter/setter function
 	std::vector<GasStop>& 	getGasStopList() 			{ return gasList; }		// FIX
-
-	// Functions for interacting with s_vehicleList
-	void 					addToVehicleList() 			{ s_vehicleList.push_back(*this); Log(LogCode::ROUTINE, "Added " + this->getName() + " to list of vehicles."); } 	// Used to add A vehicle to the master list
-	void					delFromVehList() 			{ std::erase(s_vehicleList, *this); }	// Compares the Vehicle's m_name and deletes all Vehicles with the same m_name
-	static bool				vehListIsEmpty()			{ return s_vehicleList.empty(); }		// Check if the master list is empty
-
-
-
-	// Saves vehicles by writing to file. The path is specified in the Application class 
-	// \return True if could save to file. False if could not.
-	friend bool SaveVehicles(const Application& app);	
-
-	// Display selectable list of vehicles
-	// \return Pointer to the selected Vehicle. Null if none is selected
-	friend Vehicle* SelectableVehicleList();
+	
 
 
 	//Given individual types, it will error check ranges and data before adding to the vehicle's list of Repairs
@@ -163,32 +140,46 @@ private:
 	std::vector<Repair>		repairList{};
 	std::vector<GasStop>	gasList{};
 
+};
+
+class VehicleManager : public Module{
+public:
+    VehicleManager(Application* app);
+    ~VehicleManager() override;
+
+    void    Display() override;
+    bool    Setup()   override;
+
+	// Functions for interacting with s_vehicleList
+	void 					addToVehicleList(Vehicle& veh) 		{ s_vehicleList.push_back(veh); Log(LogCode::ROUTINE, "Added " + veh.getName() + " to list of vehicles."); } 	// Used to add A vehicle to the master list
+	void					delFromVehList	(Vehicle& veh) 		{ std::erase(s_vehicleList, veh); Log(LogCode::ROUTINE, "Removed " + veh.getName() + " from list of vehicles.");}	// Compares the Vehicle's m_name and deletes all Vehicles with the same m_name
+	static bool				vehListIsEmpty()					{ return s_vehicleList.empty(); }		// Check if the master list is empty
+	std::vector<Vehicle>& 	getVehicleList() 	const 			{ return s_vehicleList; }
+
+private:
 	static std::vector<Vehicle> s_vehicleList;
+
+	Vehicle* 	SelectableVehicleList();						// Using ImGui, shows a list table of Vehicle's that are selectable
+	void 		ShowFullVehicleInformation	(Vehicle* veh);		// Shows all the parameter Vehicle's Repairs and GasStops in table format
+	void 		EditVehicle					(Vehicle* veh);		// Handle changes to the parameter Vehicle
+
+
+	bool SaveVehicles		(const Application& app);					// Saves vehicles by writing to file. The path is specified in the Application class 
+	bool WriteToFile		(const Application& app, Vehicle& veh);		// Writes Vehicle information to a file with the Vehicle's name
+	bool DeleteVehicle		(Vehicle& veh);								// Remove vehicle from the list, and file directory
 
 };
 
 
+// Parsing raw text functions that format the text ----------------------------------
 
-bool WriteToFile(const Application& app, Vehicle& veh);		// Writes Vehicle information to a file with the Vehicle's name
-bool DeleteVehicle(Application* app, Vehicle& veh);			// Remove vehicle from the list, and file directory
-
-
-// Parsing raw text functions --------------------------------------------------------
-
-std::string MakeVehicleName		(std::string& text);						// Deletes read characters from parameter and returns with string of the text read
-uint32_t 	MakeVehicleMiles	(std::string& text);						// Deletes read character from the parameter and returns the int read
-void 		MakeRepair			(std::string& text, Vehicle& veh);			// Make a Repair from a text stream. Adds it to veh parameter
-void 		MakeGasStop			(std::string& text, Vehicle& veh);			// Make a GasStop from a text stream. Adds it to the veh parameter
+std::string MakeVehicleName		(std::string& text);					// Deletes read characters from parameter and returns with string of the text read
+uint32_t 	MakeVehicleMiles	(std::string& text);					// Deletes read character from the parameter and returns the int read
+void 		MakeRepair			(std::string& text, Vehicle& veh);		// Make a Repair from a text stream. Adds it to veh parameter
+void 		MakeGasStop			(std::string& text, Vehicle& veh);		// Make a GasStop from a text stream. Adds it to the veh parameter
 
 // -----------------------------------------------------------------------------------
 
-
-
-// ImGui Implementation ---------------------------------------------------------------
-
-void VehicleManager				(Application* app, bool &shown);	// The Vehicle module window
-void ShowFullVehicleInformation	(Vehicle* veh);						// Shows all the parameter Vehicle's Repairs and GasStops in table format
-void EditVehicle				(Vehicle* veh);						// Handle changes to the parameter Vehicle
 
 // ------------------------------------------------------------------------------------
 /* 	bool AddVehicle(Application* app) {
@@ -402,3 +393,6 @@ void EditVehicle				(Vehicle* veh);						// Handle changes to the parameter Vehi
 	}
 */
 
+
+
+#endif

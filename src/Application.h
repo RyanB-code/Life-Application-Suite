@@ -1,7 +1,12 @@
 #pragma once
 #include "FileSystem.h"
 #include "Log.h"
+
+// Modules include
 #include "Modules/Module.h"
+#include "Modules/DebugLog.h"
+#include "Modules/Settings.h"
+#include "Modules/Vehicle.h"
 
 #include <vector>
 #include <Windows.h>
@@ -13,10 +18,7 @@
 #include <DearImGUI/imgui_impl_opengl3.h>
 
 // Forward Declarations
-class Application;									// For these Functions
-void Home					(Application* app);		// Needed in the Run() main lopp. 
-void SetupVehicleManager	(Application* app);		// Needed for initialization of the Application class
-class Module;										// For the Module list
+
 
 class Application
 {
@@ -44,7 +46,6 @@ public:
 
 
 private:
-	Application* m_app{ nullptr };
 
 	bool m_initialized	{ false };
 	bool m_vsync 		{ true };
@@ -68,12 +69,15 @@ private:
 	bool SetupImGUI();
 	bool SetupModules();
 
-	bool FirstTimeSetup(); // Called from SetupFileSystem() could not find directories
+	bool FirstTimeSetup(); 					// Called from SetupFileSystem() could not find directories
 	
-	
-	std::vector<Module> m_moduleList;
-	
-	std::ostringstream LogFileName();	//Displays the date for Log file. Ex: SUN, SEP 25, 2022
+	std::ostringstream LogFileName();		//Displays the date for Log file. Ex: SUN, SEP 25, 2022
+
+	// Module Interaction
+	static std::vector<Module*> s_moduleList;
+	void AddModule(Module* module) { s_moduleList.push_back(module); }	// Adds parameter to list of known modules
+	friend void Home(Application* app);
+	friend void MenuBar(bool &demoWindow);
 
 };
 

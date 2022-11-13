@@ -1,8 +1,7 @@
 #ifndef HOME_H
 #define HOME_H
 
-#include "Module.h"
-#include "DebugLog.h"
+
 #include "Vehicle.h"
 #include "Settings.h"
 
@@ -12,7 +11,7 @@
 void Home(Application* app);
 
 // Handles menu bar funcationality at the top of the window
-void MenuBar(bool& showVehMan, bool& showSettings, bool &demoWindow, bool &debugLog);
+void MenuBar(bool &demoWindow);
 
 #endif
 

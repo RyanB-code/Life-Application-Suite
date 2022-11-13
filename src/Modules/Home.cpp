@@ -3,16 +3,10 @@
 
 void Home(Application* app)
 {
-	// State variables for displaying modules
-	static bool showVehicleManager 	= false;
-	static bool showSettings 		= false;
-	static bool showDebugLog 		= false;
-
 	// Intent to remove in release ---------
 	static bool showDemoWindow 		= false;
-	if(showDemoWindow) 			{ ImGui::ShowDemoWindow(); }
 	// -------------------------------------
-
+	
 
 	static ImGuiIO& io = ImGui::GetIO();
 	// Create Docking Window over full viewport----------------------------------------
@@ -36,7 +30,7 @@ void Home(Application* app)
 			// The difference in the call to BeginMenuBar() here comapred to the else statement's BeginMainMenuBar() is
 			// that the dockspace occludes the MainMenuBar since the dockspace is itself a window
 			if(ImGui::BeginMenuBar()){
-				MenuBar(showVehicleManager, showSettings, showDemoWindow, showDebugLog);
+				MenuBar(showDemoWindow);
 				ImGui::EndMenuBar();
 			}
 			ImGui::End();
@@ -46,25 +40,34 @@ void Home(Application* app)
 	// No Docking else statement
 	else {
 		if(ImGui::BeginMainMenuBar()){
-			MenuBar(showVehicleManager, showSettings, showDemoWindow, showDebugLog);
+			MenuBar(showDemoWindow);
 			ImGui::EndMainMenuBar();
 		}
 	}
 	
-	// Show modules
-	if(showVehicleManager)		{ VehicleManager(app, showVehicleManager); }
-	if(showSettings)			{ Settings(app, showSettings); }
-	if(showDebugLog)			{ DebugLog(showDebugLog); }
+
+	// Show all modules in the module list
+	for(Module* module : Application::s_moduleList){
+		if(module->getShown()){
+			module->Display();
+		}
+	}
+	
+	// Intent to remove in release ---------
+	if(showDemoWindow) 			{ ImGui::ShowDemoWindow(); }
+	// -------------------------------------
 
 	return;
 }
 
-void MenuBar(bool& showVehMan, bool& showSettings, bool &demoWindow, bool &debugLog){
+void MenuBar(bool &demoWindow){
 	// Creates Dropdown item in the menu bar labeled "Modules"
 	if(ImGui::BeginMenu("Modules")){
-		ImGui::MenuItem("Vehicle Manager", nullptr, &showVehMan);
-		ImGui::MenuItem("Debug Log", nullptr, &debugLog);
-		ImGui::MenuItem("Settings", nullptr, &showSettings);
+		// Iterate through module list and display the option
+		for(Module* module : Application::s_moduleList){
+			ImGui::MenuItem(module->getName().c_str(), nullptr, &module->m_shown);
+		}
+
 		ImGui::EndMenu();
 	}
 

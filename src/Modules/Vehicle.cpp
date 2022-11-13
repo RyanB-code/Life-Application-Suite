@@ -1,6 +1,6 @@
 #include "Vehicle.h"
 
-std::vector<Vehicle> Vehicle::s_vehicleList{}; // Initializer for s_vehicleList to be used
+std::vector<Vehicle> VehicleManager::s_vehicleList{}; // Initializer for s_vehicleList to be used
 
 
 
@@ -167,12 +167,9 @@ bool Vehicle::NewRepair(uint32_t setMiles, RepairType setType, double setCost, s
 		if (repairList.back().getMileage() > m_mileage) {
 			m_mileage = repairList.back().getMileage();
 		}
-
-		Log(LogCode::ROUTINE, "Added a repair to " + m_name);
 		return true;
 	}
 	else {
-		Log(LogCode::WARNING, "Data not in correct format for a repair");
 		return false;
 	}
 
@@ -215,11 +212,9 @@ bool Vehicle::NewGasStop(uint32_t setMiles, double setGal, double setPPG, std::s
 		if (gasList.back().getMileage() > m_mileage) {
 			m_mileage = gasList.back().getMileage();
 		}
-		Log(LogCode::ROUTINE, "Added a gas stop to " + m_name);
 		return true;
 	}
 	else {
-		Log(LogCode::WARNING, "Data not in correct format for a gas stop");
 		return false;
 	}
 }
@@ -300,6 +295,11 @@ void 		MakeRepair			(std::string& text, Vehicle& veh){
 		if (c == '<') 	{ writeChar = true; }
 	}
 
+
+	// For logging
+	int 	numRepairsTotal{repairStrings.size()};
+	unsigned short 	numRepSuccessfullyAddedToVehicle{0}, numRebFailedToAddToVehicle{0};
+
 	//Reads unformatted repairStrings, formats them into Repair types and adds to vehicle
 	char separator{ '|' };
 	for (std::string currentString : repairStrings) {
@@ -365,14 +365,21 @@ void 		MakeRepair			(std::string& text, Vehicle& veh){
 				enumTypeBuf = RepairType::OTHER;
 			}
 		}
-		
+
 		// Read the dateStringBuf string and make a Date type
 		Date dateBuf{};
 		dateBuf.makeDate(dateStringBuf);
 
 		// Create the repair type
-		veh.NewRepair(mileBuf, enumTypeBuf, costBuf, notesBuf.str(), thirdPartyBuf, dateBuf);
+		if(veh.NewRepair(mileBuf, enumTypeBuf, costBuf, notesBuf.str(), thirdPartyBuf, dateBuf)) { ++numRepSuccessfullyAddedToVehicle; }
+		else { ++numRebFailedToAddToVehicle; }
 	}
+
+	// Log total unformatted strings, how many were successful at adding to the vehicle and how many failed
+	std::ostringstream msg; 
+	msg << "Vehicle [" << veh.getName() <<"] had [" << numRepairsTotal << "] unformatted Repair strings. [" 
+		<< numRepSuccessfullyAddedToVehicle << "] were added to vehicle, [" << numRebFailedToAddToVehicle << "] could not be added to vehicle";
+	Log(LogCode::ROUTINE, msg.str());
 
 	return;
 }
@@ -392,6 +399,11 @@ void 		MakeGasStop			(std::string& text, Vehicle& veh){
 		if (writeChar) 	{ foundGasBuf += c; }
 		if (c == '[') 	{ writeChar = true; }
 	}
+
+	// For logging
+	int numGSTotal{gasStrings.size()};
+	unsigned short 	numGSSuccessfullyAddedToVehicle{0}, numGSFailedToAddToVehicle{0};
+
 
 	//Reads unformatted gasStrings, formats them into GasStop types and adds to Vehicle
 	char separator{ '|' };
@@ -414,77 +426,40 @@ void 		MakeGasStop			(std::string& text, Vehicle& veh){
 		Date dateBuf{};
 		dateBuf.makeDate(dateStringBuf);
 
-		veh.NewGasStop(mileBuf, gallonsBuf, ppgBuf, notesBuf.str(), dateBuf);
+		if(veh.NewGasStop(mileBuf, gallonsBuf, ppgBuf, notesBuf.str(), dateBuf)){ ++numGSSuccessfullyAddedToVehicle; }
+		else { ++numGSFailedToAddToVehicle; }
 	}
+
+	// Log total unformatted strings, how many were successful at adding to the vehicle and how many failed
+	std::ostringstream msg; 
+	msg << "Vehicle [" << veh.getName() <<"] has [" << numGSTotal << "] unformatted Gas Stop strings. [" 
+		<< numGSSuccessfullyAddedToVehicle << "] were added to vehicle, [" << numGSFailedToAddToVehicle << "] could not be added to vehicle";
+	Log(LogCode::ROUTINE, msg.str());
 
 	return;
 }
 
-bool WriteToFile	(const Application& app, Vehicle& veh) {
-	std::ostringstream saveFileName{app.getVehicleDirectory() + veh.getName() + ".dat"};	// Sets the name to the Vehicle's m_name
-	std::ostringstream fileText; 															// Buffer of what will be written to the file
 
-	// Vehicle file "Header" portion of name and mileage
-	fileText << '(' << veh.getName() << ')';
-	fileText << '{' << veh.getMileage() << "}\n";
-	
-	for (Repair& repair : veh.getRepairList()) {
-		fileText << '<';
-		fileText << repair;
-		fileText << '>';
-		fileText << '\n';
-	}
-	for (GasStop& gasStop : veh.getGasStopList()) {
-		fileText << '[';
-		fileText << gasStop;
-		fileText << ']';
-		fileText << '\n';
-	}
-	
-	return FileSystem::writeToFile(saveFileName.str(), fileText.str());
+// Vehicle Module Implementation
+
+
+VehicleManager::VehicleManager(Application* app) : Module("Vehicle Manager", app){
+
 }
-bool SaveVehicles	(const Application& app) {
-	bool success{ false };
+VehicleManager::~VehicleManager(){
 
-	// Iterates through s_vehicleList and writes information to a file of it's m_name
-	for (Vehicle& currentVehicle : Vehicle::s_vehicleList) {
-		if (!WriteToFile(app, currentVehicle)) {
-			Log(LogCode::WARNING, "Could not save vehicle information for " + currentVehicle.getName());
-			success = false;
-		}
-		else {
-			Log(LogCode::LOG, "Saved vehicle information for " + currentVehicle.getName());
-			success = true;
-		}
-	}
-
-	return success;
 }
-bool DeleteVehicle	(Application* app, Vehicle& veh){
-	veh.delFromVehList(); // Delete from s_VehicleList
-
-	// Delete the actual file itself
-	std::string deletePath{app->getVehicleDirectory() + veh.getName() + ".dat"}; 
-	return FileSystem::deleteFile(deletePath);
-}
-
-
-
-
-// ImGui Implementation Below
-
-// Moved to top to get rid of compiler not finding friend function SelectableVehicleList()
-Vehicle* SelectableVehicleList() {
+Vehicle* VehicleManager::SelectableVehicleList() {
 	static Vehicle* selVeh{nullptr};
 
 	// Create the selectable list of vehicles
-	if(Vehicle::s_vehicleList.size() > 0){
+	if(s_vehicleList.size() > 0){
 		if (ImGui::BeginListBox("Current Vehicles", ImVec2(ImGui::GetWindowSize().x, ImGui::GetWindowSize().y-20))) 
 		{
 			// Numbers the vehicles in the list
 			static int selected = -1;
 			int vehNum{0};
-			for (Vehicle& currentVehicle : Vehicle::s_vehicleList )
+			for (Vehicle& currentVehicle : s_vehicleList )
 			{	
 				++vehNum;
 				char buf[32];
@@ -505,237 +480,7 @@ Vehicle* SelectableVehicleList() {
 
 	return selVeh;
 }
-void VehicleManager(Application* app, bool &shown){
-	if(ImGui::Begin("Vehicle Manager", &shown, 0)){
-		static bool viewVeh = false;
-		static bool editVeh = false;
-
-		static Vehicle* selectedVehicle{nullptr};
-
-		// Welcome message at top of window -------
-		auto windowWidth = ImGui::GetWindowSize().x;
-		auto textWidth   = ImGui::CalcTextSize("Vehicle Manager").x;
-
-		ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
-		ImGui::Text("Vehicle Manager");
-		ImGui::Spacing();
-
-		ImGui::TextWrapped(	"This Vehicle Manager stores all relevant information about a vehicle such as its name,"
-							" mileage, and repair and gas stop information. ");
-		ImGui::Spacing();
-		ImGui::Spacing();
-		// ----------------------------------------
-
-
-		if(Vehicle::vehListIsEmpty()){
-			ImGui::Text("There are no tracked vehicles");
-		}
-		else{	// This draws the child window for the vehicle list
-
-
-			// Algorithm for adjusting child window size --------
-			static float bigWindowX;
-			bigWindowX = ImGui::GetWindowContentRegionMax().x;
-			static float childY = 200;
-
-			static float childX {500};
-			if(bigWindowX > 510){
-				// Do nothing therefore keep window at 500 pixels if the parent window is larger than specified
-			}
-			else{
-				childX = bigWindowX - 10;	// If smaller than 510, rersize to the window size minus 10 pixels
-			}
-			// -------------------------------------------------
-
-			float vehWinX; //Forward declaration to get the size of the vehicle draw window to size buttons appropriately
-
-			// Create and draw the child window
-			ImGui::Text("Tracked Vehicles");
-			ImGui::SameLine(); ImGui::HelpMarker("Select a vehicle then choose from the options below");
-			ImGui::BeginChild("#Current Vehicles", ImVec2(childX, childY), false, ImGuiWindowFlags_AlwaysAutoResize);
-			selectedVehicle = SelectableVehicleList();
-			vehWinX = ImGui::GetWindowContentRegionWidth();
-			ImGui::EndChild();
-			
-			// Once/if vehicle is selected, these buttons appear
-			if(selectedVehicle){
-
-				//Size the buttons correctly
-				constexpr float MIN_BUTTON_SIZE = 70;
-				static float buttonX;
-				static float buttonY{30};
-				static ImVec2 buttonSize (0, buttonY);
-				static float winPadding{20};
-
-				// See if there are 3 or 4 buttons shown
-				static int buttonsShown {3};
-				if(viewVeh || editVeh){
-					buttonsShown = 4;
-				}
-				else{
-					buttonsShown = 3;
-				}
-
-				// Ensure buttons are at least the min size specified
-				if((vehWinX - winPadding) < (MIN_BUTTON_SIZE * buttonsShown)){
-					buttonX = MIN_BUTTON_SIZE;
-				}
-				else{ // Math the buttonSize to change with the size of the parent window
-					buttonX = (vehWinX - winPadding)  / buttonsShown;	
-				}
-
-				buttonSize.x = buttonX;
-				
-				ImGui::Spacing();
-				if(ImGui::Button("View", buttonSize)){
-					editVeh = false;
-					viewVeh = true;
-				}
-				ImGui::SameLine();
-				if(ImGui::Button("Edit", buttonSize)){
-					viewVeh = false;
-					editVeh = true;
-				}
-				ImGui::SameLine();  
-				if(ImGui::Button("Delete", buttonSize)){
-					ImGui::OpenPopup("Delete?");
-				}
-
-				// Code for popup modal
-				// Always center this window when appearing
-				ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-				ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-				if (ImGui::BeginPopupModal("Delete?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-				{
-					ImGui::Text("This will delete all of the Vehicle's information\nThis operation cannot be undone!\n\n");
-					ImGui::Separator();
-
-					if (ImGui::Button("OK", ImVec2(120, 0))) 
-					{
-						Vehicle vehBufferToDel = *selectedVehicle;
-						selectedVehicle = nullptr;
-						viewVeh = false;
-						editVeh = false;
-						if(DeleteVehicle(app, vehBufferToDel)){
-							Log(LogCode::WARNING, "Failed to delete vehicle. In Display.cpp");
-						}
-						ImGui::CloseCurrentPopup(); 
-					}
-					ImGui::SetItemDefaultFocus();
-					ImGui::SameLine();
-					if (ImGui::Button("Cancel", ImVec2(120, 0))) 
-					{ 
-						ImGui::CloseCurrentPopup(); 
-					}
-					ImGui::EndPopup();
-				} // End popup modal code 
-
-
-				// Button to close the detailed info window
-				if(viewVeh || editVeh){
-					ImGui::SameLine(); 
-					if(ImGui::Button("Close", buttonSize)){
-						viewVeh = false;
-						editVeh = false;
-					}
-				}
-			} 
-
-
-			//What happens when a vehicle action button is hit
-			if(viewVeh || editVeh){
-				ImGui::Spacing();
-				ImGui::Spacing();
-				ImGui::Spacing();
-				static float bigWindowX = ImGui::GetWindowContentRegionMax().x;				
-
-				static float childX {700};
-				static float childY {410};
-				if(bigWindowX > 710){
-
-				}
-				else{
-					childX = bigWindowX - 20;
-				}
-
-				//Starting new child window with vehicle info
-				if(viewVeh) ImGui::Text("View %s", selectedVehicle->getName().c_str());
-				if(editVeh) ImGui::Text("Edit %s", selectedVehicle->getName().c_str());
-				ImGui::SameLine(); ImGui::HelpMarker("This shows all the vehicle information");
-				ImGui::SameLine(); 
-
-
-				if(ImGui::Button("Inc Width", (ImVec2 (90, 20)))){
-					childX += 10;
-				}
-				ImGui::SameLine(); 
-				if(ImGui::Button("Dec Width", (ImVec2 (90, 20)))){
-					childX -= 10;
-				}
-
-				if(viewVeh){
-					if(!selectedVehicle){ 
-						//Ensure there is a selected Vehicle
-					}
-					else{
-						if(ImGui::BeginChild("#View Full Vehicle Info", ImVec2(childX, childY), false)){
-							ShowFullVehicleInformation(selectedVehicle);
-						}
-						ImGui::EndChild();
-					}
-					
-				}
-
-				if(editVeh){
-					if(ImGui::BeginChild("#Edit Vehicle Info", ImVec2(childX, childY), false)){
-						EditVehicle(selectedVehicle);
-					}
-					ImGui::EndChild();
-				}
-
-			}
-			else{
-				ImGui::Spacing();
-				ImGui::TextWrapped("A repair can track:");
-				ImGui::BulletText("Mileage it was done");
-				ImGui::BulletText("The type of repair it was (oil change, light replacement, washer fluid fill, etc.)");
-				ImGui::BulletText("How much the total cost was");
-				ImGui::BulletText("Was it done by a third party?");
-				ImGui::BulletText("Any notes you would like to add");
-				ImGui::BulletText("And the date it was done");
-			}
-		}
-	}
-	ImGui::End(); //End Vehicle Manager window
-	return;
-}
-void SetupVehicleManager(Application* app){
-
-	//Go through the vehicle folder and store the names of the files
-	std::vector<std::string> vehicleFiles;
-	FileSystem::filesInDirectory(app->getVehicleDirectory(), vehicleFiles);
-
-	//Iterate through the files in the folder found and create Vehicle types
-	for (const std::string& fileName : vehicleFiles) {
-		std::ostringstream fileText;
-
-		//Opens file, reads text, outputs to fileText
-		if (!FileSystem::readFile(fileName, fileText)) {
-			//If vehicle file couldn't be opened to read, do nothing
-		}
-		else {
-			std::string vehInfoBuf{ fileText.str() };	//Stores the file text in string format
-			Vehicle vehicleBuffer{ MakeVehicleName(vehInfoBuf), MakeVehicleMiles(vehInfoBuf) };
-		
-			MakeRepair(vehInfoBuf, vehicleBuffer);		//Make repairs from the remaining text and add to vehicle
-			MakeGasStop(vehInfoBuf, vehicleBuffer);		//Make Gas stop from the remaining text
-
-			vehicleBuffer.addToVehicleList();			//Add vehicleBuffer to the master vehicle list
-		}
-	}		
-}
-void EditVehicle(Vehicle* veh){
+void VehicleManager::EditVehicle(Vehicle* veh){
 	static ImVec2 buttonSize;
 	buttonSize.x = ImGui::GetWindowWidth() / 2;
 	buttonSize.y = 30;
@@ -749,8 +494,7 @@ void EditVehicle(Vehicle* veh){
 
 	return;
 }
-
-void ShowFullVehicleInformation(Vehicle* veh) {
+void VehicleManager::ShowFullVehicleInformation(Vehicle* veh) {
 	static const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
 	ImVec2 outer_size = ImVec2(0.0f, TEXT_BASE_HEIGHT * 8);
 
@@ -851,4 +595,21 @@ void ShowFullVehicleInformation(Vehicle* veh) {
 	ImGui::EndTable();
 	}
 	return;
+}
+bool VehicleManager::SaveVehicles	(const Application& app) {
+	bool success{ false };
+
+	// Iterates through s_vehicleList and writes information to a file of it's m_name
+	for (Vehicle& currentVehicle : s_vehicleList) {
+		if (!WriteToFile(app, currentVehicle)) {
+			Log(LogCode::WARNING, "Could not save vehicle information for " + currentVehicle.getName());
+			success = false;
+		}
+		else {
+			Log(LogCode::LOG, "Saved vehicle information for " + currentVehicle.getName());
+			success = true;
+		}
+	}
+
+	return success;
 }

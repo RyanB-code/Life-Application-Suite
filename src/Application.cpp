@@ -2,6 +2,10 @@
 
 #pragma warning(disable : 4996)		// Disables use of time_t and tm in creating the Log file name
 
+// Declare static variables
+std::vector<Module*> Application::s_moduleList{};
+
+
 // Needed for GLFW Setup
 static void glfw_error_callback(int error, const char* description)
 {
@@ -11,13 +15,12 @@ static void glfw_error_callback(int error, const char* description)
 }
 
 void Application::Startup() {
-	m_app = this;
-
 	if (SetupFileSystem()) {
 		if(SetupGLFW()){
 			if(SetupImGUI()){
 				if(SetupModules()){
 					m_initialized = true;
+					Log(LogCode::LOG, "Application was successfully setup");
 				}
 			}
 		}
@@ -32,7 +35,7 @@ void Application::Run()
 {
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f); //for testing
 
-	while (!glfwWindowShouldClose(m_app->m_window))
+	while (!glfwWindowShouldClose(this->m_window))
 	{
 		// Poll and handle events (inputs, window resize, etc.)
 		// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
@@ -47,13 +50,13 @@ void Application::Run()
 		ImGui::NewFrame();
 
 		// My code goes here for window calls ------------
-		Home(m_app);
+		Home(this);
 		// -----------------------------------------------
 
 		// Rendering
 		ImGui::Render();
-		glfwGetFramebufferSize(m_app->m_window, &m_app->m_window_x, &m_app->m_window_y);
-		glViewport(0, 0, m_app->m_window_x, m_app->m_window_y);
+		glfwGetFramebufferSize(this->m_window, &this->m_window_x, &this->m_window_y);
+		glViewport(0, 0, this->m_window_x, this->m_window_y);
 		glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -69,7 +72,7 @@ void Application::Run()
 			ImGui::RenderPlatformWindowsDefault();
 			glfwMakeContextCurrent(backup_current_context);
 		}
-		glfwSwapBuffers(m_app->m_window);
+		glfwSwapBuffers(this->m_window);
 	}
 
 	// Cleanup
@@ -77,7 +80,7 @@ void Application::Run()
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
-	glfwDestroyWindow(m_app->m_window);
+	glfwDestroyWindow(this->m_window);
 	glfwTerminate();
 
 	return;
@@ -119,7 +122,6 @@ bool Application::SetupFileSystem(){
 			Log::m_path = m_currentInstanceLogFile.string();  	//Sets the Log class m_path to m_currentInstanceLogFile in order for new log messages to be displayed there
 
 			success = true;
-			Log(LogCode::LOG, "Initialization successful.");
 		}
 	}
 
@@ -199,30 +201,29 @@ bool Application::SetupImGUI(){
 bool Application::SetupModules(){
 	bool success{false};
 
-	SetupVehicleManager(m_app); // FIX change SetupVehicleManager to setup within the module creation
+	static Debug 			debugManager	{this};
+	static Settings 		settings		{this};
+	static VehicleManager 	vehicleManager 	{this};
+
+
+	AddModule(&debugManager);
+	AddModule(&settings);
+	AddModule(&vehicleManager);
+
+	// Iterate through the module list and setup
+	for(Module* module : s_moduleList){
+		if(!module->Setup()){
+			std::string msg{"Could not setup " + module->getName() + ". Did not add to Module list"};
+			Log(LogCode::WARNING, msg);
+		}
+		else { 
+			Log(LogCode::ROUTINE, "Successfully initialized Module " + module->getName());
+		}
+	}
+
 	success = true;
 
 	return success;
-}
-
-
-std::string Application::getExeParentPath() const {
-	// Gets the EXE file path
-	char buffer[MAX_PATH];
-    GetModuleFileNameA(NULL, buffer, MAX_PATH);
-	std::filesystem::path pathBuffer{buffer}; // Gets the parent directory path
-
-	return pathBuffer.parent_path().string() + "\\";	
-}
-void Application::AssignPaths(std::string parentPath){
-	// Assigns the variables to be used
-	DIRECTORY_PATH 	= parentPath; // Makes the home directory the exePath's
-	DEBUG_PATH 		= DIRECTORY_PATH.string() + "Debug\\";
-	VEHICLE_PATH	= DIRECTORY_PATH.string() + "Vehicles\\";
-
-	Log(LogCode::LOG, "Set parent directory to " + parentPath);
-
-	return;
 }
 bool Application::FirstTimeSetup(){
 	Log(LogCode::WARNING, "Necessary directories were not found. Performing first time setup.");
@@ -258,6 +259,7 @@ bool Application::FirstTimeSetup(){
 				do{
 					system("cls");
 					std::cout << "Enter desired parent directory for files: ";
+					std::cout << "  Note: As of v0.0.1, the .exe needs to be in the same parent directory.\n  The folder containing the .exe will also contain the files";
 					std::getline(std::cin, desiredDirectoryBuffer);
 
 					// Ensure there is a backslash at the end
@@ -307,6 +309,25 @@ bool Application::FirstTimeSetup(){
 	system("cls");
 
 	return success;
+}
+
+std::string Application::getExeParentPath() const {
+	// Gets the EXE file path
+	char buffer[MAX_PATH];
+    GetModuleFileNameA(NULL, buffer, MAX_PATH);
+	std::filesystem::path pathBuffer{buffer}; // Gets the parent directory path
+
+	return pathBuffer.parent_path().string() + "\\";	
+}
+void Application::AssignPaths(std::string parentPath){
+	// Assigns the variables to be used
+	DIRECTORY_PATH 	= parentPath; // Makes the home directory the exePath's
+	DEBUG_PATH 		= DIRECTORY_PATH.string() + "Debug\\";
+	VEHICLE_PATH	= DIRECTORY_PATH.string() + "Vehicles\\";
+
+	Log(LogCode::LOG, "Set parent directory to " + parentPath);
+
+	return;
 }
 
 std::ostringstream Application::LogFileName() {
@@ -372,3 +393,280 @@ std::ostringstream Application::LogFileName() {
 	return date;
 }
 //--------------------
+
+
+// Modules that need App definitions
+
+void Settings::Display(){
+    if( ImGui::Begin("Settings", &m_shown, 0)){
+            ImGui::Text("Main path:  \t\t%s", m_app->getMainDirectory().c_str());
+            ImGui::Text("Debug path: \t\t%s", m_app->getDebugDirectory().c_str());
+            ImGui::Text("Vehicle path:   \t%s", m_app->getVehicleDirectory().c_str());
+            ImGui::Text("Log File:   \t\t%s", m_app->getLogFilePath().c_str());
+        }
+        ImGui::End();
+}
+
+bool VehicleManager::Setup(){
+
+	// Go through the vehicle folder and store the names of the files
+	std::vector<std::string> vehicleFiles;
+	FileSystem::filesInDirectory(m_app->getVehicleDirectory(), vehicleFiles);
+
+	// Iterate through the files in the folder found and create Vehicle types
+	for (const std::string& fileName : vehicleFiles) {
+		std::ostringstream fileText;
+
+		//Opens file, reads text, outputs to fileText
+		if (!FileSystem::readFile(fileName, fileText)) {
+			// If vehicle file couldn't be opened to read, do nothing
+			// Unsuccessful open logged in readFile()
+		}
+		else {
+			std::string vehInfoBuf{ fileText.str() };	//Stores the file text in string format
+			Vehicle vehicleBuffer{ MakeVehicleName(vehInfoBuf), MakeVehicleMiles(vehInfoBuf) };
+		
+			MakeRepair(vehInfoBuf, vehicleBuffer);		//Make repairs from the remaining text and add to vehicle
+			MakeGasStop(vehInfoBuf, vehicleBuffer);		//Make Gas stop from the remaining text
+
+			addToVehicleList(vehicleBuffer);			//Add vehicleBuffer to the master vehicle list
+		}
+	}
+
+	return true;
+}
+void VehicleManager::Display() {
+	if(ImGui::Begin("Vehicle Manager", &m_shown, 0)){
+		static bool viewVeh = false;
+		static bool editVeh = false;
+
+		static Vehicle* selectedVehicle{nullptr};
+
+		// Welcome message at top of window -------
+		auto windowWidth = ImGui::GetWindowSize().x;
+		auto textWidth   = ImGui::CalcTextSize("Vehicle Manager").x;
+
+		ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+		ImGui::Text("Vehicle Manager");
+		ImGui::Spacing();
+
+		ImGui::TextWrapped(	"This Vehicle Manager stores all relevant information about a vehicle such as its name,"
+							" mileage, and repair and gas stop information. ");
+		ImGui::Spacing();
+		ImGui::Spacing();
+		// ----------------------------------------
+
+
+		if(vehListIsEmpty()){
+			ImGui::Text("There are no tracked vehicles");
+		}
+		else{	// This draws the child window for the vehicle list
+
+
+			// Algorithm for adjusting child window size --------
+			static float bigWindowX;
+			bigWindowX = ImGui::GetWindowContentRegionMax().x;
+			static float childY = 200;
+
+			static float childX {500};
+			if(bigWindowX > 510){
+				// Do nothing therefore keep window at 500 pixels if the parent window is larger than specified
+			}
+			else{
+				childX = bigWindowX - 10;	// If smaller than 510, rersize to the window size minus 10 pixels
+			}
+			// -------------------------------------------------
+
+			float vehWinX; //Forward declaration to get the size of the vehicle draw window to size buttons appropriately
+
+			// Create and draw the child window
+			ImGui::Text("Tracked Vehicles");
+			ImGui::SameLine(); ImGui::HelpMarker("Select a vehicle then choose from the options below");
+			ImGui::BeginChild("#Current Vehicles", ImVec2(childX, childY), false, ImGuiWindowFlags_AlwaysAutoResize);
+			selectedVehicle = SelectableVehicleList();
+			vehWinX = ImGui::GetWindowContentRegionWidth();
+			ImGui::EndChild();
+			
+			// Once/if vehicle is selected, these buttons appear
+			if(selectedVehicle){
+
+				//Size the buttons correctly
+				constexpr float MIN_BUTTON_SIZE = 70;
+				static float buttonX;
+				static float buttonY{30};
+				static ImVec2 buttonSize (0, buttonY);
+				static float winPadding{20};
+
+				// See if there are 3 or 4 buttons shown
+				static int buttonsShown {3};
+				if(viewVeh || editVeh){
+					buttonsShown = 4;
+				}
+				else{
+					buttonsShown = 3;
+				}
+
+				// Ensure buttons are at least the min size specified
+				if((vehWinX - winPadding) < (MIN_BUTTON_SIZE * buttonsShown)){
+					buttonX = MIN_BUTTON_SIZE;
+				}
+				else{ // Math the buttonSize to change with the size of the parent window
+					buttonX = (vehWinX - winPadding)  / buttonsShown;	
+				}
+
+				buttonSize.x = buttonX;
+				
+				ImGui::Spacing();
+				if(ImGui::Button("View", buttonSize)){
+					editVeh = false;
+					viewVeh = true;
+				}
+				ImGui::SameLine();
+				if(ImGui::Button("Edit", buttonSize)){
+					viewVeh = false;
+					editVeh = true;
+				}
+				ImGui::SameLine();  
+				if(ImGui::Button("Delete", buttonSize)){
+					ImGui::OpenPopup("Delete?");
+				}
+
+				// Code for popup modal
+				// Always center this window when appearing
+				ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+				ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+				if (ImGui::BeginPopupModal("Delete?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+				{
+					ImGui::Text("This will delete all of the Vehicle's information\nThis operation cannot be undone!\n\n");
+					ImGui::Separator();
+
+					if (ImGui::Button("OK", ImVec2(120, 0))) 
+					{
+						Vehicle vehBufferToDel = *selectedVehicle;
+						selectedVehicle = nullptr;
+						viewVeh = false;
+						editVeh = false;
+						if(DeleteVehicle(vehBufferToDel)){
+							Log(LogCode::WARNING, "Failed to delete vehicle. In Display.cpp");
+						}
+						ImGui::CloseCurrentPopup(); 
+					}
+					ImGui::SetItemDefaultFocus();
+					ImGui::SameLine();
+					if (ImGui::Button("Cancel", ImVec2(120, 0))) 
+					{ 
+						ImGui::CloseCurrentPopup(); 
+					}
+					ImGui::EndPopup();
+				} // End popup modal code 
+
+
+				// Button to close the detailed info window
+				if(viewVeh || editVeh){
+					ImGui::SameLine(); 
+					if(ImGui::Button("Close", buttonSize)){
+						viewVeh = false;
+						editVeh = false;
+					}
+				}
+			} 
+
+
+			//What happens when a vehicle action button is hit
+			if(viewVeh || editVeh){
+				ImGui::Spacing();
+				ImGui::Spacing();
+				ImGui::Spacing();
+				static float bigWindowX = ImGui::GetWindowContentRegionMax().x;				
+
+				static float childX {700};
+				static float childY {410};
+				if(bigWindowX > 710){
+
+				}
+				else{
+					childX = bigWindowX - 20;
+				}
+
+				//Starting new child window with vehicle info
+				if(viewVeh) ImGui::Text("View %s", selectedVehicle->getName().c_str());
+				if(editVeh) ImGui::Text("Edit %s", selectedVehicle->getName().c_str());
+				ImGui::SameLine(); ImGui::HelpMarker("This shows all the vehicle information");
+				ImGui::SameLine(); 
+
+
+				if(ImGui::Button("Inc Width", (ImVec2 (90, 20)))){
+					childX += 10;
+				}
+				ImGui::SameLine(); 
+				if(ImGui::Button("Dec Width", (ImVec2 (90, 20)))){
+					childX -= 10;
+				}
+
+				if(viewVeh){
+					if(!selectedVehicle){ 
+						//Ensure there is a selected Vehicle
+					}
+					else{
+						if(ImGui::BeginChild("#View Full Vehicle Info", ImVec2(childX, childY), false)){
+							ShowFullVehicleInformation(selectedVehicle);
+						}
+						ImGui::EndChild();
+					}
+					
+				}
+
+				if(editVeh){
+					if(ImGui::BeginChild("#Edit Vehicle Info", ImVec2(childX, childY), false)){
+						EditVehicle(selectedVehicle);
+					}
+					ImGui::EndChild();
+				}
+
+			}
+			else{
+				ImGui::Spacing();
+				ImGui::TextWrapped("A repair can track:");
+				ImGui::BulletText("Mileage it was done");
+				ImGui::BulletText("The type of repair it was (oil change, light replacement, washer fluid fill, etc.)");
+				ImGui::BulletText("How much the total cost was");
+				ImGui::BulletText("Was it done by a third party?");
+				ImGui::BulletText("Any notes you would like to add");
+				ImGui::BulletText("And the date it was done");
+			}
+		}
+	}
+	ImGui::End(); //End Vehicle Manager window
+	return;
+}
+bool VehicleManager::WriteToFile(const Application& app, Vehicle& veh) {
+	std::ostringstream saveFileName{app.getVehicleDirectory() + veh.getName() + ".dat"};	// Sets the name to the Vehicle's m_name
+	std::ostringstream fileText; 															// Buffer of what will be written to the file
+
+	// Vehicle file "Header" portion of name and mileage
+	fileText << '(' << veh.getName() << ')';
+	fileText << '{' << veh.getMileage() << "}\n";
+	
+	for (Repair& repair : veh.getRepairList()) {
+		fileText << '<';
+		fileText << repair;
+		fileText << '>';
+		fileText << '\n';
+	}
+	for (GasStop& gasStop : veh.getGasStopList()) {
+		fileText << '[';
+		fileText << gasStop;
+		fileText << ']';
+		fileText << '\n';
+	}
+	
+	return FileSystem::writeToFile(saveFileName.str(), fileText.str());
+}
+bool VehicleManager::DeleteVehicle	(Vehicle& veh){
+	delFromVehList(veh); // Delete from s_VehicleList
+
+	// Delete the actual file itself
+	std::string deletePath{m_app->getVehicleDirectory() + veh.getName() + ".dat"}; 
+	return FileSystem::deleteFile(deletePath);
+}
