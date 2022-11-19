@@ -201,14 +201,16 @@ bool Application::SetupImGUI(){
 bool Application::SetupModules(){
 	bool success{false};
 
+
 	static Debug 			debugManager	{this};
 	static Settings 		settings		{this};
 	static VehicleManager 	vehicleManager 	{this};
 
 
-	AddModule(&debugManager);
-	AddModule(&settings);
+	// The order of adding will determine the order they are in the menu
 	AddModule(&vehicleManager);
+	AddModule(&settings);
+	AddModule(&debugManager);
 
 	// Iterate through the module list and setup
 	for(Module* module : s_moduleList){
@@ -442,58 +444,38 @@ void VehicleManager::Display() {
 
 		static Vehicle* selectedVehicle{nullptr};
 
-		// Welcome message at top of window -------
-		auto windowWidth = ImGui::GetWindowSize().x;
-		auto textWidth   = ImGui::CalcTextSize("Vehicle Manager").x;
-
-		ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
-		ImGui::Text("Vehicle Manager");
-		ImGui::Spacing();
-
-		ImGui::TextWrapped(	"This Vehicle Manager stores all relevant information about a vehicle such as its name,"
-							" mileage, and repair and gas stop information. ");
-		ImGui::Spacing();
-		ImGui::Spacing();
-		// ----------------------------------------
-
+		// Dispays header
+		ImGuiMods::Header("Vehicle Manager", "This Vehicle Manager stores all relevant information about a vehicle such as its name mileage,"
+			" and repair and gas stop information. ");
+		
 
 		if(vehListIsEmpty()){
 			ImGui::Text("There are no tracked vehicles");
 		}
 		else{	// This draws the child window for the vehicle list
 
+			ImGuiMods::BeginResizeableChild("Tracked Vehicles", 200, 500, 300);
+			ImGui::SameLine(); ImGuiMods::HelpMarker("Select a vehicle then choose from the options below");
+			ImGui::Spacing();
 
-			// Algorithm for adjusting child window size --------
-			static float bigWindowX;
-			bigWindowX = ImGui::GetWindowContentRegionMax().x;
-			static float childY = 200;
+			selectedVehicle = SelectableVehicleList();	// Show available vehicles list and return with selected vehicle
+			static float vehWinX; vehWinX = ImGui::GetWindowContentRegionWidth();
 
-			static float childX {500};
-			if(bigWindowX > 510){
-				// Do nothing therefore keep window at 500 pixels if the parent window is larger than specified
-			}
-			else{
-				childX = bigWindowX - 10;	// If smaller than 510, rersize to the window size minus 10 pixels
-			}
-			// -------------------------------------------------
-
-			float vehWinX; //Forward declaration to get the size of the vehicle draw window to size buttons appropriately
-
-			// Create and draw the child window
-			ImGui::Text("Tracked Vehicles");
-			ImGui::SameLine(); ImGui::HelpMarker("Select a vehicle then choose from the options below");
-			ImGui::BeginChild("#Current Vehicles", ImVec2(childX, childY), false, ImGuiWindowFlags_AlwaysAutoResize);
-			selectedVehicle = SelectableVehicleList();
-			vehWinX = ImGui::GetWindowContentRegionWidth();
-			ImGui::EndChild();
-			
-			// Once/if vehicle is selected, these buttons appear
 			if(selectedVehicle){
+
+				ImGuiMods::CenterText("Vehicle Information");
+				ImGui::Text("Total Repairs:\t   %d", selectedVehicle->getRepairList().size());
+				ImGui::Text("Total Gas Stops: \t%d", selectedVehicle->getGasStopList().size());
+				ImGui::Text("Last Updated: \t   %s", "Not Implemented");
+				
+
+				// Once/if vehicle is selected, these buttons appear. Display at bottom of screen
+				static float buttonY{30};
+				ImGui::SetCursorPosY(ImGui::GetWindowHeight() - buttonY - 20);
 
 				//Size the buttons correctly
 				constexpr float MIN_BUTTON_SIZE = 70;
 				static float buttonX;
-				static float buttonY{30};
 				static ImVec2 buttonSize (0, buttonY);
 				static float winPadding{20};
 
@@ -571,6 +553,9 @@ void VehicleManager::Display() {
 					}
 				}
 			} 
+			ImGui::EndChild();
+			
+		
 
 
 			//What happens when a vehicle action button is hit
@@ -592,7 +577,7 @@ void VehicleManager::Display() {
 				//Starting new child window with vehicle info
 				if(viewVeh) ImGui::Text("View %s", selectedVehicle->getName().c_str());
 				if(editVeh) ImGui::Text("Edit %s", selectedVehicle->getName().c_str());
-				ImGui::SameLine(); ImGui::HelpMarker("This shows all the vehicle information");
+				ImGui::SameLine(); ImGuiMods::HelpMarker("This shows all the vehicle information");
 				ImGui::SameLine(); 
 
 

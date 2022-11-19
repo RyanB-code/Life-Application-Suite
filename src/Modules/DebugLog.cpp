@@ -8,12 +8,6 @@ Debug::~Debug(){
 
 }
 
-void Debug::Display(){
-	 if(ImGui::Begin(m_name.c_str(), &m_shown, 0)){
-        ImGui::Text("Now inside %s", m_name.c_str());
-    }
-    ImGui::End(); //End Window
-}
 
 bool Debug::Setup(){
 	return true;

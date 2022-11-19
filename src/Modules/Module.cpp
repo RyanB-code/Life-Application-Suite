@@ -17,7 +17,7 @@ void Module::Display(){
 }
 
 bool Module::Setup(){
-    Log(LogCode::WARNING, "A Module's Setup function called, no override function was found");
+    
 
     return false;
 }

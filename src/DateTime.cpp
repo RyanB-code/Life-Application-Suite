@@ -7,7 +7,7 @@ std::string Date::string() const{
 		return os.str();
 	}
 
-	os << day << ' ';
+	os << std::setw(2) << std::setfill('0') << day << ' ';
 
 	switch (month) {
 	case 1:

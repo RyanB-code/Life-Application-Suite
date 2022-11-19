@@ -10,6 +10,8 @@
 
 #include <iostream>
 
+#include "Modules/DebugLog.h"
+
 
 enum class LogCode {
 	FATAL,
@@ -29,6 +31,7 @@ public:
 	static std::vector<Log> s_logList;
 
 	friend std::ostream& operator<<(std::ostream& os, const Log& log);
+	friend void Debug::Display();
 
 private:
 	static bool m_wroteAllStoredLogs;

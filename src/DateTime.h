@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include <string>
+#include <iomanip>
 
 struct Date{
 	Date(unsigned short setDay=0, unsigned short setMonth=0, int setYear=0)
@@ -18,6 +19,7 @@ struct Date{
 	int year;
 
 	std::string string() const;
+
 	friend std::ostream& operator<<(std::ostream& os, const Date& date);
 
 	// Writes a Date type from a string of text

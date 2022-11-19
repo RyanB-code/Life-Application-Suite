@@ -195,10 +195,11 @@ bool Vehicle::NewGasStop(uint32_t setMiles, double setGal, double setPPG, std::s
 		GasStop gsBuffer{ setMiles, setGal, setPPG, setNotes, setDate };
 		gasList.push_back(gsBuffer);
 
-		//If the New GasStop's mileage is higher than the last element in the vector, no need to sort.
+
+		// Sort by mileage
+		// If the New GasStop's mileage is higher than the last element in the vector, no need to sort.
 		if (gasList.size() == 1 || gsBuffer.getMileage() > gasList[gasList.size() - 2].getMileage()) { } // Does nothing if no need to sort
 		else { 
-			// Sort by mileage
 			for (int i{ 0 }; i < gasList.size() - 1; ++i) {
 				for (int x{ i + 1 }; x < gasList.size(); ++x) {
 					if (gasList[x].getMileage() < gasList[i].getMileage()) {
@@ -207,11 +208,13 @@ bool Vehicle::NewGasStop(uint32_t setMiles, double setGal, double setPPG, std::s
 				}
 			}
 		}
-
-		//If the mileage is higher than the vehicle, set the vehicle's mileage
+		// If the mileage is higher than the vehicle, set the vehicle's mileage
 		if (gasList.back().getMileage() > m_mileage) {
 			m_mileage = gasList.back().getMileage();
 		}
+
+
+
 		return true;
 	}
 	else {
@@ -297,7 +300,7 @@ void 		MakeRepair			(std::string& text, Vehicle& veh){
 
 
 	// For logging
-	int 	numRepairsTotal{repairStrings.size()};
+	size_t 	numRepairsTotal{repairStrings.size()};
 	unsigned short 	numRepSuccessfullyAddedToVehicle{0}, numRebFailedToAddToVehicle{0};
 
 	//Reads unformatted repairStrings, formats them into Repair types and adds to vehicle
@@ -401,7 +404,7 @@ void 		MakeGasStop			(std::string& text, Vehicle& veh){
 	}
 
 	// For logging
-	int numGSTotal{gasStrings.size()};
+	size_t numGSTotal{gasStrings.size()};
 	unsigned short 	numGSSuccessfullyAddedToVehicle{0}, numGSFailedToAddToVehicle{0};
 
 
@@ -454,7 +457,7 @@ Vehicle* VehicleManager::SelectableVehicleList() {
 
 	// Create the selectable list of vehicles
 	if(s_vehicleList.size() > 0){
-		if (ImGui::BeginListBox("Current Vehicles", ImVec2(ImGui::GetWindowSize().x, ImGui::GetWindowSize().y-20))) 
+		if (ImGui::BeginListBox("Current Vehicles", ImVec2(ImGui::GetWindowSize().x, 120))) 
 		{
 			// Numbers the vehicles in the list
 			static int selected = -1;
@@ -513,37 +516,42 @@ void VehicleManager::ShowFullVehicleInformation(Vehicle* veh) {
 		for (Repair& rep : veh->getRepairList())
 		{
 			ImGui::TableNextRow();
+
+			// Buffers for the specified repair that will be overweitten
 			int				mileBuf;
 			std::string		typeBuf;
 			double			costBuf;
 			std::string		notesBuf;
 			bool			thirdPartyBuf;
 			std::string		dateBuf;
+
+			// Write to the buffers
 			rep.getRepairInfo(mileBuf, typeBuf, costBuf, notesBuf, thirdPartyBuf, dateBuf);
 
+			// Display in the table
 			int column{0};
-			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%s", dateBuf.c_str());
+			ImGui::TableSetColumnIndex(column);	
+			ImGui::Text("%s", dateBuf.c_str());						// Date
 			++column;
 
 			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%d", mileBuf);
+			ImGui::Text("%d", mileBuf);								// Mileage
 			++column;
 
 			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%s", typeBuf.c_str());
+			ImGui::Text("%s", typeBuf.c_str());						// Type of Repair
 			++column;
 			
 			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%f", costBuf);
+			ImGui::Text("%4f", costBuf);								// Cost of Repair
 			++column;
 			
 			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%s", thirdPartyBuf ? "true" : "false");
+			ImGui::Text("%s", thirdPartyBuf ? "true" : "false");	// Third Party
 			++column;
 
 			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%s", notesBuf.c_str());	
+			ImGui::Text("%s", notesBuf.c_str());					// Notes
 		}
 	ImGui::EndTable();
 	}
@@ -564,33 +572,37 @@ void VehicleManager::ShowFullVehicleInformation(Vehicle* veh) {
 		for (GasStop& gas : veh->getGasStopList())
 		{
 			ImGui::TableNextRow();
+
+			// Buffers for the specified GasStop that will be overweitten
 			int			mileBuf;
 			double		galBuf;
 			double		costBuf;
 			std::string notesBuf;
 			std::string dateBuf;
+
+			// Write to the buffers
 			gas.getGasStopInfo(mileBuf, galBuf, costBuf, notesBuf, dateBuf);
 
 			int column{0};
 
 			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%s", dateBuf.c_str());
+			ImGui::Text("%s", dateBuf.c_str());		// Date
 			++column;
 
 			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%d", mileBuf);
+			ImGui::Text("%d", mileBuf);				// Mileage
 			++column;
 
 			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%f", galBuf);
+			ImGui::Text("%f", galBuf);				// Gallons total
 			++column;
 			
 			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%f", costBuf);
+			ImGui::Text("%f", costBuf);			    // Cost per gallon
 			++column;
 			
 			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%s", notesBuf.c_str());	
+			ImGui::Text("%s", notesBuf.c_str());	// Notes
 		}
 	ImGui::EndTable();
 	}

@@ -1,12 +1,12 @@
 #ifndef MODULE_H
 #define MODULE_H
 
-#include "../Log.h"
 
 #include <string>
 #include <vector>
 
 #include <DearImGUI/imgui.h>
+#include <DearImGUI/imgui_mods.h>
 
 // Forward declaration
 class Application;

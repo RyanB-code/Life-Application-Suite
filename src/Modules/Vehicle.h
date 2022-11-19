@@ -12,7 +12,7 @@
 #include <sstream>
 
 #include <DearImGUI/imgui.h>
-#include <DearImGUI/imgui_mods.h>
+
 
 
 
@@ -136,6 +136,7 @@ public:
 private:
 	std::string m_name;
 	uint32_t	m_mileage;
+	Date 		m_lastUpdated{0,0,0};
 
 	std::vector<Repair>		repairList{};
 	std::vector<GasStop>	gasList{};
