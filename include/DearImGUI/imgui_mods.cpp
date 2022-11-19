@@ -34,16 +34,21 @@ void ImGuiMods::Header(const char* title, const char* text){
 	return;
 }
 
-void ImGuiMods::BeginResizeableChild(const char* title, const float widthMin, const float widthMax, const float height){
+bool ImGuiMods::BeginResizeableChild(const char* title, const float widthMin, const float widthMax, const float height){
+
+	bool success {false};
+
 
 	static float padding {10};
+	static float parentWindowWidth;
+	static float childWindowHeight;
+	static float childWindowWidth;
 
 	// Algorithm for adjusting child window size
-	static float parentWindowWidth;
 	parentWindowWidth = ImGui::GetWindowContentRegionMax().x;
 
-	static float childWindowHeight = height;
-	static float childWindowWidth {widthMax};
+	childWindowHeight = height;
+	childWindowWidth  = widthMax;
 	
 	if(parentWindowWidth > (widthMax + padding) ){
 		// Do nothing therefore keep window at widthMax pixels if the parent window is larger than specified
@@ -58,8 +63,14 @@ void ImGuiMods::BeginResizeableChild(const char* title, const float widthMin, co
 		}
 	}
 
-	ImGui::BeginChild(title, ImVec2(childWindowWidth, childWindowHeight), true, ImGuiWindowFlags_AlwaysAutoResize);
-	ImGuiMods::CenterText(title);
+	if(ImGui::BeginChild(title, ImVec2(childWindowWidth, childWindowHeight), true, ImGuiWindowFlags_AlwaysAutoResize)) {
+		success = true;
+		ImGuiMods::CenterText(title);
+	}
+	else{
+		success = false;
+	}
 
-	return;
+
+	return success;
 }

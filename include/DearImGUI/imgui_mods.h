@@ -9,7 +9,7 @@ namespace ImGuiMods{
 
 
     // Resizes child to parent window
-    void BeginResizeableChild(const char* title, const float widthMin, const float widthMax, const float height=200);
+    bool BeginResizeableChild(const char* title, const float widthMin, const float widthMax, const float height=200);
 
     void CenterText(const char* text);
 }

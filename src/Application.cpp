@@ -444,171 +444,184 @@ void VehicleManager::Display() {
 
 		static Vehicle* selectedVehicle{nullptr};
 
+		static float selVehWinWidthMax { 500 };
+		static float selVehWinWidthMin { 200 };
+		static float currentSelVehWinWidth {selVehWinWidthMax};
+
+		static float detailedVehWinWidthMax { 700 };
+		static float detailedVehWinWidthMin { 500 };
+		static float currentDetailedWinWidth {selVehWinWidthMax};
+
+		static bool sameLine { false };
+		static float parentWindowWidth{};
+		parentWindowWidth = ImGui::GetWindowSize().x;
 		// Dispays header
 		ImGuiMods::Header("Vehicle Manager", "This Vehicle Manager stores all relevant information about a vehicle such as its name mileage,"
 			" and repair and gas stop information. ");
-		
+
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+
 
 		if(vehListIsEmpty()){
 			ImGui::Text("There are no tracked vehicles");
 		}
 		else{	// This draws the child window for the vehicle list
 
-			ImGuiMods::BeginResizeableChild("Tracked Vehicles", 200, 500, 300);
-			ImGui::SameLine(); ImGuiMods::HelpMarker("Select a vehicle then choose from the options below");
-			ImGui::Spacing();
-
-			selectedVehicle = SelectableVehicleList();	// Show available vehicles list and return with selected vehicle
-			static float vehWinX; vehWinX = ImGui::GetWindowContentRegionWidth();
-
-			if(selectedVehicle){
-
-				ImGuiMods::CenterText("Vehicle Information");
-				ImGui::Text("Total Repairs:\t   %d", selectedVehicle->getRepairList().size());
-				ImGui::Text("Total Gas Stops: \t%d", selectedVehicle->getGasStopList().size());
-				ImGui::Text("Last Updated: \t   %s", "Not Implemented");
-				
-
-				// Once/if vehicle is selected, these buttons appear. Display at bottom of screen
-				static float buttonY{30};
-				ImGui::SetCursorPosY(ImGui::GetWindowHeight() - buttonY - 20);
-
-				//Size the buttons correctly
-				constexpr float MIN_BUTTON_SIZE = 70;
-				static float buttonX;
-				static ImVec2 buttonSize (0, buttonY);
-				static float winPadding{20};
-
-				// See if there are 3 or 4 buttons shown
-				static int buttonsShown {3};
-				if(viewVeh || editVeh){
-					buttonsShown = 4;
+			
+			if(ImGui::GetWindowWidth() > (selVehWinWidthMax + detailedVehWinWidthMax + 20)){
+				sameLine = true;
+				ImGui::SameLine();
+			}
+			else{
+				sameLine = false;
+				if(parentWindowWidth < currentSelVehWinWidth){
+					// Do nothing
 				}
 				else{
-					buttonsShown = 3;
+					ImGui::SetCursorPosX((parentWindowWidth - currentSelVehWinWidth) * 0.5f);
 				}
-
-				// Ensure buttons are at least the min size specified
-				if((vehWinX - winPadding) < (MIN_BUTTON_SIZE * buttonsShown)){
-					buttonX = MIN_BUTTON_SIZE;
-				}
-				else{ // Math the buttonSize to change with the size of the parent window
-					buttonX = (vehWinX - winPadding)  / buttonsShown;	
-				}
-
-				buttonSize.x = buttonX;
-				
-				ImGui::Spacing();
-				if(ImGui::Button("View", buttonSize)){
-					editVeh = false;
-					viewVeh = true;
-				}
-				ImGui::SameLine();
-				if(ImGui::Button("Edit", buttonSize)){
-					viewVeh = false;
-					editVeh = true;
-				}
-				ImGui::SameLine();  
-				if(ImGui::Button("Delete", buttonSize)){
-					ImGui::OpenPopup("Delete?");
-				}
-
-				// Code for popup modal
-				// Always center this window when appearing
-				ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-				ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-				if (ImGui::BeginPopupModal("Delete?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-				{
-					ImGui::Text("This will delete all of the Vehicle's information\nThis operation cannot be undone!\n\n");
-					ImGui::Separator();
-
-					if (ImGui::Button("OK", ImVec2(120, 0))) 
-					{
-						Vehicle vehBufferToDel = *selectedVehicle;
-						selectedVehicle = nullptr;
-						viewVeh = false;
-						editVeh = false;
-						if(DeleteVehicle(vehBufferToDel)){
-							Log(LogCode::WARNING, "Failed to delete vehicle. In Display.cpp");
-						}
-						ImGui::CloseCurrentPopup(); 
-					}
-					ImGui::SetItemDefaultFocus();
-					ImGui::SameLine();
-					if (ImGui::Button("Cancel", ImVec2(120, 0))) 
-					{ 
-						ImGui::CloseCurrentPopup(); 
-					}
-					ImGui::EndPopup();
-				} // End popup modal code 
-
-
-				// Button to close the detailed info window
-				if(viewVeh || editVeh){
-					ImGui::SameLine(); 
-					if(ImGui::Button("Close", buttonSize)){
-						viewVeh = false;
-						editVeh = false;
-					}
-				}
-			} 
-			ImGui::EndChild();
+			}
 			
 		
 
-
-			//What happens when a vehicle action button is hit
-			if(viewVeh || editVeh){
+			if(ImGuiMods::BeginResizeableChild("Tracked Vehicles", selVehWinWidthMin, selVehWinWidthMax, 300)){
+				ImGui::SameLine(); ImGuiMods::HelpMarker("Select a vehicle then choose from the options below");
 				ImGui::Spacing();
-				ImGui::Spacing();
-				ImGui::Spacing();
-				static float bigWindowX = ImGui::GetWindowContentRegionMax().x;				
+				currentSelVehWinWidth = ImGui::GetWindowWidth();
 
-				static float childX {700};
-				static float childY {410};
-				if(bigWindowX > 710){
+				selectedVehicle = SelectableVehicleList();	// Show available vehicles list and return with selected vehicle
+				static float vehWinX; vehWinX = ImGui::GetWindowContentRegionWidth();
 
-				}
-				else{
-					childX = bigWindowX - 20;
-				}
+				if(selectedVehicle){
 
-				//Starting new child window with vehicle info
-				if(viewVeh) ImGui::Text("View %s", selectedVehicle->getName().c_str());
-				if(editVeh) ImGui::Text("Edit %s", selectedVehicle->getName().c_str());
-				ImGui::SameLine(); ImGuiMods::HelpMarker("This shows all the vehicle information");
-				ImGui::SameLine(); 
+					ImGuiMods::CenterText("Vehicle Information");
+					ImGui::Text("Total Repairs:\t   %d", selectedVehicle->getRepairList().size());
+					ImGui::Text("Total Gas Stops: \t%d", selectedVehicle->getGasStopList().size());
+					ImGui::Text("Last Updated: \t   %s", "Not Implemented");
+					
 
+					// Once/if vehicle is selected, these buttons appear. Display at bottom of screen
+					static float buttonY{30};
+					ImGui::SetCursorPosY(ImGui::GetWindowHeight() - buttonY - 20);
 
-				if(ImGui::Button("Inc Width", (ImVec2 (90, 20)))){
-					childX += 10;
-				}
-				ImGui::SameLine(); 
-				if(ImGui::Button("Dec Width", (ImVec2 (90, 20)))){
-					childX -= 10;
-				}
+					//Size the buttons correctly
+					constexpr float MIN_BUTTON_SIZE = 70;
+					static float buttonX;
+					static ImVec2 buttonSize (0, buttonY);
+					static float winPadding{20};
 
-				if(viewVeh){
-					if(!selectedVehicle){ 
-						//Ensure there is a selected Vehicle
+					// See if there are 3 or 4 buttons shown
+					static int buttonsShown {3};
+					if(viewVeh || editVeh){
+						buttonsShown = 4;
 					}
 					else{
-						if(ImGui::BeginChild("#View Full Vehicle Info", ImVec2(childX, childY), false)){
-							ShowFullVehicleInformation(selectedVehicle);
+						buttonsShown = 3;
+					}
+
+					// Ensure buttons are at least the min size specified
+					if((vehWinX - winPadding) < (MIN_BUTTON_SIZE * buttonsShown)){
+						buttonX = MIN_BUTTON_SIZE;
+					}
+					else{ // Math the buttonSize to change with the size of the parent window
+						buttonX = (vehWinX - winPadding)  / buttonsShown;	
+					}
+
+					buttonSize.x = buttonX;
+					
+					ImGui::Spacing();
+					if(ImGui::Button("View", buttonSize)){
+						editVeh = false;
+						viewVeh = true;
+					}
+					ImGui::SameLine();
+					if(ImGui::Button("Edit", buttonSize)){
+						viewVeh = false;
+						editVeh = true;
+					}
+					ImGui::SameLine();  
+					if(ImGui::Button("Delete", buttonSize)){
+						ImGui::OpenPopup("Delete?");
+					}
+
+					// Code for popup modal
+					// Always center this window when appearing
+					ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+					ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+					if (ImGui::BeginPopupModal("Delete?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+					{
+						ImGui::Text("This will delete all of the Vehicle's information\nThis operation cannot be undone!\n\n");
+						ImGui::Separator();
+
+						if (ImGui::Button("OK", ImVec2(120, 0))) 
+						{
+							Vehicle vehBufferToDel = *selectedVehicle;
+							selectedVehicle = nullptr;
+							viewVeh = false;
+							editVeh = false;
+							if(DeleteVehicle(vehBufferToDel)){
+								Log(LogCode::WARNING, "Failed to delete vehicle. In Display.cpp");
+							}
+							ImGui::CloseCurrentPopup(); 
 						}
+						ImGui::SetItemDefaultFocus();
+						ImGui::SameLine();
+						if (ImGui::Button("Cancel", ImVec2(120, 0))) 
+						{ 
+							ImGui::CloseCurrentPopup(); 
+						}
+						ImGui::EndPopup();
+					} // End popup modal code 
+
+
+					// Button to close the detailed info window
+					if(viewVeh || editVeh){
+						ImGui::SameLine(); 
+						if(ImGui::Button("Close", buttonSize)){
+							viewVeh = false;
+							editVeh = false;
+						}
+					}
+				}
+				ImGui::EndChild();
+			}
+
+			if(sameLine) { ImGui::SameLine(); }
+			else { 
+				if(parentWindowWidth < currentDetailedWinWidth){
+					// Do nothing
+				}
+				else{
+					ImGui::SetCursorPosX((parentWindowWidth - currentDetailedWinWidth) * 0.5f);
+				}
+			}
+
+			if(selectedVehicle){
+				if(viewVeh){
+					if(ImGuiMods::BeginResizeableChild("Full Vehicle Information", detailedVehWinWidthMin, detailedVehWinWidthMax, 450)){
+						currentDetailedWinWidth = ImGui::GetWindowWidth();
+						ImGui::SameLine(); ImGuiMods::HelpMarker("This shows all the vehicle information");
+						ImGui::Spacing();
+
+						ShowFullVehicleInformation(selectedVehicle);
+						ImGui::EndChild();	
+					}
+				}
+
+				// Edit Vehicle window
+				if(editVeh){
+					if(ImGuiMods::BeginResizeableChild("Edit Vehicle", 500, 700, 450)){
+						ImGui::SameLine(); ImGuiMods::HelpMarker("Add, change or delete vehicle information");
+						ImGui::Spacing();
+						currentDetailedWinWidth = ImGui::GetWindowWidth();
+
+						EditVehicle(selectedVehicle);
 						ImGui::EndChild();
 					}
-					
 				}
-
-				if(editVeh){
-					if(ImGui::BeginChild("#Edit Vehicle Info", ImVec2(childX, childY), false)){
-						EditVehicle(selectedVehicle);
-					}
-					ImGui::EndChild();
-				}
-
 			}
 			else{
 				ImGui::Spacing();

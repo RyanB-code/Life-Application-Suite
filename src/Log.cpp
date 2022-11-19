@@ -116,72 +116,24 @@ void Debug::Display(){
 
 			
 		}
-		ImGui::EndChild();
+		ImGui::EndChild();	 
 
-		/*
-		ImGui::Spacing();
-		if(ImGui::BeginTable("Repairs", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg , outer_size ))
-		{
-			ImGui::TableSetupColumn("Time", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-			ImGui::TableSetupColumn("Code", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-			ImGui::TableSetupColumn("Message", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-			ImGui::TableHeadersRow();
+		const time_t now{time(0)};
+		tm* ltm = localtime(&now);
 
-		
-			for(Log& log : Log::s_logList){
-				// Log Buffers
-				tm* ltm = localtime(&log.m_timestamp);
-				std::ostringstream os;
+		std::ostringstream os;
+		os << "["
+			<< std::setw(2) << std::setfill('0') << ltm->tm_hour << ':'
+			<< std::setw(2) << std::setfill('0') << ltm->tm_min << ':'
+			<< std::setw(2) << std::setfill('0') << ltm->tm_sec << "]";
 
-				os  << std::setw(2) << std::setfill('0') << ltm->tm_hour << ':'
-					<< std::setw(2) << std::setfill('0') << ltm->tm_min << ':'
-					<< std::setw(2) << std::setfill('0') << ltm->tm_sec;
-				std::string timestamp{os.str()};
+		std::string text {os.str()};
 
-				os.str("");
+		ImGui::TextUnformatted(text.c_str());
 
-				switch (log.m_code) {
-					case LogCode::FATAL:
-						os << "FATAL";
-						break;
-					case LogCode::WARNING:
-						os << "WARNING";
-						break;
-					case LogCode::ROUTINE:
-						os << "ROUTINE";
-						break;
-					case LogCode::LOG:
-						os << "LOG";
-						break;
-				}
-
-				std::string code{os.str()};
-
-				ImGui::TableNextRow();
-				int column{0};
-
-				ImGui::TableSetColumnIndex(column);	
-				ImGui::Text("%s", timestamp.c_str());
-				++column;
-
-				ImGui::TableSetColumnIndex(column);	
-				ImGui::Text("%s", code.c_str());
-				++column;
-
-				ImGui::TableSetColumnIndex(column);	
-				ImGui::Text("%s", log.m_msg.c_str());
-				++column;
-
-			}
-
-			ImGui::EndTable();
-		}
-		*/
-	 
+		ImGui::End(); //End Window
 	 }
 
-
-	ImGui::End(); //End Window
 
 	return;
 }
