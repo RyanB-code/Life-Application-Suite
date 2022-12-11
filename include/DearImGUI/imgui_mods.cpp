@@ -74,3 +74,15 @@ bool ImGuiMods::BeginResizeableChild(const char* title, const float widthMin, co
 
 	return success;
 }
+
+void ImGuiMods::CenterChildWindow(const float parentWindowWidth, const float childWindowWidth){
+	if(parentWindowWidth < childWindowWidth){
+		// Do nothing keeping window visible
+	}
+	else{
+		// Make the window be centered
+		ImGui::SetCursorPosX((parentWindowWidth - childWindowWidth) * 0.5f);
+	}
+
+	return;
+}

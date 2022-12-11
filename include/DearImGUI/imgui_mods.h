@@ -12,6 +12,9 @@ namespace ImGuiMods{
     bool BeginResizeableChild(const char* title, const float widthMin, const float widthMax, const float height=200);
 
     void CenterText(const char* text);
+
+    // Keeps the child window in view if the parent window collapses further than the child window's width
+    void CenterChildWindow(const float parentWindowWidth, const float childWindowWidth);
 }
 
 #endif

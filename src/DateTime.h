@@ -1,6 +1,8 @@
 #ifndef DATE_TIME_H
 #define DATE_TIME_H
 
+#include <RST/RST.h>
+
 #include <sstream>
 #include <string>
 #include <iomanip>
@@ -27,6 +29,7 @@ struct Date{
 };
 
 
+bool CheckDate (int day, int month, int year);
 
 
 #endif

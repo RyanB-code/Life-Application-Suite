@@ -63,14 +63,111 @@ std::ostream& operator<<(std::ostream& os, const Date& date){
 
 void Date::makeDate(std::stringstream& text){
 	if(text.str() == ""){
-		day = 0;
-		month = 0;
-		year = 0;
+		day = 1;
+		month = 1;
+		year = 1900;
+		RST::Log("Date cannot be blank. Set date to 1 JAN 1900", LogCode::WARNING);
+	}
+	else{
+		int dayBuf, monthBuf, yearBuf;
+
+		text >> dayBuf;
+		text >> monthBuf;
+		text >> yearBuf;
+
+		if(!CheckDate(dayBuf, monthBuf, yearBuf)){
+			std::ostringstream txt; txt << dayBuf << " " << monthBuf << " " << yearBuf;
+			RST::Log("Date [" + txt.str() + "] not accepted. Set date to 1 JAN 1900", LogCode::ERROR);
+			day = 1;
+			month = 1;
+			year = 1900;
+		}
+		else{
+			day = dayBuf;
+			month = monthBuf;
+			year = yearBuf;
+
+			std::ostringstream txt; txt << *this;
+			RST::Log("Date was set to [" + txt.str() + "]", LogCode::LOG_LOW);
+		}
 	}
 
-	text >> day;
-	text >> month;
-	text >> year;
+	
 
 	return;
+}
+
+bool 	CheckDate			(int day, int month, int year){
+	bool success {false};
+
+	if(year < 1900){
+		RST::Log("Year was below 1900", LogCode::RUNTIME_MED);
+		return false; 
+	}
+
+	if(month <= 0 || month > 12){
+		RST::Log("Month was not between 1 and 12", LogCode::RUNTIME_MED);
+		return false; 
+	}
+
+	if(day <= 0 ){
+		RST::Log("Day was at or below 0", LogCode::RUNTIME_MED);
+		return false; 
+	}
+	else{
+		// Check if the days allowed in each month is accurate
+		if(month == 1 && day > 31){
+			RST::Log("Day was out of range for January. Needs to be at or below 31", LogCode::RUNTIME_MED);
+			success = false;
+		}
+		else if(month == 2 && day > 29){
+			RST::Log("Day was out of range for February. Needs to be at or below 29", LogCode::RUNTIME_MED);
+		}
+		else if(month == 3 && day > 31){
+			RST::Log("Day was out of range for March. Needs to be at or below 31", LogCode::RUNTIME_MED);
+			success = false;
+		}
+		else if(month == 4 && day > 30){
+			RST::Log("Day was out of range for April. Needs to be at or below 30", LogCode::RUNTIME_MED);
+			success = false;
+		}
+		else if(month == 5 && day > 31){
+			RST::Log("Day was out of range for May. Needs to be at or below 31", LogCode::RUNTIME_MED);
+			success = false;
+		}
+		else if(month == 6 && day > 30){
+			RST::Log("Day was out of range for June. Needs to be at or below 30", LogCode::RUNTIME_MED);
+			success = false;
+		}
+		else if(month == 7 && day > 31){
+			RST::Log("Day was out of range for July. Needs to be at or below 31", LogCode::RUNTIME_MED);
+			success = false;
+		}
+		else if(month == 8 && day > 31){
+			RST::Log("Day was out of range for August. Needs to be at or below 31", LogCode::RUNTIME_MED);
+			success = false;
+		}
+		else if(month == 9 && day > 30){
+			RST::Log("Day was out of range for September. Needs to be at or below 30", LogCode::RUNTIME_MED);
+			success = false;
+		}
+		else if(month == 10 && day > 31){
+			RST::Log("Day was out of range for October. Needs to be at or below 31", LogCode::RUNTIME_MED);
+			success = false;
+		}
+		else if(month == 11 && day > 30){
+			RST::Log("Day was out of range for November. Needs to be at or below 30", LogCode::RUNTIME_MED);
+			success = false;
+		}
+		else if(month == 12 && day > 31){
+			RST::Log("Day was out of range for December. Needs to be at or below 31", LogCode::RUNTIME_MED);
+			success = false;
+		}
+		else{
+			RST::Log("Date was accepted", LogCode::RUNTIME_LOW);
+			success = true;
+		}
+	}
+
+	return success;
 }

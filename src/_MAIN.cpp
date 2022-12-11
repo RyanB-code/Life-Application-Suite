@@ -1,4 +1,7 @@
 #include "Application.h"
+
+#include <RST/RST.h>
+
 #include <Windows.h>
 
 int main(int, char**) {
@@ -9,8 +12,8 @@ int main(int, char**) {
         app->Startup();
         app->Run();
     }
-    catch(Log){
-        Log(LogCode::FATAL, "Fatal error in application was caught in main");
+    catch(bool log){
+        RST::Log("Application throw was caught in main.", LogCode::FATAL);
     }
 
 }

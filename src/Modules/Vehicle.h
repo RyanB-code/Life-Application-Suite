@@ -2,7 +2,6 @@
 #define VEHICLE_H
 
 #include "../FileSystem.h"
-#include "../Log.h"
 #include "../DateTime.h"
 
 #include "Module.h"
@@ -10,14 +9,19 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <chrono>
 
 #include <DearImGUI/imgui.h>
+#include <RST/RST.h>
 
 
 
 
 // Classification for the kind of Repair
-enum class RepairType{
+enum class RepairType : int{
+
+	// If adding additonal RepairTypes, be sure to change the operator<< override AND the VehicleManager's drop down menu to show the option
+
 	OIL_CHANGE = 1,
 	TRANSMISSION_FLUID_EXCHANGE,
 	LIGHTBULB_REPLACEMENT,
@@ -47,12 +51,8 @@ public:
 		m_notes{ setNotes },
 		m_isThirdPartyRepair{ setThirdParty },
 		m_date{setDate}
-	{
-
-	};
-	~Repair() {
-
-	}
+	{ }
+	~Repair() { }
 
 	// Overwrites the parameters with the info of the repair
 	void 		getRepairInfo(int& mileage, std::string& typeStr, double& costDbl, std::string& notesVar, bool& wasThirdParty, std::string& dateVar) const;
@@ -83,12 +83,10 @@ public:
 		m_pricePerGallon{setPricePerGallon},
 		m_notes{setNotes},
 		m_date{setDate}
-	{
+	{ }
 
-	}
-	~GasStop() {
+	~GasStop() { }
 
-	}
 	//Overwrites the parameters with the info of the gas stop
 	void 		getGasStopInfo(int& mileage, double& gal, double& ppg, std::string& notesVar, std::string& dateVar) const;
 	uint32_t 	getMileage() const { return m_mileageDone; }
@@ -109,10 +107,7 @@ class Vehicle {
 public:
 	// Create a Vehicle
 	Vehicle(const std::string setName = "Vehicle", uint32_t setMileage = 0);
-	~Vehicle() 
-	{
-
-	}
+	~Vehicle() { }
 
 	static constexpr int maxVehicleNameSize { 15 };
 	static constexpr int maxNotesSize		{ 45 };
@@ -123,7 +118,8 @@ public:
 	std::vector<Repair>& 	getRepairList()	 			{ return repairList; }  // FIX. Instead of this, make it be a getter/setter function
 	std::vector<GasStop>& 	getGasStopList() 			{ return gasList; }		// FIX
 	
-
+	bool setName(std::string setName);			// Error checking to be sure valid name
+	bool setMileage(uint32_t setMileage);
 
 	//Given individual types, it will error check ranges and data before adding to the vehicle's list of Repairs
 	bool NewRepair	(uint32_t setMiles, RepairType setType, double setCost, std::string setNotes, bool setThirdParty, Date setDate);
@@ -152,8 +148,8 @@ public:
     bool    Setup()   override;
 
 	// Functions for interacting with s_vehicleList
-	void 					addToVehicleList(Vehicle& veh) 		{ s_vehicleList.push_back(veh); Log(LogCode::ROUTINE, "Added " + veh.getName() + " to list of vehicles."); } 	// Used to add A vehicle to the master list
-	void					delFromVehList	(Vehicle& veh) 		{ std::erase(s_vehicleList, veh); Log(LogCode::ROUTINE, "Removed " + veh.getName() + " from list of vehicles.");}	// Compares the Vehicle's m_name and deletes all Vehicles with the same m_name
+	void 					addToVehicleList(Vehicle& veh) 		{ s_vehicleList.push_back(veh); 	RST::Log( "Added [" + veh.getName() +"] to vehicle list", LogCode::LOG_HIGH); } 	// Used to add A vehicle to the master list
+	void					delFromVehList	(Vehicle& veh) 		{ std::erase(s_vehicleList, veh); 	RST::Log( "Removed [" + veh.getName() +"] to from vehicle list", LogCode::LOG_HIGH);}	// Compares the Vehicle's m_name and deletes all Vehicles with the same m_name
 	static bool				vehListIsEmpty()					{ return s_vehicleList.empty(); }		// Check if the master list is empty
 	std::vector<Vehicle>& 	getVehicleList() 	const 			{ return s_vehicleList; }
 
@@ -162,11 +158,10 @@ private:
 
 	Vehicle* 	SelectableVehicleList();						// Using ImGui, shows a list table of Vehicle's that are selectable
 	void 		ShowFullVehicleInformation	(Vehicle* veh);		// Shows all the parameter Vehicle's Repairs and GasStops in table format
-	void 		EditVehicle					(Vehicle* veh);		// Handle changes to the parameter Vehicle
 
 
-	bool SaveVehicles		(const Application& app);					// Saves vehicles by writing to file. The path is specified in the Application class 
-	bool WriteToFile		(const Application& app, Vehicle& veh);		// Writes Vehicle information to a file with the Vehicle's name
+	bool SaveAllVehicles	();					// Saves vehicles by writing to file. The path is specified in the Application class 
+	bool SaveVehicle		(Vehicle* veh);		// Writes Vehicle information to a file with the Vehicle's name
 	bool DeleteVehicle		(Vehicle& veh);								// Remove vehicle from the list, and file directory
 
 };
@@ -178,8 +173,14 @@ std::string MakeVehicleName		(std::string& text);					// Deletes read characters
 uint32_t 	MakeVehicleMiles	(std::string& text);					// Deletes read character from the parameter and returns the int read
 void 		MakeRepair			(std::string& text, Vehicle& veh);		// Make a Repair from a text stream. Adds it to veh parameter
 void 		MakeGasStop			(std::string& text, Vehicle& veh);		// Make a GasStop from a text stream. Adds it to the veh parameter
-
+bool 		CheckStringSize		(const std::string text, int maxAllowed);
 // -----------------------------------------------------------------------------------
+
+
+// ImGui Functions that just have to do with a vehicle
+
+bool	AddGasStop(Vehicle* veh, bool& wasSaved);
+bool	AddRepair(Vehicle* veh, bool& wasSaved);
 
 
 // ------------------------------------------------------------------------------------
@@ -226,174 +227,6 @@ void 		MakeGasStop			(std::string& text, Vehicle& veh);		// Make a GasStop from 
 		return returnValue;
 	}
 */
-/*	bool AddRepair(Vehicle* veh) {
-		bool success{false};
-
-		uint32_t mileBuf{ 0 };
-		std::string typeBuf;
-		double costBuf{ 0.0 };
-		std::string notesBuf;
-		bool thirdPartyBuf;
-
-		bool exit0{ false };
-		do {
-			bool exit1{ false };
-			do {
-				std::cout << "What mileage was the repair done at?\n>";
-				std::cin >> mileBuf;
-				clearLineAfterInput();
-				if (std::cin.fail()) {
-					std::cin.clear();
-					std::cin.ignore(10000, '\n');
-				}
-				else {
-					exit1 = true;
-				}
-
-			} while (!exit1);
-
-			std::cout << "The Type of repair. [Max characters " << veh->maxRepairTypeSize << "]\nExamples: 'Oil Change', 'Power Steering', 'Body Work', etc...\n>";
-			std::cin.ignore(10000, '\n');
-			std::getline(std::cin, typeBuf);
-
-
-			bool exit2{ false };
-			do {
-				std::cout << "How much did it cost in total?\n>";
-				std::cin >> costBuf;
-				clearLineAfterInput();
-				if (std::cin.fail()) {
-					std::cin.clear();
-					std::cin.ignore(10000, '\n');
-				}
-				else {
-					exit2 = true;
-				}
-
-			} while (!exit2);
-
-			std::cout << "Enter any notes here. [Max characters " << veh->maxNotesSize << "]\n>";
-			std::cin.ignore(10000, '\n');
-			std::getline(std::cin, notesBuf);
-
-		
-			std::cout << "Did a third party perform the repair?" << std::endl;
-			thirdPartyBuf = getBoolInput();
-
-			std::cout << "Miles:\t\t" << mileBuf << std::endl;
-			std::cout << "Type:\t\t" << typeBuf << std::endl;
-			std::cout << "Cost:\t\t" << costBuf << std::endl;
-			std::cout << "Notes:\t\t" << notesBuf << std::endl;
-			std::cout << "3rd Party:\t" << std::boolalpha << thirdPartyBuf << std::endl;
-
-			std::cout << "\nSave Repair?\n";
-			if (getBoolInput()) {
-				if (!veh->NewRepair(mileBuf, typeBuf, costBuf, notesBuf, thirdPartyBuf)) {
-					std::cout << "\nCould not add repair to vehicle. \nTry Again?\n";
-					if (!getBoolInput()) {
-						exit0 = true;
-					}
-				}
-				else {
-					success = true;
-					exit0 = true;
-				}
-			}
-			else {
-				exit0 = true;
-			}
-		} while (!exit0);
-
-		return success;
-
-	}
-*/
-/*  bool AddGasStop(Vehicle* veh) {
-		bool success{false};
-
-		uint32_t mileBuf{ 0 };
-		double galBuf{ 0.0 };
-		double ppgBuf{ 0.0 };
-		std::string notesBuf;
-
-		bool exit0{ false };
-		do {
-			bool exit1{ false };
-			do {
-				std::cout << "What mileage did you fill up at?\n>";
-				std::cin >> mileBuf;
-				clearLineAfterInput();
-				if (std::cin.fail()) {
-					std::cin.clear();
-					std::cin.ignore(10000, '\n');
-				}
-				else {
-					exit1 = true;
-				}
-
-			} while (!exit1);
-
-			bool exit2{ false };
-			do {
-				std::cout << "How many gallons did you fill up?\n>";
-				std::cin >> galBuf;
-				clearLineAfterInput();
-				if (std::cin.fail()) {
-					std::cin.clear();
-					std::cin.ignore(10000, '\n');
-				}
-				else {
-					exit2 = true;
-				}
-
-			} while (!exit2);
-
-			bool exit3{ false };
-			do {
-				std::cout << "What was the price per gallon?\n>";
-				std::cin >> ppgBuf;
-				clearLineAfterInput();
-				if (std::cin.fail()) {
-					std::cin.clear();
-					std::cin.ignore(10000, '\n');
-				}
-				else {
-					exit3 = true;
-				}
-
-			} while (!exit3);
-
-			std::cout << "Enter any notes here. [Max characters " << veh->maxNotesSize << "]\n>";
-			std::cin.ignore(10000, '\n');
-			std::getline(std::cin, notesBuf);
-
-			std::cout << std::setw(17) << std::right << "Miles:\t" << mileBuf << std::endl;
-			std::cout << std::setw(17) << std::right << "Gallons:\t" << galBuf << std::endl;
-			std::cout << std::setw(17) << std::right << "Price Per Gallon:\t" << ppgBuf << std::endl;
-			std::cout << std::setw(17) << std::right << "Notes:\t" << notesBuf << std::endl;
-
-			std::cout << "\nSave Gas Stop?\n";
-			if (getBoolInput()) {
-				if (!veh->NewGasStop(mileBuf, galBuf, ppgBuf, notesBuf)) {
-					std::cout << "\nCould not add gas stop to vehicle. \nTry Again?\n";
-					if (!getBoolInput()) {
-						exit0 = true;
-					}
-				}
-				else {
-					success = true;
-					exit0 = true;
-				}
-			}
-			else {
-				exit0 = true;
-			}
-		} while (!exit0);
-
-		return success;
-	}
-*/
-
 
 
 #endif

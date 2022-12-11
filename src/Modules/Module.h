@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include <RST/RST.h>
 #include <DearImGUI/imgui.h>
 #include <DearImGUI/imgui_mods.h>
 
@@ -28,7 +29,7 @@ protected:
     std::string m_name;     // Defines the name of the module to be used
     bool        m_shown;    // Whether or not this module is currently opened in ImGui
 
-    const Application* m_app;
+    Application* m_app;
 
 private:
 

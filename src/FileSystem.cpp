@@ -26,17 +26,17 @@ namespace FileSystem{
 
 		// Before creating, check if it already exists. If found, create
 		if (doesFileExist(path)) {
-			Log(LogCode::ROUTINE, "Found " + path);
+			RST::Log("Found " + path, LogCode::LOG_HIGH);
 			success = true;
 		}
 		else {
 			// IF the directory could not be created, log and return false
 			if (!std::filesystem::create_directory(path)) {
-				Log(LogCode::WARNING, "Could not create directory " + path);
+				RST::Log("Could not create directory " + path, LogCode::WARNING);
 				success = false;
 			}
 			else{
-				Log(LogCode::ROUTINE, "Created directory " + path);
+				RST::Log("Created directory " + path, LogCode::LOG_HIGH);
 				success = true;
 			}
 		}
@@ -52,16 +52,16 @@ namespace FileSystem{
 
 			// If the file still does not exist, return false		
 			if (!doesFileExist(path)) {
-				Log(LogCode::WARNING, "Could not create " + path);
+				RST::Log("Could not create [" + path + "]", LogCode::WARNING);
 				return false;
 			}
 			else {
-				Log(LogCode::ROUTINE, "Created file " + path);
+				RST::Log("Created file [" + path + "]", LogCode::LOG_HIGH);
 				return true;
 			}
 		}
 		else {
-			Log(LogCode::ROUTINE, "Already found " + path);
+			RST::Log("Already found File " + path, LogCode::LOG_LOW);
 			return true;
 		}
 	}
@@ -70,10 +70,12 @@ namespace FileSystem{
 		const std::filesystem::path checkFile(path);
 
 		if (std::filesystem::exists(checkFile) ){
+			RST::Log("File exists [" + path + ']', LogCode::LOG_MED);
 			return true;
 		}
 		else
 		{
+			RST::Log("File does not exist [" + path + ']', LogCode::WARNING);
 			return false;
 		}
 	}
@@ -81,11 +83,11 @@ namespace FileSystem{
 	bool deleteFile(const std::string path){
 		std::filesystem::path file{path};
 		if(std::filesystem::remove(file)){
-			Log(LogCode::LOG, "Deleted file " + file.string());
+			RST::Log("Deleted file " + file.string(), LogCode::LOG_HIGH);
 			return true;
 		}
 		else{
-			Log(LogCode::WARNING, "Could not delete file " + file.string());
+			RST::Log("Could not delete file " + file.string(), LogCode::ERROR);
 			return false;
 		}
 	}
@@ -99,6 +101,7 @@ namespace FileSystem{
 		else {
 			std::ofstream file{ path }; //Open file to write
 			file << text;
+			RST::Log("Wrote to file [" + path + "]", LogCode::LOG_HIGH);
 			return true;
 		}
 		return false;
@@ -113,11 +116,11 @@ namespace FileSystem{
 		else {
 			std::ifstream file{ path.str(), std::ios_base::in};
 			if(!file) {
-				Log(LogCode::WARNING, "Failed to open " + path.str() + " for reading.");
+				RST::Log("Failed to open " + path.str() + " for reading.", LogCode::ERROR);
 				return false;
 			}
 			else {
-				Log(LogCode::LOG, "Successfully opened " + path.str() + " for reading.");
+				RST::Log("Successfully opened " + path.str() + " for reading.", LogCode::LOG_HIGH);
 				std::string line;
 				while (file.good()) {
 					std::getline(file, line);
@@ -158,9 +161,25 @@ namespace FileSystem{
 		//Log how many files were found
 		std::ostringstream logText;
 		logText << "Found " << writeTo.size() << " file(s)";
-		Log(LogCode::ROUTINE, logText.str());
+		RST::Log(logText.str(), LogCode::LOG_LOW);
 
 		return;
+	}
+
+	bool 	renameFile		(const std::string oldPath, const std::string newPath){
+		bool success {false};
+
+		if(doesFileExist(oldPath)){
+			std::filesystem::rename(oldPath, newPath);
+			RST::Log("Renamed [" + oldPath + "] to [" + newPath + "]", LogCode::LOG_MED);
+			success = true;
+		}
+		else{
+			RST::Log("Could not find target file to rename [" + oldPath + "]", LogCode::ERROR);
+			success = false;
+		}
+
+		return success;
 	}
 
 }

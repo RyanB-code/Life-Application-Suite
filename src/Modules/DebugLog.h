@@ -3,6 +3,9 @@
 
 #include "Module.h"
 
+#include <sstream>
+#include <iomanip>
+
 
 
 // Interact with and view logs created by the application

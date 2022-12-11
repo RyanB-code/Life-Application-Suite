@@ -3,7 +3,7 @@
 std::vector<Vehicle> VehicleManager::s_vehicleList{}; // Initializer for s_vehicleList to be used
 
 
-
+// Operator Overloads
 std::ostream& 	operator<<	(std::ostream& os, const Repair& repair) {
 	os << 		repair.m_mileageDone 
 	<< '|' << 	repair.m_type 
@@ -100,24 +100,13 @@ void GasStop::getGasStopInfo(int& mileage, double& gal, double& ppg, std::string
 
 
 
-Vehicle::Vehicle(const std::string setName, uint32_t setMileage) {
+Vehicle::Vehicle(const std::string name, uint32_t setMileage) {
 	
-	// Make sure the name is not longer than maxVehicleNameSize
-	if (setName.length() <= 0 || setName.length() > maxVehicleNameSize) {
-		m_name = "Vehicle";
-
-		// Log the error
-		std::ostringstream logText;
-		logText << "Vehicle name out of range. Max allowed is: " << maxVehicleNameSize << ". Current: " << setName.length();
-		Log(LogCode::WARNING, logText.str());
-	}
-	else {
-		m_name = setName;
-	}
+	setName(name);
 
 	// Make sure the mileage is not less than 0
 	if (setMileage < 0) {
-		Log(LogCode::WARNING, "Vehicle mileage out of range for " + m_name);
+		RST::Log("Inital target mileage for [" + m_name + "] was below zero. Initialized to 0 miles", LogCode::WARNING);
 		m_mileage = 0;
 	}
 	else {
@@ -129,23 +118,16 @@ Vehicle::Vehicle(const std::string setName, uint32_t setMileage) {
 bool Vehicle::NewRepair(uint32_t setMiles, RepairType setType, double setCost, std::string setNotes, bool setThirdParty, Date setDate) {
 
 	// State variables used for error checking
-	bool milesAccepted{ false }, costAccepted{ false }, notesAccepted{ false };
-
+	bool milesAccepted{ false }, costAccepted{ false }, notesAccepted{ false }, dateAccepted{false};
 
 	if (setMiles > 0) 	{ milesAccepted = true; }
-	if (setCost > 0) 	{ costAccepted 	= true; }
+	if (setCost >= 0) 	{ costAccepted 	= true; }
 
-	// Ensure the notes length is not longer than maxNotesSize
-	if (setNotes.length() <= 0 || setNotes.length() > maxNotesSize) {
-		std::ostringstream logText;
-		logText << "Repair notes out of range. Max size allowed is " << maxNotesSize << ". Current: " << setNotes.length();
-		Log(LogCode::WARNING, logText.str());
-		notesAccepted = false;
-	}
-	else { notesAccepted = true; }
+	notesAccepted 	= CheckStringSize(setNotes, maxNotesSize);						// Ensure the notes size is not longer than maxNotesSize
+	dateAccepted 	= CheckDate(setDate.day, setDate.month, setDate.year);			// Ensure valid Date
 
 	// If all conditions are valid, make the Repair and add it to the Vehicle's list of repairs
-	if (milesAccepted && costAccepted && notesAccepted) {
+	if (milesAccepted && costAccepted && notesAccepted && dateAccepted) {
 		Repair repBuf{ setMiles, setType, setCost, setNotes, setThirdParty, setDate };
 		repairList.push_back(repBuf);
 
@@ -163,38 +145,37 @@ bool Vehicle::NewRepair(uint32_t setMiles, RepairType setType, double setCost, s
 			}
 		}
 
-		//If the new repair's mileage is higher than the Vehicle's, set the vehicle's mileage to it
-		if (repairList.back().getMileage() > m_mileage) {
-			m_mileage = repairList.back().getMileage();
-		}
+		RST::Log("Added Repair to [" + getName() +']', LogCode::LOG_LOW);
+		setMileage(setMiles);
+
 		return true;
 	}
 	else {
+		RST::Log("Could not add Repair to [" + getName() +']', LogCode::ERROR);
+		if(!milesAccepted) 	{ RST::Log("Mileage was not accepted", LogCode::ERROR); }
+		if(!costAccepted) 	{ RST::Log("Cost was not accepted", LogCode::ERROR); }
+		if(!notesAccepted) 	{ RST::Log("Notes were not accepted", LogCode::ERROR); }
+		if(!dateAccepted) 	{ RST::Log("Date was not accepted", LogCode::ERROR); }
 		return false;
 	}
 
 }
 bool Vehicle::NewGasStop(uint32_t setMiles, double setGal, double setPPG, std::string setNotes, Date setDate) {
 	// Stae variables
-	bool milesAccepted{ false }, galAccepted{ false }, ppgAccepted{ false }, notesAccepted{ false };
+	bool milesAccepted{ false }, galAccepted{ false }, ppgAccepted{ false }, notesAccepted{ false }, dateAccepted{false};
 
 	if (setMiles > 0) 	{ milesAccepted = true; }
 	if (setGal > 0) 	{ galAccepted 	= true; }
 	if (setPPG > 0) 	{ ppgAccepted = true; }
 
 	// Ensure the notes size is not longer than maxNotesSize
-	if (setNotes.length() <= 0 || setNotes.length() > maxNotesSize) {
-		std::ostringstream logText;
-		logText << "Gas Stop notes out of range. Max size allowed is " << maxNotesSize << ". Current: " << setNotes.length();
-		Log(LogCode::WARNING, logText.str());
-	}
-	else { notesAccepted = true; }
+	notesAccepted = CheckStringSize(setNotes, maxNotesSize);
+	dateAccepted 	= CheckDate(setDate.day, setDate.month, setDate.year);			// Ensure valid Date
 
 	// If all inputs are valid, make GasStop type and add to list
-	if (milesAccepted && galAccepted && ppgAccepted && notesAccepted) {
+	if (milesAccepted && galAccepted && ppgAccepted && notesAccepted && dateAccepted) {
 		GasStop gsBuffer{ setMiles, setGal, setPPG, setNotes, setDate };
 		gasList.push_back(gsBuffer);
-
 
 		// Sort by mileage
 		// If the New GasStop's mileage is higher than the last element in the vector, no need to sort.
@@ -208,21 +189,243 @@ bool Vehicle::NewGasStop(uint32_t setMiles, double setGal, double setPPG, std::s
 				}
 			}
 		}
-		// If the mileage is higher than the vehicle, set the vehicle's mileage
-		if (gasList.back().getMileage() > m_mileage) {
-			m_mileage = gasList.back().getMileage();
-		}
 
+		RST::Log("Added Gas Stop to [" + getName() +']', LogCode::LOG_LOW);
+		setMileage(setMiles);
 
 
 		return true;
 	}
 	else {
+		RST::Log("Could not add Gas Stop to [" + getName() +']', LogCode::ERROR);
+		if(!milesAccepted) 	{ RST::Log("Mileage was not accepted", LogCode::ERROR); }
+		if(!galAccepted) 	{ RST::Log("Number of Gallons was not accepted", LogCode::ERROR); }
+		if(!ppgAccepted) 	{ RST::Log("Price Per Gallon was not accepted", LogCode::ERROR); }
+		if(!notesAccepted) 	{ RST::Log("Notes were not accepted", LogCode::ERROR); }
+		if(!dateAccepted) 	{ RST::Log("Date was not accepted", LogCode::ERROR); }
+
 		return false;
 	}
 }
 
+bool Vehicle::setName(std::string setName){
+	bool success{false};
 
+	// Make sure the name is not longer than maxVehicleNameSize
+	if (!CheckStringSize(setName, maxVehicleNameSize)) {
+		m_name = "Vehicle";
+
+		// Log the error
+		std::ostringstream logText;
+		logText << "Vehicle name [" << setName << "] was too long. The name was set to \"Vehicle\" ";
+		RST::Log(logText.str(), LogCode::ERROR);
+		
+		success = false;
+	}
+	else {
+		RST::Log("Vehicle [" + m_name + "] has been renamed to [" + setName + "]", LogCode::LOG_MED);
+		m_name = setName;
+
+		success = true;
+	}
+
+	return success;
+}
+bool Vehicle::setMileage(uint32_t setMileage){
+	bool success{false};
+
+	// If given mileage is greater, assign it to the vehicle
+	if (setMileage > m_mileage) {
+		m_mileage = setMileage;
+		success = true;
+
+		// Log mileage was changed
+		std::ostringstream txt{}; txt <<"Set Vehicle [" << getName() <<"] mileage to [" << m_mileage << "]";
+		RST::Log(txt.str(), LogCode::LOG_MED);
+	}
+	else{
+		std::ostringstream txt{}; txt <<"Mileage was not set for Vehicle [" << getName() <<"]. Current mileage is [" << m_mileage << "], given mileage was [" << setMileage << "]";
+		RST::Log(txt.str(), LogCode::RUNTIME_LOW);
+	}
+
+	return success;
+}
+
+
+// Vehicle Manager Implementation
+
+VehicleManager::VehicleManager(Application* app) : Module("Vehicle Manager", app){
+
+}
+VehicleManager::~VehicleManager(){
+
+}
+Vehicle* VehicleManager::SelectableVehicleList() {
+	static Vehicle* selVeh{nullptr};
+
+	// Create the selectable list of vehicles
+	if(s_vehicleList.size() > 0){
+		if (ImGui::BeginListBox("Current Vehicles", ImVec2(ImGui::GetWindowSize().x, 120))) 
+		{
+			// Numbers the vehicles in the list
+			static int selected = -1;
+			int vehNum{0};
+			for (Vehicle& currentVehicle : s_vehicleList )
+			{	
+				++vehNum;
+				char buf[32];
+				sprintf(buf, "%d. %s", vehNum, currentVehicle.getName().c_str());
+				if (ImGui::Selectable(buf, selected == vehNum))
+				{
+					selected = vehNum;
+					selVeh = &currentVehicle;
+				}
+				ImGui::SameLine(200); ImGui::Text("%d miles", currentVehicle.getMileage()); 
+			}
+			ImGui::EndListBox();
+		}
+	}
+	else{
+		ImGui::Text("There are no tracked vehicles");
+	}
+
+	return selVeh;
+}
+void VehicleManager::ShowFullVehicleInformation(Vehicle* veh) {
+	static const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+	ImVec2 outer_size = ImVec2(0.0f, TEXT_BASE_HEIGHT * 8);
+
+	ImGui::Text("Repairs");
+	ImGui::Spacing();
+	if(ImGui::BeginTable("Repairs", 6, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg , outer_size ))
+	{
+		ImGui::TableSetupColumn("Date", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("Miles", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("Cost", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("Third Party", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("Notes", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableHeadersRow();
+
+		for (Repair& rep : veh->getRepairList())
+		{
+			ImGui::TableNextRow();
+
+			// Buffers for the specified repair that will be overweitten
+			int				mileBuf;
+			std::string		typeBuf;
+			double			costBuf;
+			std::string		notesBuf;
+			bool			thirdPartyBuf;
+			std::string		dateBuf;
+
+			// Write to the buffers
+			rep.getRepairInfo(mileBuf, typeBuf, costBuf, notesBuf, thirdPartyBuf, dateBuf);
+
+			// Display in the table
+			int column{0};
+			ImGui::TableSetColumnIndex(column);	
+			ImGui::Text("%s", dateBuf.c_str());						// Date
+			++column;
+
+			ImGui::TableSetColumnIndex(column);
+			ImGui::Text("%d", mileBuf);								// Mileage
+			++column;
+
+			ImGui::TableSetColumnIndex(column);
+			ImGui::Text("%s", typeBuf.c_str());						// Type of Repair
+			++column;
+			
+			ImGui::TableSetColumnIndex(column);
+			ImGui::Text("%4f", costBuf);								// Cost of Repair
+			++column;
+			
+			ImGui::TableSetColumnIndex(column);
+			ImGui::Text("%s", thirdPartyBuf ? "true" : "false");	// Third Party
+			++column;
+
+			ImGui::TableSetColumnIndex(column);
+			ImGui::Text("%s", notesBuf.c_str());					// Notes
+		}
+	ImGui::EndTable();
+	}
+
+	ImGui::NewLine();
+	ImGui::Text("Gas Stops");
+	ImGui::Spacing();
+
+	if(ImGui::BeginTable("Gas Stops", 5, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg , outer_size ))
+	{
+		ImGui::TableSetupColumn("Date", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("Miles", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("Gallons", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("Per Gal", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("Notes", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableHeadersRow();
+
+		for (GasStop& gas : veh->getGasStopList())
+		{
+			ImGui::TableNextRow();
+
+			// Buffers for the specified GasStop that will be overweitten
+			int			mileBuf;
+			double		galBuf;
+			double		costBuf;
+			std::string notesBuf;
+			std::string dateBuf;
+
+			// Write to the buffers
+			gas.getGasStopInfo(mileBuf, galBuf, costBuf, notesBuf, dateBuf);
+
+			int column{0};
+
+			ImGui::TableSetColumnIndex(column);
+			ImGui::Text("%s", dateBuf.c_str());		// Date
+			++column;
+
+			ImGui::TableSetColumnIndex(column);
+			ImGui::Text("%d", mileBuf);				// Mileage
+			++column;
+
+			ImGui::TableSetColumnIndex(column);
+			ImGui::Text("%f", galBuf);				// Gallons total
+			++column;
+			
+			ImGui::TableSetColumnIndex(column);
+			ImGui::Text("%f", costBuf);			    // Cost per gallon
+			++column;
+			
+			ImGui::TableSetColumnIndex(column);
+			ImGui::Text("%s", notesBuf.c_str());	// Notes
+		}
+	ImGui::EndTable();
+	}
+	return;
+}
+bool VehicleManager::SaveAllVehicles	() {
+	bool success{ false };
+
+	// Iterates through s_vehicleList and writes information to a file of it's m_name
+	for (Vehicle& currentVehicle : s_vehicleList) {
+		if (!SaveVehicle(&currentVehicle)) {
+			RST::Log("Could not save vehicle information for " + currentVehicle.getName(), LogCode::WARNING);
+			success = false;
+		}
+		else {
+			RST::Log("Saved vehicle information for " + currentVehicle.getName(), LogCode::LOG_HIGH);
+			success = true;
+		}
+	}
+
+	return success;
+}
+
+// -----------------------
+
+
+
+
+// Helper Functions
 
 std::string MakeVehicleName		(std::string& text){
 	//Check if the text string exists. If not, exit functin
@@ -380,9 +583,9 @@ void 		MakeRepair			(std::string& text, Vehicle& veh){
 
 	// Log total unformatted strings, how many were successful at adding to the vehicle and how many failed
 	std::ostringstream msg; 
-	msg << "Vehicle [" << veh.getName() <<"] had [" << numRepairsTotal << "] unformatted Repair strings. [" 
+	msg << "Vehicle file [" << veh.getName() <<"] had [" << numRepairsTotal << "] unformatted Repair strings. [" 
 		<< numRepSuccessfullyAddedToVehicle << "] were added to vehicle, [" << numRebFailedToAddToVehicle << "] could not be added to vehicle";
-	Log(LogCode::ROUTINE, msg.str());
+	RST::Log(msg.str(), LogCode::LOG_HIGH);
 
 	return;
 }
@@ -435,193 +638,179 @@ void 		MakeGasStop			(std::string& text, Vehicle& veh){
 
 	// Log total unformatted strings, how many were successful at adding to the vehicle and how many failed
 	std::ostringstream msg; 
-	msg << "Vehicle [" << veh.getName() <<"] has [" << numGSTotal << "] unformatted Gas Stop strings. [" 
+	msg << "Vehicle file [" << veh.getName() <<"] has [" << numGSTotal << "] unformatted Gas Stop strings. [" 
 		<< numGSSuccessfullyAddedToVehicle << "] were added to vehicle, [" << numGSFailedToAddToVehicle << "] could not be added to vehicle";
-	Log(LogCode::ROUTINE, msg.str());
+	RST::Log( msg.str(), LogCode::LOG_HIGH);
 
 	return;
 }
+bool 		CheckStringSize		(const std::string text, int maxAllowed){
 
-
-// Vehicle Module Implementation
-
-
-VehicleManager::VehicleManager(Application* app) : Module("Vehicle Manager", app){
-
-}
-VehicleManager::~VehicleManager(){
-
-}
-Vehicle* VehicleManager::SelectableVehicleList() {
-	static Vehicle* selVeh{nullptr};
-
-	// Create the selectable list of vehicles
-	if(s_vehicleList.size() > 0){
-		if (ImGui::BeginListBox("Current Vehicles", ImVec2(ImGui::GetWindowSize().x, 120))) 
-		{
-			// Numbers the vehicles in the list
-			static int selected = -1;
-			int vehNum{0};
-			for (Vehicle& currentVehicle : s_vehicleList )
-			{	
-				++vehNum;
-				char buf[32];
-				sprintf(buf, "%d. %s", vehNum, currentVehicle.getName().c_str());
-				if (ImGui::Selectable(buf, selected == vehNum))
-				{
-					selected = vehNum;
-					selVeh = &currentVehicle;
-				}
-				ImGui::SameLine(200); ImGui::Text("%d miles", currentVehicle.getMileage()); 
-			}
-			ImGui::EndListBox();
-		}
-	}
-	else{
-		ImGui::Text("There are no tracked vehicles");
+	if(text.length() == 0){
+		return true;
 	}
 
-	return selVeh;
+	// Ensure the notes size is not longer than maxNotesSize
+	if (text.length() < 0 || text.length() > maxAllowed) {
+		std::ostringstream logText;
+		logText << "String [" << text << "] out of range at [" << text.length() << "] characters. Max allowed is [" << maxAllowed << "]";
+		RST::Log(logText.str(), LogCode::ERROR);
+
+		return false;
+	}
+	else { return true; }
 }
-void VehicleManager::EditVehicle(Vehicle* veh){
-	static ImVec2 buttonSize;
-	buttonSize.x = ImGui::GetWindowWidth() / 2;
-	buttonSize.y = 30;
+
+bool 		AddGasStop(Vehicle* veh, bool& wasSaved){
+	bool success{false};
+
+	static bool badMileage 	{false};
+	static bool badGal		{false};
+	static bool badPPG		{false};
+	static bool badNotes	{false};
+	static bool badDate		{false};
+
+
+	static uint32_t mileBuf{ 0 };
+	static double galBuf{ 0.0 };
+	static double ppgBuf{ 0.0 };
+	static char notesBuf[veh->maxNotesSize];
+
+	static uint16_t day{1}, month{1}, year{1900};
+
+	ImGuiMods::CenterText("Enter in the required information to add a new Gas Stop to the Vehicle");
+	ImGui::NewLine();
+
+	ImGui::Text("Mileage          "); ImGui::SameLine();
+ 	ImGui::InputScalar("##MileBuf", ImGuiDataType_U32, &mileBuf, NULL, NULL, "%u");
+	if(badMileage) {ImGui::SameLine(); ImGui::Text("Cannot be zero or below"); }
+
+	ImGui::Text("Gallons          "); ImGui::SameLine();
+ 	ImGui::InputScalar("##galBuf", ImGuiDataType_Double, &galBuf, NULL, NULL, "%lf");
+	if(badGal) {ImGui::SameLine(); ImGui::Text("Cannot be zero or below"); }
+
+	ImGui::Text("Price Per Gallon "); ImGui::SameLine();
+ 	ImGui::InputScalar("##ppgBuf", ImGuiDataType_Double, &ppgBuf, NULL, NULL, "%lf");
+	if(badPPG) {ImGui::SameLine(); ImGui::Text("Cannot be zero or below"); }
+
+	ImGui::Text("Notes            "); ImGui::SameLine();
+	ImGui::InputText("##Notes", notesBuf, veh->maxNotesSize);
+	if(badNotes) {ImGui::SameLine(); ImGui::Text("Notes out of range. Max size allowed is %d characters", veh->maxNotesSize); }
+
+
+	ImGui::NewLine();
+	if(badDate) {ImGui::Text("The date entered was invalid. Try again!"); }
+	ImGui::Text("Day    "); 	ImGui::SameLine(); ImGui::InputScalar("##Day", ImGuiDataType_U16, &day, NULL, NULL, "%d");
+	ImGui::Text("Month  "); 	ImGui::SameLine(); ImGui::InputScalar("##Month", ImGuiDataType_U16, &month, NULL, NULL, "%d");
+	ImGui::Text("Year   "); 	ImGui::SameLine(); ImGui::InputScalar("##Year", ImGuiDataType_U16, &year, NULL, NULL, "%d");
 	
-	ImGui::Text("Name: \t%s", veh->getName().c_str());
-	ImGui::Text("Miles:            \t   %d", veh->getMileage());
-	ImGui::Text("Number of repairs \t   %d", veh->getRepairList().size());
-	ImGui::Text("Number of gas stops: \t%d", veh->getGasStopList().size());
-	ImGui::Button("Add Repair", buttonSize); ImGui::SameLine();
-	ImGui::Button("Add Gas Stop", buttonSize);
 
-	return;
-}
-void VehicleManager::ShowFullVehicleInformation(Vehicle* veh) {
-	static const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
-	ImVec2 outer_size = ImVec2(0.0f, TEXT_BASE_HEIGHT * 8);
+	// Assign the buffers to the vehicle
+	ImGui::NewLine();
+	ImGui::SetCursorPosX( (ImGui::GetWindowWidth() / 2) - 75 );
+	if(ImGui::Button("Save", ImVec2(150, 30))){
+		// Error checking of the inputs
+		if(mileBuf <= 0)	{ badMileage = true; } 		else { badMileage = false;}
+		if(galBuf <= 0.0)		{ badGal = true; }		else { badGal = false;}
+		if(ppgBuf <= 0.0)		{ badPPG = true; }		else { badPPG = false;}
+		
+		if(!CheckStringSize(notesBuf, veh->maxNotesSize)) { badNotes = true; }
+		else {badNotes = false; }
 
-	ImGui::Text("Repairs");
-	ImGui::Spacing();
-	if(ImGui::BeginTable("Repairs", 6, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg , outer_size ))
-	{
-		ImGui::TableSetupColumn("Date", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-		ImGui::TableSetupColumn("Miles", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-		ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-		ImGui::TableSetupColumn("Cost", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-		ImGui::TableSetupColumn("Third Party", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-		ImGui::TableSetupColumn("Notes", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-		ImGui::TableHeadersRow();
+		if(!CheckDate(day, month, year)){ badDate = true;} else {badDate = false; }
 
-		for (Repair& rep : veh->getRepairList())
-		{
-			ImGui::TableNextRow();
-
-			// Buffers for the specified repair that will be overweitten
-			int				mileBuf;
-			std::string		typeBuf;
-			double			costBuf;
-			std::string		notesBuf;
-			bool			thirdPartyBuf;
-			std::string		dateBuf;
-
-			// Write to the buffers
-			rep.getRepairInfo(mileBuf, typeBuf, costBuf, notesBuf, thirdPartyBuf, dateBuf);
-
-			// Display in the table
-			int column{0};
-			ImGui::TableSetColumnIndex(column);	
-			ImGui::Text("%s", dateBuf.c_str());						// Date
-			++column;
-
-			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%d", mileBuf);								// Mileage
-			++column;
-
-			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%s", typeBuf.c_str());						// Type of Repair
-			++column;
-			
-			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%4f", costBuf);								// Cost of Repair
-			++column;
-			
-			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%s", thirdPartyBuf ? "true" : "false");	// Third Party
-			++column;
-
-			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%s", notesBuf.c_str());					// Notes
-		}
-	ImGui::EndTable();
-	}
-
-	ImGui::Spacing();
-	ImGui::Text("Gas Stops");
-	ImGui::Spacing();
-
-	if(ImGui::BeginTable("Gas Stops", 5, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg , outer_size ))
-	{
-		ImGui::TableSetupColumn("Date", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-		ImGui::TableSetupColumn("Miles", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-		ImGui::TableSetupColumn("Gallons", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-		ImGui::TableSetupColumn("Per Gal", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-		ImGui::TableSetupColumn("Notes", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-		ImGui::TableHeadersRow();
-
-		for (GasStop& gas : veh->getGasStopList())
-		{
-			ImGui::TableNextRow();
-
-			// Buffers for the specified GasStop that will be overweitten
-			int			mileBuf;
-			double		galBuf;
-			double		costBuf;
-			std::string notesBuf;
-			std::string dateBuf;
-
-			// Write to the buffers
-			gas.getGasStopInfo(mileBuf, galBuf, costBuf, notesBuf, dateBuf);
-
-			int column{0};
-
-			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%s", dateBuf.c_str());		// Date
-			++column;
-
-			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%d", mileBuf);				// Mileage
-			++column;
-
-			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%f", galBuf);				// Gallons total
-			++column;
-			
-			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%f", costBuf);			    // Cost per gallon
-			++column;
-			
-			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%s", notesBuf.c_str());	// Notes
-		}
-	ImGui::EndTable();
-	}
-	return;
-}
-bool VehicleManager::SaveVehicles	(const Application& app) {
-	bool success{ false };
-
-	// Iterates through s_vehicleList and writes information to a file of it's m_name
-	for (Vehicle& currentVehicle : s_vehicleList) {
-		if (!WriteToFile(app, currentVehicle)) {
-			Log(LogCode::WARNING, "Could not save vehicle information for " + currentVehicle.getName());
-			success = false;
-		}
-		else {
-			Log(LogCode::LOG, "Saved vehicle information for " + currentVehicle.getName());
-			success = true;
+		if(!badMileage && !badGal && !badPPG && !badNotes && !badDate){
+			// Actually save the information
+			success = veh->NewGasStop(mileBuf, galBuf, ppgBuf, std::string{notesBuf}, Date{day, month, year});
+			wasSaved = true;
 		}
 	}
+
 
 	return success;
 }
+bool 		AddRepair(Vehicle* veh, bool& wasSaved){
+	bool success{false};
+
+	static bool badMileage 	{false};
+	static bool badCost		{false};
+	static bool badNotes	{false};
+	static bool badDate		{false};
+
+	static uint32_t 	mileBuf{ 0 };
+	static double 		costBuf{ 0.0 };
+	static bool 		thirdPartyBuf;
+	static char 		notesBuf[veh->maxNotesSize];
+
+	static uint16_t day{1}, month{1}, year{1900};
+
+	ImGuiMods::CenterText("Enter in the required information to add a new Repair to the Vehicle");
+	ImGui::NewLine();
+
+	ImGui::Text("Mileage         "); ImGui::SameLine();
+ 	ImGui::InputScalar("##MileBuf", ImGuiDataType_U32, &mileBuf, NULL, NULL, "%u");
+	if(badMileage) {ImGui::SameLine(); ImGui::Text("Cannot be zero or below"); }
+
+	ImGui::Text("Type	        "); ImGui::SameLine();
+	const char* repairTypes[] = { "Oil Change", "Transmission Fluid Exchange", "Lightbulb Replacement", "Power Steering Fluid Exchange",
+		 "Wiper Blade Replacement", "Tire Rotation", "Tire Replacement", "Bodywork", "Mechanical Work", "Battery Replacement", "Other" };
+	static int repairTypeIndex = 0; // Here we store our selection data as an index.
+	const char* combo_preview_value = repairTypes[repairTypeIndex];  // Pass in the preview value visible before opening the combo (it could be anything)
+	if (ImGui::BeginCombo("##RepairType", combo_preview_value))
+	{
+		for (int n = 0; n < IM_ARRAYSIZE(repairTypes); n++)
+		{
+			const bool is_selected = (repairTypeIndex == n);
+			if (ImGui::Selectable(repairTypes[n], is_selected))
+				repairTypeIndex = n;
+
+			// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
+
+
+	ImGui::Text("Cost	        "); ImGui::SameLine();
+ 	ImGui::InputScalar("##cost", ImGuiDataType_Double, &costBuf, NULL, NULL, "%lf");
+	if(badCost) {ImGui::SameLine(); ImGui::Text("Cannot be below zero"); }
+
+
+	ImGui::Text("Notes           "); ImGui::SameLine();
+	ImGui::InputText("##Notes", notesBuf, veh->maxNotesSize);
+	if(badNotes) {ImGui::SameLine(); ImGui::Text("Notes out of range. Max size allowed is %d characters", veh->maxNotesSize); }
+
+	ImGui::Checkbox("Third Party", &thirdPartyBuf);
+
+	ImGui::NewLine();
+	if(badDate) {ImGui::Text("The date entered was invalid. Try again!"); }
+	ImGui::Text("Day    "); 	ImGui::SameLine(); ImGui::InputScalar("##Day", ImGuiDataType_U16, &day, NULL, NULL, "%d");
+	ImGui::Text("Month  "); 	ImGui::SameLine(); ImGui::InputScalar("##Month", ImGuiDataType_U16, &month, NULL, NULL, "%d");
+	ImGui::Text("Year   "); 	ImGui::SameLine(); ImGui::InputScalar("##Year", ImGuiDataType_U16, &year, NULL, NULL, "%d");
+	
+
+	// Assign the buffers to the vehicle
+	ImGui::NewLine();
+	ImGui::SetCursorPosX( (ImGui::GetWindowWidth() / 2) - 75 );
+	if(ImGui::Button("Save", ImVec2(150, 30))){
+		// Error checking of the inputs
+		if(mileBuf <= 0)	{ badMileage = true; } 		else { badMileage = false;}
+		if(costBuf < 0.0)		{ badCost = true; }		else { badCost = false;}
+		
+		if(!CheckStringSize(notesBuf, veh->maxNotesSize)) { badNotes = true; }
+		else {badNotes = false; }
+
+		if(!CheckDate(day, month, year)){ badDate = true;} else {badDate = false; }
+
+		// Get the info from the RepairType combo box
+		if(!badMileage && !badCost && !badNotes && !badDate){
+			// Actually save the information
+			success = veh->NewRepair(mileBuf, static_cast<RepairType>(repairTypeIndex + 1), costBuf, std::string{notesBuf}, thirdPartyBuf, Date{day, month, year});
+			wasSaved = true;
+		}
+	}
+	return success;
+}
+
+

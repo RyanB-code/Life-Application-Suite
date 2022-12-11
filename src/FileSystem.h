@@ -5,8 +5,10 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <filesystem>
 
-#include "Log.h"
+#include <RST/RST.h>
+
 
 namespace FileSystem {
 	// Reads text until limit and deletes characters read \param text: what will be read, limit: char to read until, returnType: will be overwritten with the data
@@ -38,6 +40,8 @@ namespace FileSystem {
 	bool	doesFileExist	(const std::string path);
 
 	bool	deleteFile		(const std::string path);
+
+	bool 	renameFile		(const std::string oldPath, const std::string newPath);
 
 	// Through operator overloading, the goal is to call the read and write functions depending on file format
 	// \param setPath: path of file to write, \param text - text to write to file

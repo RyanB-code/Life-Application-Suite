@@ -7,6 +7,7 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
+                "-w",   // Disable warnings
                 "${workspaceFolder}/include/DearImGUI/*.cpp",       // Build files in DearImGUI diectory
                 "${workspaceFolder}/src/Modules/*.cpp",             // Build files in Modules directory
                 "${workspaceFolder}/src/*.cpp",                     // Build all cpp files in the current workspace folder
@@ -18,7 +19,10 @@
                 "-o",
                 "C:\\dev\\1. Project Development Files\\LAS\\Life Application Suite-0.0.1.exe",   // Name the .exe and put to file
                 "-std=c++20",                                       // Tells g++ to use C++20
-                "-lglfw3dll"        // Not needed to compile but needed to run
+
+                "-lImGui",
+                "-lglfw3dll", 
+                "-lRST", 
             ],
             "options": {
                 "cwd": "${fileDirname}"
