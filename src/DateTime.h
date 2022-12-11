@@ -12,24 +12,21 @@ struct Date{
 	: 	day{setDay},
 		month{setMonth},
 		year{setYear}
-	{
+	{ }
+	Date(std::stringstream& text) { makeDate(text); }			// Create a Date from a string of text. If invalid, set to 1 JAN 1900
 
-	}
-	Date(std::stringstream& text) { makeDate(text); }
-
-	unsigned short day, month;
-	int year;
-
-	std::string string() const;
+	std::string 	string() const;								// Creates a string of the Date type. Formatted as 12 DEC 2022
+	void 			makeDate(std::stringstream& text);			// Writes a Date type from a string of text
 
 	friend std::ostream& operator<<(std::ostream& os, const Date& date);
 
-	// Writes a Date type from a string of text
-	void makeDate(std::stringstream& text);
+	// Member variables
+	unsigned short day, month;
+	int year;
 };
 
 
-bool CheckDate (int day, int month, int year);
+bool CheckDate (int day, int month, int year);		// Ensures the parameters are a valid Date (such as not 31 days in April)
 
 
 #endif

@@ -1,25 +1,24 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
-
+// User-created include
 #include "FileSystem.h"
 #include "Modules/Module.h"
 #include "Modules/DebugLog.h"
 #include "Modules/Settings.h"
 #include "Modules/Vehicle.h"
 
-
+// Standard library include
 #include <vector>
 #include <Windows.h>
 
+// 3rd Party Library include
 #include <RST/RST.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <DearImGUI/imgui.h>
 #include <DearImGUI/imgui_impl_glfw.h>
 #include <DearImGUI/imgui_impl_opengl3.h>
-
-// Forward Declarations
 
 
 class Application
@@ -57,23 +56,25 @@ private:
 	const 	std::string 			WINDOW_TITLE 		{"Life Application Suite"};
 	
 	// Paths necessary to run. The interaction and variables
-	std::string getExeParentPath() const;	// Returns the parent directory of the EXE path
-	void 		AssignPaths(std::string parentPath);
-	std::filesystem::path 	DIRECTORY_PATH;
-	std::filesystem::path	VEHICLE_PATH;
+	std::string getExeParentPath() const;						// Returns the parent directory of the EXE path
+	void 		AssignPaths(const std::string parentPath);		// Assigns member variable paths given the parentPath
+	std::filesystem::path 	DIRECTORY_PATH;						// Main parent directory that houses the executable
+	std::filesystem::path	VEHICLE_PATH;						// Directory holdng all of the Vehicle information files
 
 
 	// Setup functions. Does setup in the order listed here
-	bool SetupFileSystem();
-	bool SetupGLFW();
-	bool SetupImGUI();
-	bool SetupModules();
+	bool SetupFileSystem();										// Set member path varialbes and initializes RST
+	bool SetupGLFW();											
+	bool SetupImGUI();											// Creates window flags and sets colors
+	bool SetupModules();										// Iterates through s_moduleList and runs the Setup() function
 
-	bool FirstTimeSetup(); 					// Called from SetupFileSystem() could not find directories
+	bool FirstTimeSetup(); 										// Called if SetupFileSystem() could not find directories necessary, thereby assuming FirstTimeSetup
 	
-	// Module Interaction
-	static std::vector<Module*> s_moduleList;
-	void AddModule(Module* module) { s_moduleList.push_back(module); }	// Adds parameter to list of known modules
+	
+	static std::vector<Module*> s_moduleList;							// Holds all Modules
+	void AddModule(Module* module) { s_moduleList.push_back(module); }	// Adds given Module parameter to list of known modules
+
+	// Friend functions
 	friend void Home(Application* app);
 	friend void MenuBar(bool &demoWindow);
 

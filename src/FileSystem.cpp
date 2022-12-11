@@ -13,7 +13,7 @@ namespace FileSystem{
 			if (c != limit && charRead < text.length()) { bufferText += c; }	//Make sure c is not the limit, and that it does not go over the end of the string.
 			else {
 				if (c != limit) { bufferText += c; }
-				text.erase(0, charRead);					// Deletes read characters
+				text.erase(0, charRead);										// Deletes read characters
 				return bufferText;
 			}
 		}
@@ -24,13 +24,13 @@ namespace FileSystem{
 	bool createDirectory(const std::string path) {
 		bool success{ false };
 
-		// Before creating, check if it already exists. If found, create
+		// Before creating directory, check if it already exists. If not found, create directory
 		if (doesFileExist(path)) {
 			RST::Log("Found " + path, LogCode::LOG_HIGH);
 			success = true;
 		}
 		else {
-			// IF the directory could not be created, log and return false
+			// If the directory could not be created, log and return FALSE
 			if (!std::filesystem::create_directory(path)) {
 				RST::Log("Could not create directory " + path, LogCode::WARNING);
 				success = false;
@@ -48,19 +48,21 @@ namespace FileSystem{
 		
 		// Error check if the file exists already
 		if (!doesFileExist(path)) {
-			std::ofstream file(path);	// Creates the files here
+			std::ofstream file(path);	// Creates the file here
 
-			// If the file still does not exist, return false		
+			// If the file still does not exist, return FALSE		
 			if (!doesFileExist(path)) {
 				RST::Log("Could not create [" + path + "]", LogCode::WARNING);
 				return false;
 			}
 			else {
+				// If creation successful, log and return TRUE
 				RST::Log("Created file [" + path + "]", LogCode::LOG_HIGH);
 				return true;
 			}
 		}
 		else {
+			// If already found, no need to create. Log and return TRUE
 			RST::Log("Already found File " + path, LogCode::LOG_LOW);
 			return true;
 		}
@@ -69,6 +71,7 @@ namespace FileSystem{
 	bool doesFileExist(const std::string path) {
 		const std::filesystem::path checkFile(path);
 
+		// Check whether the file exists and return appropriately
 		if (std::filesystem::exists(checkFile) ){
 			RST::Log("File exists [" + path + ']', LogCode::LOG_MED);
 			return true;
@@ -82,6 +85,8 @@ namespace FileSystem{
 
 	bool deleteFile(const std::string path){
 		std::filesystem::path file{path};
+
+		// Try to delete the file and return appropriately
 		if(std::filesystem::remove(file)){
 			RST::Log("Deleted file " + file.string(), LogCode::LOG_HIGH);
 			return true;
@@ -93,7 +98,7 @@ namespace FileSystem{
 	}
 	
 	bool writeToFile(const std::string path, const std::string& text){
-		//If the file doesnt exist, try to create and it and then write again. If that fails, returns false
+		// If the file doesnt exist, try to create and it and then write again. If that fails, returns false
 		if (!doesFileExist(path)) {
 			createFile(path);
 			return writeToFile(path, text);
@@ -107,21 +112,22 @@ namespace FileSystem{
 		return false;
 	}
 
-	bool readFile(const std::string setPath, std::ostringstream& output) {
-		std::ostringstream path{ setPath };
-
-		if (!doesFileExist(path.str())) {
+	bool readFile(const std::string path, std::ostringstream& output) {
+		// If the file does not exist, no need to read. Return FALSE
+		if (!doesFileExist(path)) {
 			return false;
 		}
 		else {
-			std::ifstream file{ path.str(), std::ios_base::in};
+			// Open file for reading
+			std::ifstream file{ path, std::ios_base::in};
 			if(!file) {
-				RST::Log("Failed to open " + path.str() + " for reading.", LogCode::ERROR);
+				RST::Log("Failed to open " + path + " for reading.", LogCode::ERROR);
 				return false;
 			}
 			else {
-				RST::Log("Successfully opened " + path.str() + " for reading.", LogCode::LOG_HIGH);
+				RST::Log("Successfully opened " + path + " for reading.", LogCode::LOG_HIGH);
 				std::string line;
+				// Read the file line by line
 				while (file.good()) {
 					std::getline(file, line);
 					output << line;
@@ -160,7 +166,7 @@ namespace FileSystem{
 
 		//Log how many files were found
 		std::ostringstream logText;
-		logText << "Found " << writeTo.size() << " file(s)";
+		logText << "Found " << writeTo.size() << " file(s) in [" << directoryToRead << "]";
 		RST::Log(logText.str(), LogCode::LOG_LOW);
 
 		return;

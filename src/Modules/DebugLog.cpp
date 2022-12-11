@@ -78,7 +78,7 @@ void Debug::Display(){
 
 		ImGui::TextUnformatted(text.c_str());
 		ImGui::SameLine();
-		ImGui::Text("3 Dec 22 -> Will not update with new logs based on how get strings function is called");
+		ImGui::Text("As ov v0.0.1, this will not update with new logs based on how get strings function is called");
 
 		ImGui::End(); //End Window
 	 }

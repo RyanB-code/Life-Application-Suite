@@ -86,3 +86,10 @@ void ImGuiMods::CenterChildWindow(const float parentWindowWidth, const float chi
 
 	return;
 }
+
+bool ImGuiMods::BeginPopupModal(const char* title){
+	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+	return ImGui::BeginPopupModal(title, NULL, ImGuiWindowFlags_AlwaysAutoResize);
+}

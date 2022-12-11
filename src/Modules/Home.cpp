@@ -4,12 +4,11 @@
 void Home(Application* app)
 {
 	// Intent to remove in release ---------
-	static bool showDemoWindow 		= false;
+	static bool showDemoWindow 	= false;
 	// -------------------------------------
 	
-
-	static ImGuiIO& io = ImGui::GetIO();
 	// Create Docking Window over full viewport----------------------------------------
+	static ImGuiIO& io = ImGui::GetIO();
 	if(io.ConfigFlags & ImGuiConfigFlags_DockingEnable){
 		static const ImGuiViewport* viewport = ImGui::GetMainViewport();
 
@@ -35,8 +34,9 @@ void Home(Application* app)
 			}
 			ImGui::End();
 		}
-	} 
-	// -----------------------------------------------------------
+	} // -----------------------------------------------------------
+	
+
 	// No Docking else statement
 	else {
 		if(ImGui::BeginMainMenuBar()){
@@ -46,7 +46,7 @@ void Home(Application* app)
 	}
 	
 
-	// Show all modules in the module list
+	// Show all modules in the module list and actually draw the window
 	for(Module* module : Application::s_moduleList){
 		if(module->getShown()){
 			module->Display();

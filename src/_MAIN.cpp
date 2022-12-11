@@ -13,7 +13,7 @@ int main(int, char**) {
         app->Run();
     }
     catch(bool log){
-        RST::Log("Application throw was caught in main.", LogCode::FATAL);
+        RST::Log("Application error throw was caught in main.", LogCode::FATAL);
     }
 
 }

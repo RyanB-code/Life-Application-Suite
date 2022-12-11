@@ -1,8 +1,49 @@
 #include "DateTime.h"
 
+
+void Date::makeDate(std::stringstream& text){
+
+	// If the string is empty, set to 1 JAN 1900
+	if(text.str() == ""){
+		day = 1;
+		month = 1;
+		year = 1900;
+		RST::Log("Date cannot be blank. Set date to 1 JAN 1900", LogCode::WARNING);
+	}
+	else{
+		int dayBuf, monthBuf, yearBuf;
+
+		// Read the text and put to buffers
+		text >> dayBuf;
+		text >> monthBuf;
+		text >> yearBuf;
+
+		// Ensure the buffers are valid before assigning member variables
+		if(!CheckDate(dayBuf, monthBuf, yearBuf)){
+			std::ostringstream txt; txt << dayBuf << " " << monthBuf << " " << yearBuf;
+			RST::Log("Date [" + txt.str() + "] not accepted. Set date to 1 JAN 1900", LogCode::ERROR);
+			day = 1;
+			month = 1;
+			year = 1900;
+		}
+		else{
+			// Set member variables 
+			day = dayBuf;
+			month = monthBuf;
+			year = yearBuf;
+
+			std::ostringstream txt; txt << *this;
+			RST::Log("Date was set to [" + txt.str() + "]", LogCode::RUNTIME_LOW);
+		}
+	}
+
+	return;
+}
+
 std::string Date::string() const{
-	std::ostringstream os;
-	if(day == 0 && month == 0 && year == 0){
+	std::ostringstream os;			// Output stream buffer
+
+	if(day == 0 && month == 0 && year == 0){	// If variables are zero, make string say 'NA'
 		os << "NA";
 		return os.str();
 	}
@@ -56,60 +97,30 @@ std::string Date::string() const{
 }
 
 std::ostream& operator<<(std::ostream& os, const Date& date){
+
+	// Output as numbers
 	os << date.day << ' ' << date.month << ' ' << date.year;
 
 	return os;
 }
 
-void Date::makeDate(std::stringstream& text){
-	if(text.str() == ""){
-		day = 1;
-		month = 1;
-		year = 1900;
-		RST::Log("Date cannot be blank. Set date to 1 JAN 1900", LogCode::WARNING);
-	}
-	else{
-		int dayBuf, monthBuf, yearBuf;
-
-		text >> dayBuf;
-		text >> monthBuf;
-		text >> yearBuf;
-
-		if(!CheckDate(dayBuf, monthBuf, yearBuf)){
-			std::ostringstream txt; txt << dayBuf << " " << monthBuf << " " << yearBuf;
-			RST::Log("Date [" + txt.str() + "] not accepted. Set date to 1 JAN 1900", LogCode::ERROR);
-			day = 1;
-			month = 1;
-			year = 1900;
-		}
-		else{
-			day = dayBuf;
-			month = monthBuf;
-			year = yearBuf;
-
-			std::ostringstream txt; txt << *this;
-			RST::Log("Date was set to [" + txt.str() + "]", LogCode::LOG_LOW);
-		}
-	}
-
-	
-
-	return;
-}
 
 bool 	CheckDate			(int day, int month, int year){
 	bool success {false};
 
+	// Check valid year
 	if(year < 1900){
 		RST::Log("Year was below 1900", LogCode::RUNTIME_MED);
 		return false; 
 	}
 
+	// Check valid month
 	if(month <= 0 || month > 12){
 		RST::Log("Month was not between 1 and 12", LogCode::RUNTIME_MED);
 		return false; 
 	}
 
+	// Check valid day
 	if(day <= 0 ){
 		RST::Log("Day was at or below 0", LogCode::RUNTIME_MED);
 		return false; 

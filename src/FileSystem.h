@@ -29,28 +29,19 @@ namespace FileSystem {
 			}
 		}
 	}
-	// Reads text until limit, and deletes characters read \param text: what will be read limit: char to read until \return String of read text
-	std::string readUntilString(std::string& text, const char limit);
 	
-	// \return True if directory was found/created. False if directory could not be created
-	bool	createDirectory	(const std::string path);
-	// \return True if file was found/created. False if file could not be created
-	bool	createFile		(const std::string path);
-	// \return True if exists. False if does not exist
-	bool	doesFileExist	(const std::string path);
 
-	bool	deleteFile		(const std::string path);
+	std::string readUntilString(std::string& text, const char limit);					// Reads text until limit char found and deletes characters read	
+	bool	createDirectory	(const std::string path);									// Return TRUE if directory was found/created. FALSE if directory could not be created
+	bool	createFile		(const std::string path);									// Return TRUE if file was found/created. FALSE if file could not be created
+	bool	doesFileExist	(const std::string path);									// Return TRUE if file exists. FALSE if it does not exist
+	bool	deleteFile		(const std::string path);									// Return TRUE if file could be deleted, FALSE is file could not be deleted
+	bool 	renameFile		(const std::string oldPath, const std::string newPath);		// Return TRUE if target file could be found and renamed, FALSE if target file could not be found
 
-	bool 	renameFile		(const std::string oldPath, const std::string newPath);
+	bool writeToFile		(const std::string path, const std::string& text);			// Writes the given text to the file. Overwrites everything in the file. Returns TRUE if file was written, FALSE if file could not be found
+	bool readFile			(const std::string path, std::ostringstream& output);		// Reads all text from a file and overwrites parameter output with the text. Returns TRUE if file was opened and read from, FALSE if file could not be found
 
-	// Through operator overloading, the goal is to call the read and write functions depending on file format
-	// \param setPath: path of file to write, \param text - text to write to file
-	bool writeToFile(const std::string path, const std::string& text);
-	// \param Path of file, Where output of the file will be passed to \return Overrides output stream with text of the file. True if could read, false if could not
-	bool readFile(const std::string setPath, std::ostringstream& output);
-
-	// Iterates through the directory \return Overrides writeTo with file names found
-	void filesInDirectory(const std::string directoryToRead, std::vector<std::string>& writeTo);
+	void filesInDirectory(const std::string directoryToRead, std::vector<std::string>& writeTo);	// Iterates through the given directory and adds the file name to the writeTo vector
 
 }
 

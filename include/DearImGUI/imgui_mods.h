@@ -15,6 +15,9 @@ namespace ImGuiMods{
 
     // Keeps the child window in view if the parent window collapses further than the child window's width
     void CenterChildWindow(const float parentWindowWidth, const float childWindowWidth);
+
+    // Create Pop-Up modal that will always be centered
+    bool BeginPopupModal(const char* title);
 }
 
 #endif

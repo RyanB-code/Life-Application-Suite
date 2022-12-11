@@ -279,21 +279,16 @@ bool Vehicle::setName(const std::string setName){
 
 	return success;
 }
+
+
 // Vehicle Manager Implementation
 
-VehicleManager::VehicleManager(Application* app) : Module("Vehicle Manager", app){
-
-}
-VehicleManager::~VehicleManager(){
-
-}
+VehicleManager::VehicleManager(Application* app) : Module("Vehicle Manager", app)		{ }
+VehicleManager::~VehicleManager()														{ }
 Vehicle* VehicleManager::SelectableVehicleList(bool &reset) {
 	static Vehicle* selVeh{nullptr};
 
-	if(reset){
-		reset = false;
-		selVeh = nullptr;
-	}
+	if(reset){ reset = false; selVeh = nullptr; } // If reset is true, make selected vehicle null and put the flag back to false
 
 	// Create the selectable list of vehicles
 	if(s_vehicleList.size() > 0){
@@ -317,9 +312,7 @@ Vehicle* VehicleManager::SelectableVehicleList(bool &reset) {
 			ImGui::EndListBox();
 		}
 	}
-	else{
-		ImGui::Text("There are no tracked vehicles");
-	}
+	else{ ImGui::Text("There are no tracked vehicles"); }
 
 	return selVeh;
 }
@@ -448,7 +441,6 @@ bool VehicleManager::SaveAllVehicles	() {
 			success = true;
 		}
 	}
-
 	return success;
 }
 
@@ -677,7 +669,7 @@ void 		MakeGasStop			(std::string& text, Vehicle& veh){
 	return;
 }
 bool 		CheckStringSize		(const std::string text, int maxAllowed){
-
+	// If length is zero, it's below the max allowed so return TRUE
 	if(text.length() == 0){
 		return true;
 	}
@@ -696,18 +688,18 @@ bool 		CheckStringSize		(const std::string text, int maxAllowed){
 bool 		AddGasStop(Vehicle* veh, bool& wasSaved){
 	bool success{false};
 
+	// Flags for if input was not accepted, these set to TRUE
 	static bool badMileage 	{false};
 	static bool badGal		{false};
 	static bool badPPG		{false};
 	static bool badNotes	{false};
 	static bool badDate		{false};
 
-
-	static uint32_t mileBuf{ 0 };
-	static double galBuf{ 0.0 };
-	static double ppgBuf{ 0.0 };
-	static char notesBuf[veh->maxNotesSize];
-
+	// Input field buffers
+	static uint32_t 	mileBuf		{ 0 };
+	static double 		galBuf		{ 0.0 };
+	static double 		ppgBuf		{ 0.0 };
+	static char 		notesBuf	[veh->maxNotesSize];
 	static uint16_t day{1}, month{1}, year{1900};
 
 	ImGuiMods::CenterText("Enter in the required information to add a new Gas Stop to the Vehicle");
@@ -761,10 +753,7 @@ bool 		AddGasStop(Vehicle* veh, bool& wasSaved){
 			ppgBuf = 0.0;
 			
 			int i{0};						// Clear all of the notesBuffer
-			for( char& c : notesBuf){
-				notesBuf[i] = NULL;
-				++i;
-			}
+			for( char& c : notesBuf){ notesBuf[i] = NULL; ++i; }
 			day = 1; month = 1; year = 1900;
 
 			wasSaved = true;
@@ -777,16 +766,17 @@ bool 		AddGasStop(Vehicle* veh, bool& wasSaved){
 bool 		AddRepair(Vehicle* veh, bool& wasSaved){
 	bool success{false};
 
+	// Flags for if input was not accepted, these set to TRUE
 	static bool badMileage 	{false};
 	static bool badCost		{false};
 	static bool badNotes	{false};
 	static bool badDate		{false};
 
-	static uint32_t 	mileBuf{ 0 };
-	static double 		costBuf{ 0.0 };
+	// Input field buffers
+	static uint32_t 	mileBuf			{ 0 };
+	static double 		costBuf			{ 0.0 };
 	static bool 		thirdPartyBuf;
-	static char 		notesBuf[veh->maxNotesSize];
-
+	static char 		notesBuf		[veh->maxNotesSize];
 	static uint16_t day{1}, month{1}, year{1900};
 
 	ImGuiMods::CenterText("Enter in the required information to add a new Repair to the Vehicle");
@@ -798,9 +788,10 @@ bool 		AddRepair(Vehicle* veh, bool& wasSaved){
 
 	ImGui::Text("Type	        "); ImGui::SameLine();
 	const char* repairTypes[] = { "Oil Change", "Transmission Fluid Exchange", "Lightbulb Replacement", "Power Steering Fluid Exchange",
-		 "Wiper Blade Replacement", "Tire Rotation", "Tire Replacement", "Bodywork", "Mechanical Work", "Battery Replacement", "Other" };
-	static int repairTypeIndex = 10; // Here we store our selection data as an index.
-	const char* combo_preview_value = repairTypes[repairTypeIndex];  // Pass in the preview value visible before opening the combo (it could be anything)
+		 "Wiper Blade Replacement", "Tire Rotation", "Tire Replacement", "Bodywork", "Mechanical Work", "Battery Replacement", "Other" }; 	// Options for the combo box
+	
+	static int repairTypeIndex = 10; 																										// Here we store our selected member data as an index of the array
+	const char* combo_preview_value = repairTypes[repairTypeIndex];  																		// Pass in the preview value visible before opening the combo (it could be anything)
 	if (ImGui::BeginCombo("##RepairType", combo_preview_value))
 	{
 		for (int n = 0; n < IM_ARRAYSIZE(repairTypes); n++)
@@ -810,12 +801,10 @@ bool 		AddRepair(Vehicle* veh, bool& wasSaved){
 				repairTypeIndex = n;
 
 			// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-			if (is_selected)
-				ImGui::SetItemDefaultFocus();
+			if (is_selected) { ImGui::SetItemDefaultFocus(); }
 		}
 		ImGui::EndCombo();
 	}
-
 
 	ImGui::Text("Cost	        "); ImGui::SameLine();
  	ImGui::InputScalar("##cost", ImGuiDataType_Double, &costBuf, NULL, NULL, "%lf");
@@ -859,15 +848,11 @@ bool 		AddRepair(Vehicle* veh, bool& wasSaved){
 			repairTypeIndex = 10;
 			
 			int i{0};						// Clear all of the notesBuffer
-			for( char& c : notesBuf){
-				notesBuf[i] = NULL;
-				++i;
-			}
+			for( char& c : notesBuf) { notesBuf[i] = NULL; ++i; }
 			
 			thirdPartyBuf = false;
 			day = 1; month = 1; year = 1900;
 			
-
 			wasSaved = true;
 		}
 	}
