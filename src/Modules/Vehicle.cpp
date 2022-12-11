@@ -754,6 +754,19 @@ bool 		AddGasStop(Vehicle* veh, bool& wasSaved){
 		if(!badMileage && !badGal && !badPPG && !badNotes && !badDate){
 			// Actually save the information
 			success = veh->NewGasStop(mileBuf, galBuf, ppgBuf, std::string{notesBuf}, Date{day, month, year});
+
+			// Reset Buffers
+			mileBuf = 0.0;
+			galBuf = 0.0;
+			ppgBuf = 0.0;
+			
+			int i{0};						// Clear all of the notesBuffer
+			for( char& c : notesBuf){
+				notesBuf[i] = NULL;
+				++i;
+			}
+			day = 1; month = 1; year = 1900;
+
 			wasSaved = true;
 		}
 	}
@@ -786,7 +799,7 @@ bool 		AddRepair(Vehicle* veh, bool& wasSaved){
 	ImGui::Text("Type	        "); ImGui::SameLine();
 	const char* repairTypes[] = { "Oil Change", "Transmission Fluid Exchange", "Lightbulb Replacement", "Power Steering Fluid Exchange",
 		 "Wiper Blade Replacement", "Tire Rotation", "Tire Replacement", "Bodywork", "Mechanical Work", "Battery Replacement", "Other" };
-	static int repairTypeIndex = 0; // Here we store our selection data as an index.
+	static int repairTypeIndex = 10; // Here we store our selection data as an index.
 	const char* combo_preview_value = repairTypes[repairTypeIndex];  // Pass in the preview value visible before opening the combo (it could be anything)
 	if (ImGui::BeginCombo("##RepairType", combo_preview_value))
 	{
@@ -839,6 +852,22 @@ bool 		AddRepair(Vehicle* veh, bool& wasSaved){
 		if(!badMileage && !badCost && !badNotes && !badDate){
 			// Actually save the information
 			success = veh->NewRepair(mileBuf, static_cast<RepairType>(repairTypeIndex + 1), costBuf, std::string{notesBuf}, thirdPartyBuf, Date{day, month, year});
+
+			// Reset Buffers
+			mileBuf = 0.0;
+			costBuf = 0.0;
+			repairTypeIndex = 10;
+			
+			int i{0};						// Clear all of the notesBuffer
+			for( char& c : notesBuf){
+				notesBuf[i] = NULL;
+				++i;
+			}
+			
+			thirdPartyBuf = false;
+			day = 1; month = 1; year = 1900;
+			
+
 			wasSaved = true;
 		}
 	}

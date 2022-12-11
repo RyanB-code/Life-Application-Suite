@@ -778,11 +778,8 @@ void VehicleManager::Display() {
 		} // End if vehicle list is not empty
 
 		if(createVehicle){
-			if(ImGui::GetWindowWidth() > (createVehWidthMin + 20)){
-				ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - (currentCreateVehWidth / 2) );
-			}
-
 			ImGui::NewLine();
+			ImGuiMods::CenterChildWindow(parentWindowWidth, currentCreateVehWidth);
 			ImGuiMods::BeginResizeableChild("Create New Vehicle", createVehWidthMin, createVehWidthMax, 350);
 			currentCreateVehWidth = ImGui::GetWindowWidth();
 
@@ -840,6 +837,9 @@ void VehicleManager::Display() {
 				ImGui::EndPopup();
 			}
 
+			ImGui::SetCursorPosX( (ImGui::GetWindowWidth() / 2) - 75);
+			ImGui::SetCursorPosY( ImGui::GetWindowHeight() - 40 );
+			if (ImGui::Button("Close", ImVec2{150, 30})) {createVehicle = false; }
 
 			ImGui::EndChild();
 		}
