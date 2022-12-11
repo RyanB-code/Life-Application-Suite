@@ -387,6 +387,7 @@ void VehicleManager::Display() {
 		static bool addRepair 			{false};
 		static bool addGasStop 			{false};
 		static bool createVehicle		{false};
+		static bool deleteVehicleCalled	{false};
 		// Child Window sizes
 
 		const static float mainWinWidthMax 	{ 700 };					// The main Vehicle Tracker Window
@@ -447,7 +448,7 @@ void VehicleManager::Display() {
 				ImGui::Spacing();
 				currentMainWinSize = ImGui::GetWindowWidth();
 
-				selectedVehicle = SelectableVehicleList();	// Show available vehicles list and return with selected vehicle
+				selectedVehicle = SelectableVehicleList(deleteVehicleCalled);	// Show available vehicles list and return with selected vehicle
 				static float vehWinX; vehWinX = ImGui::GetWindowContentRegionWidth();
 
 				if(selectedVehicle){
@@ -556,8 +557,9 @@ void VehicleManager::Display() {
 							ImGui::Text("This will delete all of the Vehicle's information\nThis operation cannot be undone!\n\n");
 							ImGui::Separator();
 
-							if (ImGui::Button("OK", ImVec2(120, 0))) 
+							if (ImGui::Button("Delete", ImVec2(120, 0))) 
 							{
+								deleteVehicleCalled = true;
 								Vehicle vehBufferToDel = *selectedVehicle;
 								selectedVehicle = nullptr;
 								detailedVehView = false;
@@ -566,6 +568,7 @@ void VehicleManager::Display() {
 								if(!DeleteVehicle(vehBufferToDel)){
 									failed = true;
 								}
+								else{ selectedVehicle = nullptr; }
 								ImGui::CloseCurrentPopup(); 
 							}
 							ImGui::SetItemDefaultFocus();
@@ -824,9 +827,9 @@ void VehicleManager::Display() {
 				ImGui::NewLine();
 
 				if(ImGui::Button("Create", ImVec2(120, 30))) {
-					Vehicle vehBuf {nameBuf, milesBuffer};
-					addToVehicleList(vehBuf);
-					changesMade = true;
+					Vehicle* vehBuf = new Vehicle{nameBuf, milesBuffer};
+					addToVehicleList(*vehBuf);
+					SaveVehicle(vehBuf);
 					ImGui::CloseCurrentPopup();
 					createVehicle = false;
 				}

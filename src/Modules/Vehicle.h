@@ -159,7 +159,7 @@ public:
 private:
 	static std::vector<Vehicle> s_vehicleList;
 
-	Vehicle* 	SelectableVehicleList();						// Using ImGui, shows a list table of Vehicle's that are selectable
+	Vehicle* 	SelectableVehicleList(bool &reset);						// Using ImGui, shows a list table of Vehicle's that are selectable
 	void 		ShowFullVehicleInformation	(Vehicle* veh);		// Shows all the parameter Vehicle's Repairs and GasStops in table format
 
 
@@ -185,51 +185,6 @@ bool 		CheckStringSize		(const std::string text, int maxAllowed);
 bool	AddGasStop(Vehicle* veh, bool& wasSaved);
 bool	AddRepair(Vehicle* veh, bool& wasSaved);
 
-
-// ------------------------------------------------------------------------------------
-/* 	bool AddVehicle(Application* app) {
-		bool returnValue{false};
-		
-		std::string nameBuf;
-		uint32_t mileBuf;
-
-		std::cout << "Name\n>";
-		std::cin.ignore(10000, '\n');
-		std::getline(std::cin, nameBuf);
-
-		bool exit{ false };
-		do {
-			std::cout << "Mileage >";
-			std::cin >> mileBuf;
-			clearLineAfterInput();
-
-			if (std::cin.fail()) {
-				std::cin.clear();
-				std::cin.ignore(10000, '\n');
-			}
-			else {
-				exit = true;
-			}
-
-		} while (!exit);
-
-		std::cout << "Name:\t\t" << nameBuf << std::endl;
-		std::cout << "Mileage:\t" << mileBuf << std::endl;
-
-		std::cout << "\nSave Vehicle?\n";
-		if (getBoolInput()) {
-			Vehicle newVehicle{ nameBuf, mileBuf };
-			app->NewVehicle(newVehicle);
-
-			returnValue = true;
-		}
-		else {
-			returnValue = false;
-		}
-
-		return returnValue;
-	}
-*/
 
 
 #endif

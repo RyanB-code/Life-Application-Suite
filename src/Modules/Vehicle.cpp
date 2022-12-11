@@ -103,7 +103,15 @@ void GasStop::getGasStopInfo(int& mileage, double& gal, double& ppg, std::string
 Vehicle::Vehicle(const std::string name, uint32_t mileage) {
 	
 	setName(name);
-	setMileage(mileage);
+	// Make sure the mileage is not less than 0
+	if (mileage < 0) {
+		RST::Log("Vehicle mileage for [" + m_name + "] was below zero. Set to 0", LogCode::WARNING);
+		m_mileage = 0;
+	}
+	else {
+		m_mileage = mileage;
+	}
+
 
 	return;
 }
@@ -279,8 +287,13 @@ VehicleManager::VehicleManager(Application* app) : Module("Vehicle Manager", app
 VehicleManager::~VehicleManager(){
 
 }
-Vehicle* VehicleManager::SelectableVehicleList() {
+Vehicle* VehicleManager::SelectableVehicleList(bool &reset) {
 	static Vehicle* selVeh{nullptr};
+
+	if(reset){
+		reset = false;
+		selVeh = nullptr;
+	}
 
 	// Create the selectable list of vehicles
 	if(s_vehicleList.size() > 0){
