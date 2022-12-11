@@ -100,22 +100,14 @@ void GasStop::getGasStopInfo(int& mileage, double& gal, double& ppg, std::string
 
 
 
-Vehicle::Vehicle(const std::string name, uint32_t setMileage) {
+Vehicle::Vehicle(const std::string name, uint32_t mileage) {
 	
 	setName(name);
-
-	// Make sure the mileage is not less than 0
-	if (setMileage < 0) {
-		RST::Log("Inital target mileage for [" + m_name + "] was below zero. Initialized to 0 miles", LogCode::WARNING);
-		m_mileage = 0;
-	}
-	else {
-		m_mileage = setMileage;
-	}
+	setMileage(mileage);
 
 	return;
 }
-bool Vehicle::NewRepair(uint32_t setMiles, RepairType setType, double setCost, std::string setNotes, bool setThirdParty, Date setDate) {
+bool Vehicle::NewRepair(uint32_t setMiles, RepairType setType, double setCost, std::string setNotes, bool setThirdParty, Date date) {
 
 	// State variables used for error checking
 	bool milesAccepted{ false }, costAccepted{ false }, notesAccepted{ false }, dateAccepted{false};
@@ -124,11 +116,11 @@ bool Vehicle::NewRepair(uint32_t setMiles, RepairType setType, double setCost, s
 	if (setCost >= 0) 	{ costAccepted 	= true; }
 
 	notesAccepted 	= CheckStringSize(setNotes, maxNotesSize);						// Ensure the notes size is not longer than maxNotesSize
-	dateAccepted 	= CheckDate(setDate.day, setDate.month, setDate.year);			// Ensure valid Date
+	dateAccepted 	= CheckDate(date.day, date.month, date.year);			// Ensure valid Date
 
 	// If all conditions are valid, make the Repair and add it to the Vehicle's list of repairs
 	if (milesAccepted && costAccepted && notesAccepted && dateAccepted) {
-		Repair repBuf{ setMiles, setType, setCost, setNotes, setThirdParty, setDate };
+		Repair repBuf{ setMiles, setType, setCost, setNotes, setThirdParty, date };
 		repairList.push_back(repBuf);
 
 		// Sorts the Vehicle's repair list.
@@ -147,6 +139,7 @@ bool Vehicle::NewRepair(uint32_t setMiles, RepairType setType, double setCost, s
 
 		RST::Log("Added Repair to [" + getName() +']', LogCode::LOG_LOW);
 		setMileage(setMiles);
+		setLasUpdated(date);
 
 		return true;
 	}
@@ -160,7 +153,7 @@ bool Vehicle::NewRepair(uint32_t setMiles, RepairType setType, double setCost, s
 	}
 
 }
-bool Vehicle::NewGasStop(uint32_t setMiles, double setGal, double setPPG, std::string setNotes, Date setDate) {
+bool Vehicle::NewGasStop(uint32_t setMiles, double setGal, double setPPG, std::string setNotes, Date date) {
 	// Stae variables
 	bool milesAccepted{ false }, galAccepted{ false }, ppgAccepted{ false }, notesAccepted{ false }, dateAccepted{false};
 
@@ -169,12 +162,12 @@ bool Vehicle::NewGasStop(uint32_t setMiles, double setGal, double setPPG, std::s
 	if (setPPG > 0) 	{ ppgAccepted = true; }
 
 	// Ensure the notes size is not longer than maxNotesSize
-	notesAccepted = CheckStringSize(setNotes, maxNotesSize);
-	dateAccepted 	= CheckDate(setDate.day, setDate.month, setDate.year);			// Ensure valid Date
+	notesAccepted 	= CheckStringSize(setNotes, maxNotesSize);
+	dateAccepted 	= CheckDate(date.day, date.month, date.year);			// Ensure valid Date
 
 	// If all inputs are valid, make GasStop type and add to list
 	if (milesAccepted && galAccepted && ppgAccepted && notesAccepted && dateAccepted) {
-		GasStop gsBuffer{ setMiles, setGal, setPPG, setNotes, setDate };
+		GasStop gsBuffer{ setMiles, setGal, setPPG, setNotes, date };
 		gasList.push_back(gsBuffer);
 
 		// Sort by mileage
@@ -192,7 +185,7 @@ bool Vehicle::NewGasStop(uint32_t setMiles, double setGal, double setPPG, std::s
 
 		RST::Log("Added Gas Stop to [" + getName() +']', LogCode::LOG_LOW);
 		setMileage(setMiles);
-
+		setLasUpdated(date);
 
 		return true;
 	}
@@ -208,30 +201,7 @@ bool Vehicle::NewGasStop(uint32_t setMiles, double setGal, double setPPG, std::s
 	}
 }
 
-bool Vehicle::setName(std::string setName){
-	bool success{false};
-
-	// Make sure the name is not longer than maxVehicleNameSize
-	if (!CheckStringSize(setName, maxVehicleNameSize)) {
-		m_name = "Vehicle";
-
-		// Log the error
-		std::ostringstream logText;
-		logText << "Vehicle name [" << setName << "] was too long. The name was set to \"Vehicle\" ";
-		RST::Log(logText.str(), LogCode::ERROR);
-		
-		success = false;
-	}
-	else {
-		RST::Log("Vehicle [" + m_name + "] has been renamed to [" + setName + "]", LogCode::LOG_MED);
-		m_name = setName;
-
-		success = true;
-	}
-
-	return success;
-}
-bool Vehicle::setMileage(uint32_t setMileage){
+bool Vehicle::setMileage(const uint32_t setMileage){
 	bool success{false};
 
 	// If given mileage is greater, assign it to the vehicle
@@ -250,8 +220,57 @@ bool Vehicle::setMileage(uint32_t setMileage){
 
 	return success;
 }
+bool Vehicle::setLasUpdated(const Date date){
+	bool success{false};
 
+	if(date.year < m_lastUpdated.year){
+		RST::Log("Given year was prior to Last Updated year for [" + getName() + "]", LogCode::RUNTIME_LOW);
+		return false;
+	}
+	else{
+		if(date.month < m_lastUpdated.month){
+			RST::Log("Given month was prior to Last Updated month for [" + getName() + "]", LogCode::RUNTIME_LOW);
+			return false;
+		}
+		else{
+			if(date.month == m_lastUpdated.month && date.day < m_lastUpdated.day){
+				RST::Log("Given day was prior to Last Updated day for [" + getName() + "]", LogCode::RUNTIME_LOW);
+				return false;
+			}
+			else{
+				m_lastUpdated = date;
+				std::ostringstream txt; txt << m_lastUpdated;
+				RST::Log("Set Vehicle [" + getName() + "] last updated to [" + txt.str() + "]", LogCode::LOG_MED);
+				success = true;
+			}
+		}
+	}
 
+	return success;
+}
+bool Vehicle::setName(const std::string setName){
+	bool success{false};
+
+	// Make sure the name is not longer than maxVehicleNameSize
+	if (!CheckStringSize(setName, maxVehicleNameSize)) {
+		m_name = "Vehicle";
+
+		// Log the error
+		std::ostringstream logText;
+		logText << "Vehicle name [" << setName << "] was too long. The name was set to \"Vehicle\" ";
+		RST::Log(logText.str(), LogCode::ERROR);
+		
+		success = false;
+	}
+	else {
+		RST::Log("Vehicle [" + m_name + "] has been renamed to [" + setName + "]", LogCode::LOG_MED);
+		m_name = setName;
+		
+		success = true;
+	}
+
+	return success;
+}
 // Vehicle Manager Implementation
 
 VehicleManager::VehicleManager(Application* app) : Module("Vehicle Manager", app){

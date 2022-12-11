@@ -106,7 +106,7 @@ private:
 class Vehicle {
 public:
 	// Create a Vehicle
-	Vehicle(const std::string setName = "Vehicle", uint32_t setMileage = 0);
+	Vehicle(const std::string setName = "Vehicle", uint32_t mileage = 0);
 	~Vehicle() { }
 
 	static constexpr int maxVehicleNameSize { 15 };
@@ -114,17 +114,20 @@ public:
 
 	uint32_t 				getMileage() 		const 	{ return m_mileage; }
 	std::string 			getName() 			const 	{ return m_name; }
+	Date					getLastUpdated()	const 	{ return m_lastUpdated; }
 
-	std::vector<Repair>& 	getRepairList()	 			{ return repairList; }  // FIX. Instead of this, make it be a getter/setter function
-	std::vector<GasStop>& 	getGasStopList() 			{ return gasList; }		// FIX
+	bool 					setName						(const std::string setName);
+	bool 					setMileage					(const uint32_t setMileage);
+	bool					setLasUpdated				(const Date date);
+
+	std::vector<Repair>& 	getRepairList()	 			{ return repairList; } 
+	std::vector<GasStop>& 	getGasStopList() 			{ return gasList; }
 	
-	bool setName(std::string setName);			// Error checking to be sure valid name
-	bool setMileage(uint32_t setMileage);
 
 	//Given individual types, it will error check ranges and data before adding to the vehicle's list of Repairs
-	bool NewRepair	(uint32_t setMiles, RepairType setType, double setCost, std::string setNotes, bool setThirdParty, Date setDate);
+	bool NewRepair	(uint32_t setMiles, RepairType setType, double setCost, std::string setNotes, bool setThirdParty, Date date);
 	//Given individual types, it will error check ranges and data before adding to the vehicle's list of Gas Stops
-	bool NewGasStop	(uint32_t setMiles, double setGal, double setPPG, std::string setNotes, Date setDate);
+	bool NewGasStop	(uint32_t setMiles, double setGal, double setPPG, std::string setNotes, Date date);
 
 	// Compare if Vehicle names are the same
 	friend bool operator==(const Vehicle& lhs, const Vehicle& rhs);	

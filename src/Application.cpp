@@ -386,12 +386,12 @@ void VehicleManager::Display() {
 		static bool detailedVehView     {false};
 		static bool addRepair 			{false};
 		static bool addGasStop 			{false};
-
+		static bool createVehicle		{false};
 		// Child Window sizes
 
 		const static float mainWinWidthMax 	{ 700 };					// The main Vehicle Tracker Window
 		const static float mainWinWidthMin 	{ 500 };
-		static float mainWinHeight			{ 350 };
+		static float mainWinHeight			{ 400 };
 		static float currentMainWinSize 	{mainWinWidthMax}; 			// Saves the current size
 
 		const static float detailedVehWinWidthMax { 700 };				// For the Table view of Gas Stops and Repairs
@@ -401,6 +401,10 @@ void VehicleManager::Display() {
 		const static float addToVehicleWidthMax	{ 1000 }; 				// For Adding Gas Stop / Repair
 		const static float addToVehicleWidthMin { 500 };
 		static float currentAddToWinWidth {addToVehicleWidthMax}; 		// Saves current size
+
+		const static float createVehWidthMax { 700 };
+		const static float createVehWidthMin { 500 };
+		static float currentCreateVehWidth {createVehWidthMax};
 
 		static ImVec2 buttonSize {150.0f, 30.0f};
 
@@ -416,7 +420,13 @@ void VehicleManager::Display() {
 		ImGui::Spacing();
 		ImGui::Spacing();
 
-		if(vehListIsEmpty())	{ ImGui::Text("There are no tracked vehicles"); }
+		if(vehListIsEmpty())	{ 
+			ImGui::Text("There are no tracked vehicles"); 
+
+			ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - 100);
+			ImGui::SetCursorPosY(ImGui::GetWindowHeight() / 2 - 25);
+			if(ImGui::Button("Create Vehicle", ImVec2 (200, 50))) { createVehicle = true; }
+		}
 		else{
 
 			// This draws the child window for the vehicle list and resizes
@@ -441,6 +451,9 @@ void VehicleManager::Display() {
 				static float vehWinX; vehWinX = ImGui::GetWindowContentRegionWidth();
 
 				if(selectedVehicle){
+					
+					if(ImGui::Button("Create New Vehicle", ImVec2(vehWinX, 30))) { createVehicle = true; }
+					ImGui::NewLine();
 
 					static float buttonX_1 {150};
 
@@ -464,14 +477,14 @@ void VehicleManager::Display() {
 					}
 
 					ImGui::NewLine();
-					ImGui::Text("Last Updated: \t   %s", "Not Implemented");
+					ImGui::Text("Last Updated: \t   %s", selectedVehicle->getLastUpdated().string().c_str());
 					
 					if(changesMade){
-						mainWinHeight = 400;
+						mainWinHeight = 450;
 						ImGui::NewLine();
 						ImGui::NewLine();
 
-						ImGuiMods::CenterText(std::string{"Changes have been made to " + selectedVehicle->getName() + " that have not yet been saved."}.c_str());
+						ImGuiMods::CenterText(std::string{"Changes have been made to a Vehicle that have not yet been saved."}.c_str());
 					}
 
 					// Once/if vehicle is selected, these buttons appear. Display at bottom of screen
@@ -527,6 +540,7 @@ void VehicleManager::Display() {
 							detailedVehView = false;
 							addRepair = false;
 							addGasStop = false;
+							createVehicle = false;
 						}
 					}
 
@@ -576,6 +590,11 @@ void VehicleManager::Display() {
 
 
 				}
+				else{
+					ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - (vehWinX / 2));
+					ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 40);
+					if(ImGui::Button("Create New Vehicle", ImVec2(vehWinX, 30))) { createVehicle = true; }
+				}
 				ImGui::EndChild(); // Ending main window viewing tracked vehicles
 			}
 
@@ -597,6 +616,8 @@ void VehicleManager::Display() {
 
 					// Edit Vehicle Portion
 					static uint32_t milesBuffer{0};
+					static char nameBuf[64];
+
 
 					// See if the selected vehicle has changed
 					static Vehicle* currentVehicle = nullptr; 
@@ -604,8 +625,6 @@ void VehicleManager::Display() {
 						defaultInputs = true;
 						currentVehicle = selectedVehicle;
 					}
-
-					static char nameBuf[64];
 
 					// Resets the default variables
 					if(defaultInputs){
@@ -632,7 +651,49 @@ void VehicleManager::Display() {
 					ImGui::InputText("##Name", nameBuf, 64);
 					ImGui::SameLine();
 					ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x - 10);
-					if(ImGui::Button("Save Changes", buttonSize)){ ImGui::OpenPopup("Are You Sure You Want To Save?");	}
+					if(ImGui::Button("Save Changes", buttonSize)) {
+						if(nameBuf != selectedVehicle->getName())	{ ImGui::OpenPopup("Are You Sure You Want To Save?");	}
+						else 										{ if(selectedVehicle->setMileage(milesBuffer)) { changesMade = true; }} 
+						
+					}
+
+					static bool showSaveFailed{false};
+					if(ImGui::BeginPopupModal("Saving Failed", NULL, ImGuiWindowFlags_AlwaysAutoResize)){
+						ImGui::Text("Could not save the Vehicle's Name.\nChanges were not made. Please try again!");
+						ImGui::NewLine();
+						if(ImGui::Button("Close")) { ImGui::CloseCurrentPopup(); showSaveFailed= false;};
+						ImGui::EndPopup();
+					}
+					if(showSaveFailed) { ImGui::OpenPopup("Saving Failed"); }
+
+					if(ImGui::BeginPopupModal("Are You Sure You Want To Save?", NULL, ImGuiWindowFlags_AlwaysAutoResize)){
+						ImGui::Text("This will overwrite the selected Vehicle information.\n\nThis operation cannot be undone!\n\n");
+
+						if(ImGui::Button("Save", ImVec2(120, 30))) {
+							std::string oldName{selectedVehicle->getName()};
+							std::ostringstream oldFileName{m_app->getVehicleDirectory() + oldName + ".dat"};
+							std::ostringstream newFileName{m_app->getVehicleDirectory() + nameBuf + ".dat"};  
+
+
+							if(!selectedVehicle->setName(nameBuf) || !FileSystem::renameFile(oldFileName.str(), newFileName.str())){
+								ImGui::CloseCurrentPopup();
+								selectedVehicle->setName(oldName);
+								showSaveFailed = true;
+							}
+							else{
+								selectedVehicle->setMileage(milesBuffer);
+								SaveVehicle(selectedVehicle);
+								ImGui::CloseCurrentPopup();
+							}
+						}
+						ImGui::SetItemDefaultFocus();
+						ImGui::SameLine();
+						if(ImGui::Button("Cancel", ImVec2(120, 30))) { ImGui::CloseCurrentPopup(); }
+						
+						ImGui::EndPopup();
+					}
+
+			
 					
 					ImGui::Text("Miles: "); ImGui::SameLine();
 					ImGui::InputScalar("##Miles",  ImGuiDataType_U32,  &milesBuffer, nullptr, NULL, "%u");
@@ -650,10 +711,13 @@ void VehicleManager::Display() {
 					if (ImGui::Button("Close", buttonSize)) {detailedVehView = false; }
 
 					ImGui::EndChild();	
+
+					
+					
 				}
 				else{ defaultInputs = true; }
 
-
+				
 				ImGui::NewLine();
 				if(addRepair){
 					ImGuiMods::CenterChildWindow(parentWindowWidth, currentAddToWinWidth);
@@ -693,10 +757,11 @@ void VehicleManager::Display() {
 						
 					ImGui::EndChild(); }
 				}
-
-
 			}
 			else{
+
+				ImGui::NewLine();
+				
 				ImGui::Spacing();
 				ImGui::TextWrapped("A repair can track:");
 				ImGui::BulletText("Mileage it was done");
@@ -707,7 +772,74 @@ void VehicleManager::Display() {
 				ImGui::BulletText("And the date it was done");
 			}
 
-		} // End if vehicle list is empty
+		} // End if vehicle list is not empty
+
+		if(createVehicle){
+			if(ImGui::GetWindowWidth() > (createVehWidthMin + 20)){
+				ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2 - (currentCreateVehWidth / 2) );
+			}
+
+			ImGui::NewLine();
+			ImGuiMods::BeginResizeableChild("Create New Vehicle", createVehWidthMin, createVehWidthMax, 350);
+			currentCreateVehWidth = ImGui::GetWindowWidth();
+
+			static uint32_t milesBuffer{0};
+			static char nameBuf[64];
+
+			static bool defaultInputs{true}; // Used for displaying current info in the text boxes
+			if(defaultInputs){	// Resets the default variables
+				int i{0};
+				// Clear all of the nameBuffer
+				for( char& c : nameBuf){
+					nameBuf[i] = NULL;
+					++i;
+				}
+				i = 0;
+				// Write the Vehicles name to the buffer to display in the text box
+				for(const char& c :"Vehicle"){
+					nameBuf[i] = c;
+					++i;
+				}
+				milesBuffer = 0;	// Write the vehicle mileage to the buffer
+
+				defaultInputs = false; // Once set, remove the flag to allow editing
+			}
+			ImGui::NewLine(); ImGui::NewLine();
+			ImGui::Text("Name:  "); ImGui::SameLine();
+			ImGui::InputText("##Name", nameBuf, 64);
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 100 - 10);
+			if(ImGui::Button("Create", ImVec2(100, 30))) {
+				ImGui::OpenPopup("Create New Vehicle?");
+			}
+			ImGui::Text("Miles: "); ImGui::SameLine();
+			ImGui::InputScalar("##Miles",  ImGuiDataType_U32,  &milesBuffer, nullptr, NULL, "%u");
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 100 - 10); 
+			if(ImGui::Button("Clear",  ImVec2(100, 30))){ defaultInputs = true; }
+
+			if(ImGui::BeginPopupModal("Create New Vehicle?", NULL, ImGuiWindowFlags_AlwaysAutoResize)){
+				ImGui::NewLine();
+				ImGui::Text("This will create a new Vehicle.");
+				ImGui::NewLine();
+
+				if(ImGui::Button("Create", ImVec2(120, 30))) {
+					Vehicle vehBuf {nameBuf, milesBuffer};
+					addToVehicleList(vehBuf);
+					changesMade = true;
+					ImGui::CloseCurrentPopup();
+					createVehicle = false;
+				}
+				ImGui::SetItemDefaultFocus();
+				ImGui::SameLine();
+				if(ImGui::Button("Cancel", ImVec2(120, 30))) { ImGui::CloseCurrentPopup(); }
+				
+				ImGui::EndPopup();
+			}
+
+
+			ImGui::EndChild();
+		}
 	}
 	ImGui::End(); //End Vehicle Manager window
 	
