@@ -172,11 +172,11 @@ private:
 
 // Parsing raw text functions that format the text ----------------------------------
 
-std::string MakeVehicleName		(std::string& text);					// Deletes read characters from parameter and returns with string of the text read
-uint32_t 	MakeVehicleMiles	(std::string& text);					// Deletes read character from the parameter and returns the int read
-void 		MakeRepair			(std::string& text, Vehicle& veh);		// Make a Repair from a text stream. Adds it to veh parameter
-void 		MakeGasStop			(std::string& text, Vehicle& veh);		// Make a GasStop from a text stream. Adds it to the veh parameter
-bool 		CheckStringSize		(const std::string text, int maxAllowed);
+std::string MakeVehicleName		(std::string& text);						// Deletes read characters from parameter and returns with string of the text read
+uint32_t 	MakeVehicleMiles	(std::string& text);						// Deletes read character from the parameter and returns the int read
+void 		MakeRepair			(std::string& text, Vehicle& veh);			// Make a Repair from a text stream. Adds it to veh parameter
+void 		MakeGasStop			(std::string& text, Vehicle& veh);			// Make a GasStop from a text stream. Adds it to the veh parameter
+bool 		CheckStringSize		(const std::string text, int maxAllowed); 	// Returns TRUE if text is within limits, FALSE otherwise
 // -----------------------------------------------------------------------------------
 
 

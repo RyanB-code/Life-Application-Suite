@@ -392,7 +392,10 @@ void VehicleManager::Display() {
 		static bool saveVehInfoFailed			{false};			// If saving Vehicle information failed, inform user using Pop-up
 		static bool deleteVehicleCalled			{false};			// If a vehicle was deleted, this will be changed to true so the SelectableVehicleList() can reset its buffer and that function will revert this to false
 		static bool deleteVehFailed 			{false};			// If a vehicle could not be deleted, this set to true to display a message box
-		static bool resetDetailedWindowInputs	{true}; 			// In the Detailed View window, if this is true values will be reverted to default
+		
+		
+		static bool resetInputBufferDetailedViewWindow		{false}; 	// Call to reset all input fields and text in the DetailedView Window
+		static bool resetInputBufferCreateVehicleWindow		{false};
 
 		// Displaying child window variables
 		static bool showDetailedVehView     {false};
@@ -429,6 +432,7 @@ void VehicleManager::Display() {
 		static bool sameLine { false };		// Showing the Tracked Vehicles and Detailed View windows on the same line
 		static float parentWindowWidth{};
 		parentWindowWidth = ImGui::GetWindowSize().x;
+
 
 		// Forward declaration of Pop-Up Modal
 		// Pop-up informing that Information could not be saved
@@ -610,21 +614,23 @@ void VehicleManager::Display() {
 					static uint32_t milesBuf{0};
 					static char 	nameBuf[64];
 
+					static bool showMilesageTooBigMsg { false };
+
 					// See if the selected vehicle has changed, and if so, throw flag to reset values
 					static Vehicle* currentVehicle = nullptr; 
 					if(currentVehicle != selectedVehicle){
-						resetDetailedWindowInputs = true;
+						resetInputBufferDetailedViewWindow = true;
 						currentVehicle = selectedVehicle;
 					}
 
 					// Resets the default variables
-					if(resetDetailedWindowInputs){
+					if(resetInputBufferDetailedViewWindow){
 						int i{0};
 						for( char& c : nameBuf){ nameBuf[i] = NULL; ++i; } 							// Clear all of the nameBuffer
 						i = 0;																		// Set index to front of array
 						for(const char& c : selectedVehicle->getName())	{ nameBuf[i] = c; ++i; } 	// Write the Vehicles name to the buffer char by char to display in the text box
 						milesBuf = selectedVehicle->getMileage();									// Set the buffer equal to the current Vehicle's mileage
-						resetDetailedWindowInputs = false; 											// Once set, remove the flag to allow editing
+						resetInputBufferDetailedViewWindow = false; 								// Once set, remove the flag to allow editing
 					}
 
 					// Show Name input box and Save Changes button on the same line
@@ -639,29 +645,38 @@ void VehicleManager::Display() {
 					if(saveVehInfoFailed) { ImGui::OpenPopup("Saving Failed"); }
 
 					if(ImGui::BeginPopupModal("Are You Sure You Want To Save?", NULL, ImGuiWindowFlags_AlwaysAutoResize)){
-						ImGui::Text("This will overwrite the selected Vehicle information.\n\nThis operation cannot be undone!\n\n");
-
-						if(ImGui::Button("Save", ImVec2(120, 30))) {	
-							std::string oldName{selectedVehicle->getName()};									// Buffer to save current name in case renaming failed to revert back to original
-							std::ostringstream oldFileName{m_app->getVehicleDirectory() + oldName + ".dat"};	// Old Vehicle file path
-							std::ostringstream newFileName{m_app->getVehicleDirectory() + nameBuf + ".dat"};  	// Renamed target vehicle file path
-
-							// If the Vehicle renaming was not accepted OR file name not valid, revert back to original name
-							if(!selectedVehicle->setName(nameBuf) || !FileSystem::renameFile(oldFileName.str(), newFileName.str())){
-								ImGui::CloseCurrentPopup();
-								selectedVehicle->setName(oldName);
-								saveVehInfoFailed = true;
-							}
-							else{
-								// If vehicle renaming and file rename successful, change mileage, name and save to file
-								selectedVehicle->setMileage(milesBuf);
-								SaveVehicle(selectedVehicle);
-								ImGui::CloseCurrentPopup();
-							}
+						if(!CheckStringSize(nameBuf, Vehicle::maxVehicleNameSize)) 	{ 
+							ImGui::Text("Vehicle name out of range. Max size allowed is %d characters.\nVehicle was not created.", Vehicle::maxVehicleNameSize); 
+							ImGui::NewLine();
+							if(ImGui::Button("Close", ImVec2(120, 30))) { ImGui::CloseCurrentPopup(); }
 						}
-						ImGui::SetItemDefaultFocus();
-						ImGui::SameLine();
-						if(ImGui::Button("Cancel", ImVec2(120, 30))) { ImGui::CloseCurrentPopup(); }
+						else {
+							ImGui::Text("This will overwrite current Vehicle Information to: ");
+							ImGui::Text("Name:    %s\nMileage: %d", &nameBuf, milesBuf);
+							ImGui::NewLine();
+
+							if(ImGui::Button("Save", ImVec2(120, 30))) {	
+								std::string oldName{selectedVehicle->getName()};									// Buffer to save current name in case renaming failed to revert back to original
+								std::ostringstream oldFileName{m_app->getVehicleDirectory() + oldName + ".dat"};	// Old Vehicle file path
+								std::ostringstream newFileName{m_app->getVehicleDirectory() + nameBuf + ".dat"};  	// Renamed target vehicle file path
+
+								// If the Vehicle renaming was not accepted OR file name not valid, revert back to original name
+								if(!selectedVehicle->setName(nameBuf) || !FileSystem::renameFile(oldFileName.str(), newFileName.str())){
+									ImGui::CloseCurrentPopup();
+									selectedVehicle->setName(oldName);
+									saveVehInfoFailed = true;
+								}
+								else{
+									// If vehicle renaming and file rename successful, change mileage, name and save to file
+									selectedVehicle->setMileage(milesBuf);
+									SaveVehicle(selectedVehicle);
+									ImGui::CloseCurrentPopup();
+								}
+							}
+							ImGui::SetItemDefaultFocus();
+							ImGui::SameLine();
+							if(ImGui::Button("Cancel", ImVec2(120, 30))) { ImGui::CloseCurrentPopup(); }
+						}
 						ImGui::EndPopup();
 					}
 
@@ -669,7 +684,10 @@ void VehicleManager::Display() {
 					ImGui::Text("Miles: "); ImGui::SameLine();
 					ImGui::InputScalar("##Miles",  ImGuiDataType_U32,  &milesBuf, nullptr, NULL, "%u"); ImGui::SameLine();
 					ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x - 10); 
-					if(ImGui::Button("Clear", buttonSize)){ resetDetailedWindowInputs = true; }
+					if(ImGui::Button("Clear Inputs", buttonSize)){ resetInputBufferDetailedViewWindow = true; }
+
+					if(milesBuf >= 500000) { milesBuf = 0; showMilesageTooBigMsg = true;} else {showMilesageTooBigMsg = false; }
+					if(showMilesageTooBigMsg) 	{ImGui::Text("Mileage out of range. Mileage must be real. \nVehicle was not created");}
 
 					ImGui::NewLine();
 					ShowFullVehicleInformation(selectedVehicle);	// Display two tables with Repairs and Gas Stops
@@ -681,7 +699,7 @@ void VehicleManager::Display() {
 
 					ImGui::EndChild();	
 				} 
-				else{ resetDetailedWindowInputs = true; }
+				else{ resetInputBufferDetailedViewWindow = true; }
 				// End showing detailed vehicle window
 
 				
@@ -732,23 +750,23 @@ void VehicleManager::Display() {
 			static uint32_t mileBuf{0};
 			static char 	nameBuf[64];
 
-			static bool defaultInputs	{ true }; 	// Used for displaying current info in the text boxes
-			static bool badName			{ false };	// If already tried to save but failed, show message saying why
-			if(defaultInputs){					// Resets the default variables
+			static bool showMilesageTooBigMsg	{ false };					// If mileage entered > 500,000, show message saying mileage cannot be that high
+
+			if(resetInputBufferCreateVehicleWindow){						// Resets the default variables
 				int i{0};
-				for( char& c : nameBuf) { nameBuf[i] = NULL; ++i; }		// Clear all of the nameBuffer
+				for( char& c : nameBuf) { nameBuf[i] = NULL; ++i; }			// Clear all of the nameBuffer
 				i = 0;
-				for(const char& c :"Vehicle") { nameBuf[i] = c; ++i; }	// Write the Vehicles name to the buffer to display in the text box
-				mileBuf = 0;										// Reset mileage buffer to zero
-				defaultInputs = false; // Once set, remove the flag to allow editing
+				for(const char& c :"Vehicle Name") { nameBuf[i] = c; ++i; }	// Write the Vehicles name to the buffer to display in the text box
+				mileBuf = 0;												// Reset mileage buffer to zero
+				resetInputBufferCreateVehicleWindow = false; 				// Once set, remove the flag to allow editing
 			}
 
 			// Show name field and create on same line
 			ImGui::NewLine(); ImGui::NewLine();
 			ImGui::Text("Name:  "); ImGui::SameLine();
 			ImGui::InputText("##Name", nameBuf, 64); ImGui::SameLine();
-			ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 100 - 10);
-			if(ImGui::Button("Create", ImVec2(100, 30))) {
+			ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 150 - 10);
+			if(ImGui::Button("Create", ImVec2(150, 30))) {
 				ImGui::OpenPopup("Create New Vehicle?");
 			}
 
@@ -756,31 +774,46 @@ void VehicleManager::Display() {
 			ImGui::Text("Miles: "); ImGui::SameLine();
 			ImGui::InputScalar("##Miles",  ImGuiDataType_U32,  &mileBuf, nullptr, NULL, "%u");
 			ImGui::SameLine();
-			ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 100 - 10); 
-			if(ImGui::Button("Clear",  ImVec2(100, 30))){ defaultInputs = true; }
+			ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 150 - 10); 
+			if(ImGui::Button("Clear Inputs",  ImVec2(150, 30))){ resetInputBufferCreateVehicleWindow = true; }
 
-			if(badName) {ImGui::NewLine(); ImGui::Text("Name out of range. Max size allowed is %d characters.\nVehicle was not created", Vehicle::maxVehicleNameSize); }
+			ImGui::NewLine();
+
+			// Check inputs for bad inputs
+			if(mileBuf >= 500000) { mileBuf = 0; showMilesageTooBigMsg = true;} else {showMilesageTooBigMsg = false; }
+
+			// Show if bad inputs were found
+			if(showMilesageTooBigMsg) 	{ImGui::Text("Mileage out of range. Mileage must be real. \nVehicle was not created");}
 
 			if(ImGui::BeginPopupModal("Create New Vehicle?", NULL, ImGuiWindowFlags_AlwaysAutoResize)){
-				ImGui::NewLine();
-				ImGui::Text("This will create a new Vehicle.");
-				ImGui::NewLine();
 
-				if(ImGui::Button("Create", ImVec2(120, 30))) {
-					Vehicle* vehBuf = new Vehicle{nameBuf, mileBuf};
+				if(!CheckStringSize(nameBuf, Vehicle::maxVehicleNameSize)) 	{ 
+					ImGui::Text("Vehicle name out of range. Max size allowed is %d characters.\nVehicle was not created.", Vehicle::maxVehicleNameSize); 
+					ImGui::NewLine();
+					if(ImGui::Button("Close", ImVec2(120, 30))) { ImGui::CloseCurrentPopup(); }
+				}
+				else{
+					ImGui::NewLine();
+					ImGui::Text("This will create a new Vehicle:");
+					ImGui::Text("Name:    %s\nMileage: %d", &nameBuf, mileBuf);
+					ImGui::NewLine();
 
-					if(!CheckStringSize(nameBuf, Vehicle::maxVehicleNameSize)) 	{ 
-						badName = true; ImGui::CloseCurrentPopup();
-					}
-					else {
+					if(ImGui::Button("Create", ImVec2(120, 30))) {
+						Vehicle* vehBuf = new Vehicle{nameBuf, mileBuf};
+
 						addToVehicleList(*vehBuf);
 						if(!SaveVehicle(vehBuf)) { ImGui::CloseCurrentPopup(); 	ImGui::OpenPopup("Saving Failed"); }
-						else 					 { showCreateVehicle = false;	ImGui::CloseCurrentPopup(); }
+						else { 
+							showCreateVehicle = false;			// Close the Child Window
+							showMilesageTooBigMsg = false;		// Reset buffer for future calls to window
+		
+							ImGui::CloseCurrentPopup();
+						}
+						delete vehBuf;
 					}
+					ImGui::SameLine(); if(ImGui::Button("Close Wihtout Creating", ImVec2(215, 30))) { ImGui::CloseCurrentPopup(); }
+					
 				}
-				ImGui::SetItemDefaultFocus();
-				ImGui::SameLine();
-				if(ImGui::Button("Cancel", ImVec2(120, 30))) { ImGui::CloseCurrentPopup(); }
 
 				ImGui::EndPopup();
 			}
@@ -791,6 +824,10 @@ void VehicleManager::Display() {
 
 			ImGui::EndChild();
 		}
+		else { resetInputBufferCreateVehicleWindow = true; }
+		// End Create Vehicle Window
+
+
 	}
 	ImGui::End(); //End Vehicle Manager window
 	

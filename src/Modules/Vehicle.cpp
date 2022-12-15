@@ -167,7 +167,7 @@ bool Vehicle::NewGasStop(uint32_t setMiles, double setGal, double setPPG, std::s
 
 	if (setMiles > 0) 	{ milesAccepted = true; }
 	if (setGal > 0) 	{ galAccepted 	= true; }
-	if (setPPG > 0) 	{ ppgAccepted = true; }
+	if (setPPG >= 0) 	{ ppgAccepted = true; }
 
 	// Ensure the notes size is not longer than maxNotesSize
 	notesAccepted 	= CheckStringSize(setNotes, maxNotesSize);
@@ -362,7 +362,7 @@ void VehicleManager::ShowFullVehicleInformation(Vehicle* veh) {
 			++column;
 			
 			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%4f", costBuf);								// Cost of Repair
+			ImGui::Text("$ %4f", costBuf);							// Cost of Repair
 			++column;
 			
 			ImGui::TableSetColumnIndex(column);
@@ -417,7 +417,7 @@ void VehicleManager::ShowFullVehicleInformation(Vehicle* veh) {
 			++column;
 			
 			ImGui::TableSetColumnIndex(column);
-			ImGui::Text("%f", costBuf);			    // Cost per gallon
+			ImGui::Text("$ %f", costBuf);			    // Cost per gallon
 			++column;
 			
 			ImGui::TableSetColumnIndex(column);
@@ -678,7 +678,7 @@ bool 		CheckStringSize		(const std::string text, int maxAllowed){
 	if (text.length() < 0 || text.length() > maxAllowed) {
 		std::ostringstream logText;
 		logText << "String [" << text << "] out of range at [" << text.length() << "] characters. Max allowed is [" << maxAllowed << "]";
-		RST::Log(logText.str(), LogCode::ERROR);
+		RST::Log(logText.str(), LogCode::RUNTIME_HIGH);
 
 		return false;
 	}
@@ -689,9 +689,9 @@ bool 		AddGasStop(Vehicle* veh, bool& wasSaved){
 	bool success{false};
 
 	// Flags for if input was not accepted, these set to TRUE
-	static bool badMileage 	{false};
-	static bool badGal		{false};
-	static bool badPPG		{false};
+	static bool showMileageOutOfRangeMsg { false };
+	static bool showGalOutOfRangeMsg	 { false };
+	static bool showPPGOutOfRangeMsg	 { false };
 	static bool badNotes	{false};
 	static bool badDate		{false};
 
@@ -702,24 +702,32 @@ bool 		AddGasStop(Vehicle* veh, bool& wasSaved){
 	static char 		notesBuf	[veh->maxNotesSize];
 	static uint16_t day{1}, month{1}, year{1900};
 
+	// Check inputs as they are typed
+	if(mileBuf >= 500000 || mileBuf <= 0)   { mileBuf = 0; showMileageOutOfRangeMsg = true;}	else {showMileageOutOfRangeMsg 	= false; }
+	if(galBuf >= 300 || galBuf <= 0) 		{ galBuf = 0; showGalOutOfRangeMsg 		= true;} 	else {showGalOutOfRangeMsg 		= false; }
+	if(ppgBuf >= 300 || ppgBuf < 0) 		{ ppgBuf = 0; showPPGOutOfRangeMsg 		= true;} 	else {showPPGOutOfRangeMsg 		= false; }
+
+
 	ImGuiMods::CenterText("Enter in the required information to add a new Gas Stop to the Vehicle");
 	ImGui::NewLine();
 
 	ImGui::Text("Mileage          "); ImGui::SameLine();
  	ImGui::InputScalar("##MileBuf", ImGuiDataType_U32, &mileBuf, NULL, NULL, "%u");
-	if(badMileage) {ImGui::SameLine(); ImGui::Text("Cannot be zero or below"); }
+	if(showMileageOutOfRangeMsg) {ImGui::SameLine(); ImGui::Text("Mileage out of range. Mileage must be real.");}
+	
 
 	ImGui::Text("Gallons          "); ImGui::SameLine();
  	ImGui::InputScalar("##galBuf", ImGuiDataType_Double, &galBuf, NULL, NULL, "%lf");
-	if(badGal) {ImGui::SameLine(); ImGui::Text("Cannot be zero or below"); }
+	if(showGalOutOfRangeMsg) {ImGui::SameLine(); ImGui::Text("Gallons out of range. Gallons must be real.");}
 
 	ImGui::Text("Price Per Gallon "); ImGui::SameLine();
  	ImGui::InputScalar("##ppgBuf", ImGuiDataType_Double, &ppgBuf, NULL, NULL, "%lf");
-	if(badPPG) {ImGui::SameLine(); ImGui::Text("Cannot be zero or below"); }
+	if(showPPGOutOfRangeMsg) {ImGui::SameLine(); ImGui::Text("Price Per Gallon out of range. Price Per Gallon must be real.");}
+
 
 	ImGui::Text("Notes            "); ImGui::SameLine();
 	ImGui::InputText("##Notes", notesBuf, veh->maxNotesSize);
-	if(badNotes) {ImGui::SameLine(); ImGui::Text("Notes out of range. Max size allowed is %d characters", veh->maxNotesSize); }
+	if(badNotes) {ImGui::SameLine(); ImGui::Text("Notes out of range. Max size allowed is %d characters", Vehicle::maxVehicleNameSize); }
 
 
 	ImGui::NewLine();
@@ -727,39 +735,51 @@ bool 		AddGasStop(Vehicle* veh, bool& wasSaved){
 	ImGui::Text("Day    "); 	ImGui::SameLine(); ImGui::InputScalar("##Day", ImGuiDataType_U16, &day, NULL, NULL, "%d");
 	ImGui::Text("Month  "); 	ImGui::SameLine(); ImGui::InputScalar("##Month", ImGuiDataType_U16, &month, NULL, NULL, "%d");
 	ImGui::Text("Year   "); 	ImGui::SameLine(); ImGui::InputScalar("##Year", ImGuiDataType_U16, &year, NULL, NULL, "%d");
+
+
+	static bool inputsAccepted { false };
+	static bool alreadySaved{ false };
+	if(ImGuiMods::BeginPopupModal("New Gas Stop")){
+	
+		if(inputsAccepted){
+			// Inputs were accepted
+			if(!alreadySaved) { success = veh->NewGasStop(mileBuf, galBuf, ppgBuf, std::string{notesBuf}, Date{day, month, year}); alreadySaved = true;} 
+
+			// Reset Buffers
+			mileBuf = 0.0;
+			ppgBuf 	= 0.0;
+			galBuf 	= 0.0;
+			day = 1; month = 1; year = 1900;
+			
+			int i{0};						// Clear all of the notesBuffer
+			for( char& c : notesBuf) { notesBuf[i] = NULL; ++i; }
+					
+			wasSaved = true;
+
+			ImGui::NewLine(); ImGui::Text("Gas Stop added to %s", + veh->getName().c_str()); ImGui::NewLine();
+			if(ImGui::Button("Close", ImVec2(120, 30))) { ImGui::CloseCurrentPopup(); alreadySaved = false; inputsAccepted = false;}
+
+		}
+		else{
+			ImGuiMods::CenterText("One or more of your inputs were invalid. \nPlease try again");
+			if(ImGui::Button("Close", ImVec2(120, 30))) { ImGui::CloseCurrentPopup();  alreadySaved = false; }
+		}
+		ImGui::EndPopup();
+	}
 	
 
 	// Assign the buffers to the vehicle
 	ImGui::NewLine();
 	ImGui::SetCursorPosX( (ImGui::GetWindowWidth() / 2) - 75 );
 	if(ImGui::Button("Save", ImVec2(150, 30))){
-		// Error checking of the inputs
-		if(mileBuf <= 0)	{ badMileage = true; } 		else { badMileage = false;}
-		if(galBuf <= 0.0)		{ badGal = true; }		else { badGal = false;}
-		if(ppgBuf <= 0.0)		{ badPPG = true; }		else { badPPG = false;}
-		
-		if(!CheckStringSize(notesBuf, veh->maxNotesSize)) { badNotes = true; }
-		else {badNotes = false; }
+		// Moved checking of inputs here to remove the repeated checking in the Popup Modal loop
+		if(CheckStringSize(notesBuf, Vehicle::maxVehicleNameSize)) 	{ badNotes = false; } else { badNotes = true; }
+		if(CheckDate(day, month, year)) 							{ badDate = false;  } else { badDate = true; }
 
-		if(!CheckDate(day, month, year)){ badDate = true;} else {badDate = false; }
+		if(mileBuf > 0 && ppgBuf >= 0.0 && galBuf > 0.0 && !badNotes && !badDate) { inputsAccepted = true; } else { inputsAccepted = false; }
 
-		if(!badMileage && !badGal && !badPPG && !badNotes && !badDate){
-			// Actually save the information
-			success = veh->NewGasStop(mileBuf, galBuf, ppgBuf, std::string{notesBuf}, Date{day, month, year});
-
-			// Reset Buffers
-			mileBuf = 0.0;
-			galBuf = 0.0;
-			ppgBuf = 0.0;
-			
-			int i{0};						// Clear all of the notesBuffer
-			for( char& c : notesBuf){ notesBuf[i] = NULL; ++i; }
-			day = 1; month = 1; year = 1900;
-
-			wasSaved = true;
-		}
+		ImGui::OpenPopup("New Gas Stop"); 
 	}
-
 
 	return success;
 }
@@ -767,8 +787,8 @@ bool 		AddRepair(Vehicle* veh, bool& wasSaved){
 	bool success{false};
 
 	// Flags for if input was not accepted, these set to TRUE
-	static bool badMileage 	{false};
-	static bool badCost		{false};
+	static bool showMileageOutOfRangeMsg { false };
+	static bool showCostOutOfRangeMsg	 { false };
 	static bool badNotes	{false};
 	static bool badDate		{false};
 
@@ -776,15 +796,20 @@ bool 		AddRepair(Vehicle* veh, bool& wasSaved){
 	static uint32_t 	mileBuf			{ 0 };
 	static double 		costBuf			{ 0.0 };
 	static bool 		thirdPartyBuf;
-	static char 		notesBuf		[veh->maxNotesSize];
+	static char 		notesBuf		[Vehicle::maxVehicleNameSize];
 	static uint16_t day{1}, month{1}, year{1900};
+
+	// Check inputs as they are typed
+	if(mileBuf >= 500000 || mileBuf <= 0) { mileBuf = 0; showMileageOutOfRangeMsg = true;}	else {showMileageOutOfRangeMsg = false; }
+	if(costBuf >= 500000 || costBuf < 0) { costBuf = 0; showCostOutOfRangeMsg = true;} 		else {showCostOutOfRangeMsg = false; }
 
 	ImGuiMods::CenterText("Enter in the required information to add a new Repair to the Vehicle");
 	ImGui::NewLine();
 
 	ImGui::Text("Mileage         "); ImGui::SameLine();
  	ImGui::InputScalar("##MileBuf", ImGuiDataType_U32, &mileBuf, NULL, NULL, "%u");
-	if(badMileage) {ImGui::SameLine(); ImGui::Text("Cannot be zero or below"); }
+	if(showMileageOutOfRangeMsg) {ImGui::SameLine(); ImGui::Text("Mileage out of range. Mileage must be real.");}
+
 
 	ImGui::Text("Type	        "); ImGui::SameLine();
 	const char* repairTypes[] = { "Oil Change", "Transmission Fluid Exchange", "Lightbulb Replacement", "Power Steering Fluid Exchange",
@@ -808,39 +833,29 @@ bool 		AddRepair(Vehicle* veh, bool& wasSaved){
 
 	ImGui::Text("Cost	        "); ImGui::SameLine();
  	ImGui::InputScalar("##cost", ImGuiDataType_Double, &costBuf, NULL, NULL, "%lf");
-	if(badCost) {ImGui::SameLine(); ImGui::Text("Cannot be below zero"); }
+	if(showCostOutOfRangeMsg) {ImGui::SameLine(); ImGui::Text("Cost out of range. Cost must be real."); }
 
 
 	ImGui::Text("Notes           "); ImGui::SameLine();
 	ImGui::InputText("##Notes", notesBuf, veh->maxNotesSize);
-	if(badNotes) {ImGui::SameLine(); ImGui::Text("Notes out of range. Max size allowed is %d characters", veh->maxNotesSize); }
+	if(badNotes) {ImGui::SameLine(); ImGui::Text("Notes out of range. Max size allowed is %d characters", Vehicle::maxVehicleNameSize); }
 
 	ImGui::Checkbox("Third Party", &thirdPartyBuf);
 
 	ImGui::NewLine();
 	if(badDate) {ImGui::Text("The date entered was invalid. Try again!"); }
-	ImGui::Text("Day    "); 	ImGui::SameLine(); ImGui::InputScalar("##Day", ImGuiDataType_U16, &day, NULL, NULL, "%d");
-	ImGui::Text("Month  "); 	ImGui::SameLine(); ImGui::InputScalar("##Month", ImGuiDataType_U16, &month, NULL, NULL, "%d");
-	ImGui::Text("Year   "); 	ImGui::SameLine(); ImGui::InputScalar("##Year", ImGuiDataType_U16, &year, NULL, NULL, "%d");
+	ImGui::Text("Day    "); 	ImGui::SameLine(); ImGui::InputScalar("##Day", 		ImGuiDataType_U16, &day, NULL, NULL, "%d");
+	ImGui::Text("Month  "); 	ImGui::SameLine(); ImGui::InputScalar("##Month", 	ImGuiDataType_U16, &month, NULL, NULL, "%d");
+	ImGui::Text("Year   "); 	ImGui::SameLine(); ImGui::InputScalar("##Year", 	ImGuiDataType_U16, &year, NULL, NULL, "%d");
 	
 
-	// Assign the buffers to the vehicle
-	ImGui::NewLine();
-	ImGui::SetCursorPosX( (ImGui::GetWindowWidth() / 2) - 75 );
-	if(ImGui::Button("Save", ImVec2(150, 30))){
-		// Error checking of the inputs
-		if(mileBuf <= 0)	{ badMileage = true; } 		else { badMileage = false;}
-		if(costBuf < 0.0)		{ badCost = true; }		else { badCost = false;}
-		
-		if(!CheckStringSize(notesBuf, veh->maxNotesSize)) { badNotes = true; }
-		else {badNotes = false; }
-
-		if(!CheckDate(day, month, year)){ badDate = true;} else {badDate = false; }
-
-		// Get the info from the RepairType combo box
-		if(!badMileage && !badCost && !badNotes && !badDate){
-			// Actually save the information
-			success = veh->NewRepair(mileBuf, static_cast<RepairType>(repairTypeIndex + 1), costBuf, std::string{notesBuf}, thirdPartyBuf, Date{day, month, year});
+	static bool inputsAccepted { false };
+	static bool alreadySaved{ false };
+	if(ImGuiMods::BeginPopupModal("New Repair")){
+	
+		if(inputsAccepted){
+			// Inputs were accepted
+			if(!alreadySaved) { success = veh->NewRepair(mileBuf, static_cast<RepairType>(repairTypeIndex + 1), costBuf, std::string{notesBuf}, thirdPartyBuf, Date{day, month, year}); alreadySaved = true;} 
 
 			// Reset Buffers
 			mileBuf = 0.0;
@@ -854,9 +869,32 @@ bool 		AddRepair(Vehicle* veh, bool& wasSaved){
 			day = 1; month = 1; year = 1900;
 			
 			wasSaved = true;
+			
+			ImGui::NewLine(); ImGui::Text("Repair added to %s", + veh->getName().c_str()); ImGui::NewLine();
+			if(ImGui::Button("Close", ImVec2(120, 30))) { ImGui::CloseCurrentPopup(); alreadySaved = false; inputsAccepted = false;}
 		}
+		else{
+			ImGuiMods::CenterText("One or more of your inputs were invalid. \nPlease try again");
+			if(ImGui::Button("Close", ImVec2(120, 30))) { ImGui::CloseCurrentPopup();  alreadySaved = false; }
+		}
+
+		ImGui::EndPopup();
+	}
+
+
+
+	// Assign the buffers to the vehicle
+	ImGui::NewLine();
+	ImGui::SetCursorPosX( (ImGui::GetWindowWidth() / 2) - 75 );
+	if(ImGui::Button("Save", ImVec2(150, 30)))	{ 
+		// Moved checking of inputs here to remove the repeated checking in the Popup Modal loop
+		if(CheckStringSize(notesBuf, Vehicle::maxVehicleNameSize)) 	{ badNotes = false; } else { badNotes = true; }
+		if(CheckDate(day, month, year)) 							{ badDate = false;  } else { badDate = true; }
+
+		if(mileBuf > 0 && costBuf >= 0.0 && !badNotes && !badDate) { inputsAccepted = true; } else { inputsAccepted = false; }
+
+		ImGui::OpenPopup("New Repair"); 
 	}
 	return success;
 }
-
 

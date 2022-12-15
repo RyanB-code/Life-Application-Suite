@@ -2,7 +2,6 @@
 
 #include <RST/RST.h>
 
-#include <Windows.h>
 
 int main(int, char**) {
 
