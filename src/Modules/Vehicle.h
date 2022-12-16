@@ -157,15 +157,62 @@ public:
 	std::vector<Vehicle>& 	getVehicleList() 	const 			{ return s_vehicleList; }
 
 private:
-	static std::vector<Vehicle> s_vehicleList;
+	static std::vector<Vehicle> s_vehicleList;			// Vehicle list holding all known vehicles
+	Vehicle* m_selectedVehicle 			{ nullptr };	// Holds current selected vehicle information
 
-	Vehicle* 	SelectableVehicleList(bool &reset);						// Using ImGui, shows a list table of Vehicle's that are selectable
+	// State variables
+	bool m_changesNeedToBeSaved 		{ false };		// If changes have been made to a Vehicle that have yet to be saved to file, it will be true
+	bool m_saveVehInfoFailed			{ false };		// If saving Vehicle information failed, inform user using Pop-up
+	bool m_delVehCalled					{ false };		// If a vehicle was deleted, this will be changed to true so the SelectableVehicleList() can reset its buffer and that function will revert this to false
+	bool m_delVehFailed 				{ false };		// If a vehicle could not be deleted, this set to true to display a message box
+	
+	// Reset input buffers for child windows
+	bool m_resetInputBufDetailedViewWin	{ false }; 		// Call to reset all input fields and text in the DetailedView Window
+	bool m_resetInputBufCreateVehWin	{ false };		// Call to reset all input fields and text in the Create Vehicle Window
+
+	// Displaying child window variables
+	bool m_showDetailedVehWin    		{ false };
+	bool m_showAddRepairWin 			{ false };
+	bool m_showAddGasStopWin 			{ false };
+	bool m_showCreateVehicleWin			{ false };
+
+	// Used for child window formatting
+	bool 	m_childWindowSameLine 		{ false };		// Showing the Tracked Vehicles and Detailed View windows on the same line
+	float 	m_currentModuleWindowWidth	{};				// The current width of the entire module window
+
+	// Child Window sizes
+	const float m_mainWinWidthMax 			{ 700 };	// The main Vehicle Tracker Window
+	const float m_mainWinWidthMin 			{ 500 };
+		  float m_mainWinHeight				{ 400 };
+	      float m_currentMainWinWidth 		{m_mainWinWidthMax}; 
+		
+	const float m_detailedVehWinWidthMax 	{ 700 };	// For the Table view of Gas Stops and Repairs
+	const float m_detailedVehWinWidthMin 	{ 500 };
+		  float	m_currentDetailedWinWidth 	{m_detailedVehWinWidthMax};
+
+	const float m_addToVehicleWidthMax		{ 1000 }; 	// For Adding Gas Stop/Repair
+	const float m_addToVehicleWidthMin		{ 500 };
+		  float m_currentAddToWinWidth 		{m_addToVehicleWidthMax}; 
+		  	
+	const float m_createVehWidthMax 		{ 700 };	// Creation of new Vehicle window
+	const float m_createVehWidthMin 		{ 500 };
+	 	  float m_createVehWinHeight		{ 350 };
+	 	  float m_currentCreateVehWidth 	{m_createVehWidthMax};
+		
+	// Button sizing and formatting
+		  ImVec2 	m_mainWinButtonSize 		{ 150.0f, 30.0f };		// Button size for the main window that will resize
+	const float 	m_minButtonSize 			{ 70.0f };				// For resizable buttons, this is what the minimum size will be
+		  int 		m_buttonsShown 				{ 2 };					// For the main window, this will changes based on which windows are open
+	const ImVec2	m_addRepOrGasStopButtonSize { 150.0f, 30.0f };		// Side buttons in the main window size
+	const float 	m_winPadding				{ 10.0f };				// Padding that buttons will be from the edges of windows
+
+
+	Vehicle* 	SelectableVehicleList		(bool &reset);		// Using ImGui, shows a list table of Vehicle's that are selectable
 	void 		ShowFullVehicleInformation	(Vehicle* veh);		// Shows all the parameter Vehicle's Repairs and GasStops in table format
-
 
 	bool SaveAllVehicles	();					// Saves vehicles by writing to file. The path is specified in the Application class 
 	bool SaveVehicle		(Vehicle* veh);		// Writes Vehicle information to a file with the Vehicle's name
-	bool DeleteVehicle		(Vehicle& veh);								// Remove vehicle from the list, and file directory
+	bool DeleteVehicle		(Vehicle& veh);		// Remove vehicle from the list, and file directory
 
 };
 
@@ -182,9 +229,9 @@ bool 		CheckStringSize		(const std::string text, int maxAllowed); 	// Returns TR
 
 // ImGui Functions that just have to do with a vehicle
 
-bool	AddGasStop(Vehicle* veh, bool& wasSaved);
-bool	AddRepair(Vehicle* veh, bool& wasSaved);
+bool	AddGasStop	(Vehicle* veh, bool& wasSaved);
+bool	AddRepair	(Vehicle* veh, bool& wasSaved);
 
-
+// ----------------------------------------------------
 
 #endif
