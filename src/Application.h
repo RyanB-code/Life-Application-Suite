@@ -46,6 +46,8 @@ public:
 
 private:
 
+	const std::string VERSION = "v0.2.0-WIP";
+
 	bool m_initialized	{ false };
 	bool m_vsync 		{ true };
 

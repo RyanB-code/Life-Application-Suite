@@ -23,6 +23,8 @@
                 "-lglfw3dll", 
                 "-lRST",
                 "-lglad", 
+
+                "-D DEV",   // Define development macro
             ],
             "options": {
                 "cwd": "${fileDirname}"

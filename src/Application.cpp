@@ -106,13 +106,15 @@ bool Application::SetupFileSystem(){
 	AssignPaths(getExeParentPath());
 	
 	// Checks if member variable directories exist yet. If they do not exist, start first time setup
-	if (!FileSystem::doesFileExist(DIRECTORY_PATH.string()) || !FileSystem::doesFileExist(VEHICLE_PATH.string()))
+	if (!FileSystem::doesFileExist(getMainDirectory()) || !FileSystem::doesFileExist(getVehicleDirectory()))
 	{
 		if(!FirstTimeSetup()) { return false; }	// If first time setup was not successful, return FALSE thereby aborting further execution
-	}
+	}		
 	
+	std::cout << getVehicleDirectory() << "\n";
+
 	// Creates directories for the files if the files did exist/first time setup complete
-	if (!FileSystem::createDirectory(DIRECTORY_PATH.string()) || !FileSystem::createDirectory(VEHICLE_PATH.string()))
+	if (!FileSystem::createDirectory(getMainDirectory()) || !FileSystem::createDirectory(getVehicleDirectory()))
 	{
 		RST::Log("Could not initialize the file system.", LogCode::FATAL);
 		success = false;
@@ -245,8 +247,8 @@ bool Application::FirstTimeSetup(){
 
 		system("cls");
 		char input{};
-		std::cout << "Required file directories were not found.\nWould you like to use default directories? (y/n)\n";
-		std::cout << "  Note: This creates necessary folders within the parent folder of this .exe\n>";
+		std::cout << "Required file directories were not found in " << this->getMainDirectory() << "\nWould you like to use this directory to store the application's files? (y/n)\n";
+		std::cout << "  Note: This creates necessary folders within the Program Files folder of your computer.\n>";
 		std::cin  >> input;
 
 		switch(input){
@@ -265,7 +267,7 @@ bool Application::FirstTimeSetup(){
 				do{
 					system("cls");
 					std::cout << "Enter desired parent directory for files: ";
-					std::cout << "\n  Note: As of v0.0.1, the .exe needs to be in the same parent directory.\n  The folder containing the .exe will also contain the files\n>";
+					std::cout << "\n  Note: As of v0.2.0-WIP, the .exe needs to be in the same parent directory.\n  The folder containing the .exe will also contain the files\n>";
 					std::getline(std::cin, desiredDirectoryBuffer);
 
 					// Ensure there is a backslash at the end
@@ -318,16 +320,48 @@ bool Application::FirstTimeSetup(){
 }
 
 std::string Application::getExeParentPath() const {
-	char buffer[MAX_PATH];
-    GetModuleFileNameA(NULL, buffer, MAX_PATH);		// Windows specific call to return parent directory of the EXE
-	std::filesystem::path pathBuffer{buffer};		// Gets the parent directory path
 
-	return pathBuffer.parent_path().string() + "\\";	// return the directory name followed by a backslash
+	std::filesystem::path pathBuffer{};
+
+#ifdef _WIN32
+	RST::Log("Windows OS was detected", LogCode::LOG_HIGH);
+	
+	#ifdef DEV
+		RST::Log("Development version " + VERSION, LogCode::LOG_HIGH);
+		char buffer[MAX_PATH];
+		GetModuleFileNameA(NULL, buffer, MAX_PATH);			// Windows specific call to return parent directory of the EXE
+		pathBuffer = buffer;								// Gets the parent directory path
+		return pathBuffer.parent_path().string() + "\\";	// return the directory name followed by a backslash
+	#endif
+
+	#ifndef DEV
+		RST::Log("Release version " + VERSION, LogCode::LOG_HIGH);
+
+		// If the OS is x64 bit windows, set to normal program files
+		#ifdef _WIN64
+			pathBuffer 	= "C:\\Program Files\\LAS\\";			
+		#endif
+
+		// If the OS is x32 bit windows, set to x86 program files
+		#ifndef _WIN64
+			pathBuffer = "C:\\Program Files (x86)\\LAS\\";
+		#endif
+	#endif
+
+#endif
+
+
+#ifndef _WIN32
+	RST::Log("Windows OS was not detected. This version of LAS does not support other operating systems. Exiting Application", LogCode::LOG_HIGH);
+	throw (true);
+#endif
+
+	return pathBuffer.string();
 }
 void Application::AssignPaths(const std::string parentPath){
 	// Assigns the variables to be used
-	DIRECTORY_PATH 	= parentPath; 								// Makes the home directory the exePath's
-	VEHICLE_PATH	= DIRECTORY_PATH.string() + "Vehicles\\";	// Assign member variables but does NOT create the directory
+	DIRECTORY_PATH 	= parentPath;
+	VEHICLE_PATH 	= DIRECTORY_PATH.string() + "Vehicles\\";	// Assign member variables but does NOT create the directory
 
 	RST::Log("Set parent directory to " + parentPath, LogCode::LOG_HIGH);
 

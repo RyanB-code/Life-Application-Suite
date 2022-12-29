@@ -24,7 +24,7 @@ namespace FileSystem{
 	bool createDirectory(const std::string path) {
 		bool success{ false };
 
-		// Before creating directory, check if it already exists. If not found, create directory
+		// Before creating directory, check if it already exists. If not found, create directory, still return true
 		if (doesFileExist(path)) {
 			RST::Log("Found " + path, LogCode::LOG_HIGH);
 			success = true;
