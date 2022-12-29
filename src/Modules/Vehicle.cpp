@@ -124,7 +124,7 @@ bool Vehicle::NewRepair(uint32_t setMiles, RepairType setType, double setCost, s
 	if (setCost >= 0) 	{ costAccepted 	= true; }
 
 	notesAccepted 	= CheckStringSize(setNotes, maxNotesSize);						// Ensure the notes size is not longer than maxNotesSize
-	dateAccepted 	= CheckDate(date.day, date.month, date.year);			// Ensure valid Date
+	dateAccepted 	= DateTime::CheckDate(date.day, date.month, date.year);			// Ensure valid Date
 
 	// If all conditions are valid, make the Repair and add it to the Vehicle's list of repairs
 	if (milesAccepted && costAccepted && notesAccepted && dateAccepted) {
@@ -171,7 +171,7 @@ bool Vehicle::NewGasStop(uint32_t setMiles, double setGal, double setPPG, std::s
 
 	// Ensure the notes size is not longer than maxNotesSize
 	notesAccepted 	= CheckStringSize(setNotes, maxNotesSize);
-	dateAccepted 	= CheckDate(date.day, date.month, date.year);			// Ensure valid Date
+	dateAccepted 	= DateTime::CheckDate(date.day, date.month, date.year);			// Ensure valid Date
 
 	// If all inputs are valid, make GasStop type and add to list
 	if (milesAccepted && galAccepted && ppgAccepted && notesAccepted && dateAccepted) {
@@ -598,7 +598,7 @@ void 		MakeRepair			(std::string& text, Vehicle& veh){
 
 		// Read the dateStringBuf string and make a Date type
 		Date dateBuf{};
-		dateBuf.makeDate(dateStringBuf);
+		DateTime::MakeDate(dateStringBuf, dateBuf);
 
 		// Create the repair type
 		if(veh.NewRepair(mileBuf, enumTypeBuf, costBuf, notesBuf.str(), thirdPartyBuf, dateBuf)) { ++numRepSuccessfullyAddedToVehicle; }
@@ -654,7 +654,7 @@ void 		MakeGasStop			(std::string& text, Vehicle& veh){
 		dateStringBuf << FileSystem::readUntilString(currentString, separator);
 
 		Date dateBuf{};
-		dateBuf.makeDate(dateStringBuf);
+		DateTime::MakeDate(dateStringBuf, dateBuf);
 
 		if(veh.NewGasStop(mileBuf, gallonsBuf, ppgBuf, notesBuf.str(), dateBuf)){ ++numGSSuccessfullyAddedToVehicle; }
 		else { ++numGSFailedToAddToVehicle; }
@@ -774,7 +774,7 @@ bool 		AddGasStop(Vehicle* veh, bool& wasSaved){
 	if(ImGui::Button("Save", ImVec2(150, 30))){
 		// Moved checking of inputs here to remove the repeated checking in the Popup Modal loop
 		if(CheckStringSize(notesBuf, Vehicle::maxVehicleNameSize)) 	{ badNotes = false; } else { badNotes = true; }
-		if(CheckDate(day, month, year)) 							{ badDate = false;  } else { badDate = true; }
+		if(DateTime::CheckDate(day, month, year)) 							{ badDate = false;  } else { badDate = true; }
 
 		if(mileBuf > 0 && ppgBuf >= 0.0 && galBuf > 0.0 && !badNotes && !badDate) { inputsAccepted = true; } else { inputsAccepted = false; }
 
@@ -889,7 +889,7 @@ bool 		AddRepair(Vehicle* veh, bool& wasSaved){
 	if(ImGui::Button("Save", ImVec2(150, 30)))	{ 
 		// Moved checking of inputs here to remove the repeated checking in the Popup Modal loop
 		if(CheckStringSize(notesBuf, Vehicle::maxVehicleNameSize)) 	{ badNotes = false; } else { badNotes = true; }
-		if(CheckDate(day, month, year)) 							{ badDate = false;  } else { badDate = true; }
+		if(DateTime::CheckDate(day, month, year)) 					{ badDate = false;  } else { badDate = true; }
 
 		if(mileBuf > 0 && costBuf >= 0.0 && !badNotes && !badDate) { inputsAccepted = true; } else { inputsAccepted = false; }
 

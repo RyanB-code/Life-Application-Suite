@@ -1,19 +1,19 @@
 #include "DateTime.h"
 
 
-void Date::makeDate(std::stringstream& text){
+void DateTime::MakeDate(std::stringstream& text, Date& target){
 
 	// If the string is empty, set to 1 JAN 1900
 	if(text.str() == ""){
-		day = 1;
-		month = 1;
-		year = 1900;
+		target.day = 1;
+		target.month = 1;
+		target.year = 1900;
 		RST::Log("Date cannot be blank. Set date to 1 JAN 1900", LogCode::WARNING);
 	}
 	else{
-		int dayBuf, monthBuf, yearBuf;
+		int dayBuf, monthBuf, yearBuf;		// Input buffers
 
-		// Read the text and put to buffers
+		// Read the text and write to buffers
 		text >> dayBuf;
 		text >> monthBuf;
 		text >> yearBuf;
@@ -22,17 +22,17 @@ void Date::makeDate(std::stringstream& text){
 		if(!CheckDate(dayBuf, monthBuf, yearBuf)){
 			std::ostringstream txt; txt << dayBuf << " " << monthBuf << " " << yearBuf;
 			RST::Log("Date [" + txt.str() + "] not accepted. Set date to 1 JAN 1900", LogCode::ERROR);
-			day = 1;
-			month = 1;
-			year = 1900;
+			target.day = 1;
+			target.month = 1;
+			target.year = 1900;
 		}
 		else{
-			// Set member variables 
-			day = dayBuf;
-			month = monthBuf;
-			year = yearBuf;
+			// If the input buffers are valid, set member variables accordingly 
+			target.day = dayBuf;
+			target.month = monthBuf;
+			target.year = yearBuf;
 
-			std::ostringstream txt; txt << *this;
+			std::ostringstream txt; txt << target;
 			RST::Log("Date was set to [" + txt.str() + "]", LogCode::RUNTIME_LOW);
 		}
 	}
@@ -105,7 +105,7 @@ std::ostream& operator<<(std::ostream& os, const Date& date){
 }
 
 
-bool 	CheckDate			(int day, int month, int year){
+bool 	DateTime::CheckDate			(int day, int month, int year){
 	bool success {false};
 
 	// Check valid year
