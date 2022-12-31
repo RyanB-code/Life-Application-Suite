@@ -22,18 +22,22 @@ void Application::Startup() {
 	// Ensure all proper subsystems are initialized
 	if (SetupFileSystem()) {
 		RST::Log("Application file system was setup successfully", LogCode::RUNTIME_HIGH);
-		if(SetupGLFW()){
-			RST::Log("GLFW was setup successfully", LogCode::RUNTIME_HIGH);
-			if(SetupImGUI()){
-				RST::Log("ImGUI was setup successfully", LogCode::RUNTIME_HIGH);
-				if(SetupModules()){
-					RST::Log("All Modules are setup", LogCode::RUNTIME_HIGH);
-					m_initialized = true;
-					RST::Log( "Application was successfully setup", LogCode::LOG_HIGH);
+		if(ReadSettingsFile()){
+			RST::Log("Settings file was setup successfully", LogCode::RUNTIME_HIGH);
+			if(SetupGLFW()){
+				RST::Log("GLFW was setup successfully", LogCode::RUNTIME_HIGH);
+				if(SetupImGUI()){
+					RST::Log("ImGUI was setup successfully", LogCode::RUNTIME_HIGH);
+					if(SetupModules()){
+						RST::Log("All Modules are setup", LogCode::RUNTIME_HIGH);
+						m_initialized = true;
+						RST::Log( "Application was successfully setup", LogCode::LOG_HIGH);
+					}
 				}
 			}
 		}
 	}
+	
 	
 	// Exit if every subsystem could noe be initialized
 	if(!m_initialized){
@@ -111,7 +115,6 @@ bool Application::SetupFileSystem(){
 		if(!FirstTimeSetup()) { return false; }	// If first time setup was not successful, return FALSE thereby aborting further execution
 	}		
 	
-	std::cout << getVehicleDirectory() << "\n";
 
 	// Creates directories for the files if the files did exist/first time setup complete
 	if (!FileSystem::createDirectory(getMainDirectory()) || !FileSystem::createDirectory(getVehicleDirectory()))
@@ -128,6 +131,22 @@ bool Application::SetupFileSystem(){
 		
 		success = true;
 	}
+
+	return success;
+}
+bool Application::ReadSettingsFile(){
+	bool success {false};
+
+	// Check if the Setings file exists before creating
+	if(!FileSystem::doesFileExist(SETTINGS_FILE.string())){
+		RST::Log("Settings file was not found. Initializing and creating with default values", LogCode::FATAL);
+		if(!FileSystem::createFile(SETTINGS_FILE.string())){ success = false; }
+		else {
+			// Settings file needed to be created, write defualt values to it
+			success = ResetSettingsFile();  
+		}
+	}
+	else { success = true; }	// Settings file was already found, return TRUE
 
 	return success;
 }
@@ -233,6 +252,7 @@ bool Application::SetupModules(){
 
 	return true;
 }
+
 bool Application::FirstTimeSetup(){
 	RST::Log("Necessary directories were not found. Performing first time setup.", LogCode::LOG_HIGH);
 	bool success {false};
@@ -318,6 +338,22 @@ bool Application::FirstTimeSetup(){
 
 	return success;
 }
+bool Application::ResetSettingsFile(){
+	bool success {false};
+
+	// Ensure path is valid
+	if(!FileSystem::doesFileExist(SETTINGS_FILE.string())){
+		RST::Log("Could not reset Settings file, path was not found", LogCode::WARNING);
+		return false;
+	}
+	else{
+		success = true;
+		// Start writing to file here
+	}
+
+	return success;
+}
+
 
 std::string Application::getExeParentPath() const {
 
@@ -359,9 +395,10 @@ std::string Application::getExeParentPath() const {
 	return pathBuffer.string();
 }
 void Application::AssignPaths(const std::string parentPath){
-	// Assigns the variables to be used
+	// Assign member variables but does NOT create the directory
 	DIRECTORY_PATH 	= parentPath;
-	VEHICLE_PATH 	= DIRECTORY_PATH.string() + "Vehicles\\";	// Assign member variables but does NOT create the directory
+	VEHICLE_PATH 	= DIRECTORY_PATH.string() + "Vehicles\\";
+	SETTINGS_FILE 	= DIRECTORY_PATH.string() + "Settings.ini";
 
 	RST::Log("Set parent directory to " + parentPath, LogCode::LOG_HIGH);
 

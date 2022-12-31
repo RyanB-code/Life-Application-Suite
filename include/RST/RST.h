@@ -32,7 +32,6 @@ enum class LogCode {
     LOG_MED,        // Medium importance    - Ex: To show if something passed/failed an if statement
     LOG_HIGH,       // High importance      - Ex: Function completed, show iteration status
 
-
     // Will not be written to Log file
     RUNTIME_LOW,     // Low importance       - Ex: Setting variables. Get an idea of current execution place
     RUNTIME_MED,     // Medium importance    - Ex: To show if something passed/failed an if statement
@@ -40,7 +39,7 @@ enum class LogCode {
 
 //  RETURN,			// Used in conjunction with function to categorize that msg along with the return
 
-    RST,            // An error happened internal in the Ryan Software Toolkit
+    RST,            // Logs internal to the Ryan Software Toolkit
 };
 enum class LogLevel {
     ALL     = 0,    // Shows every LogCode
@@ -65,8 +64,6 @@ namespace RST {
     bool init(const std::string parentDirectory);
 
 
-    // Logging --------------------------------------
-   
     // Writes a debug log to the specified output target
     bool Log(const std::string msg, const LogCode code);
 
@@ -76,10 +73,11 @@ namespace RST {
     // Specifies what logs to display. Levels include all of the above levels.
     void SetLogLevel(const LogLevel level);
 
-    // Overwrites parameter with list of all logs in formatted strings
-    std::vector<std::string> GetFormattedLogs();
+    // Stores the parameter that will be updated with each new log call
+    void SetLogVector(std::vector<std::string>* vector);
+    void DeleteLogVector();
 
-    // ------------------------------------------------
+    
 
 
 
@@ -96,6 +94,27 @@ namespace RST {
     // ------------------------------------------------
 
 }
+
+/*
+// Singleton Implementation
+
+class RST{
+
+public:
+    static RST& GetInstance();
+
+private:
+    RST();
+    ~RST();
+
+    RST(const RST &rst);
+
+    const RST &operator=(const RST &rst);
+    
+
+
+};
+*/
 
 
 #endif

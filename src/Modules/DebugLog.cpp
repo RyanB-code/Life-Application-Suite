@@ -1,15 +1,18 @@
 #include "DebugLog.h"
 
-Debug::Debug(Application* app) : Module("Debug Menu", app){
 
+Debug::Debug(Application* app) : Module("Debug Menu", app){
+	m_logs = new std::vector<std::string>;
 }
 
 Debug::~Debug(){
-
+	delete m_logs;
 }
 
 
 bool Debug::Setup(){
+	RST::SetLogVector(m_logs);
+
 	return true;
 }
 
@@ -45,16 +48,11 @@ void Debug::Display(){
 
 		// Log Region
 		 if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), true, ImGuiWindowFlags_HorizontalScrollbar))
-        {
+        {	
 
-			static std::vector<std::string> logs {RST::GetFormattedLogs()};
-		
-
-			for(std::string& s : logs){
-				std::ostringstream os{}; os << s;
-				std::string text {os.str()};
-
-				ImGui::Text(text.c_str());
+			// Write the string to the window
+			for(std::string& s : *m_logs){
+				ImGui::TextUnformatted(s.c_str());
 			}
 
 			if (ScrollToBottom || (AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()))
@@ -74,11 +72,10 @@ void Debug::Display(){
 			<< std::setw(2) << std::setfill('0') << ltm->tm_min << ':'
 			<< std::setw(2) << std::setfill('0') << ltm->tm_sec << "]";
 
-		std::string text {os.str()};
+		std::string clock {os.str()};
 
-		ImGui::TextUnformatted(text.c_str());
-		ImGui::SameLine();
-		ImGui::Text("As ov v0.0.1, this will not update with new logs based on how get strings function is called");
+		ImGui::TextUnformatted(clock.c_str());
+
 
 		ImGui::End(); //End Window
 	 }

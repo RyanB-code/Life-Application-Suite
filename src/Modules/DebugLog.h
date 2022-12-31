@@ -20,6 +20,8 @@ public:
     void    Display() override;
     bool    Setup()   override;
 
+   std::vector<std::string>* m_logs;
+
 
 };
 

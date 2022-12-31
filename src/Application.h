@@ -52,7 +52,7 @@ private:
 	bool m_vsync 		{ true };
 
 	// For RST
-	LogTarget 	m_logTarget		{LogTarget::ALL};
+	LogTarget 	m_logTarget		{LogTarget::FILE};
 	LogLevel 	m_logLevel		{LogLevel::ALL};
 
 	const 	std::string 			WINDOW_TITLE 		{"Life Application Suite"};
@@ -62,16 +62,18 @@ private:
 	void 		AssignPaths(const std::string parentPath);		// Assigns member variable paths given the parentPath
 	std::filesystem::path 	DIRECTORY_PATH;						// Main parent directory that houses the executable
 	std::filesystem::path	VEHICLE_PATH;						// Directory holdng all of the Vehicle information files
+	std::filesystem::path	SETTINGS_FILE;
 
 
 	// Setup functions. Does setup in the order listed here
 	bool SetupFileSystem();										// Set member path varialbes and initializes RST
+	bool ReadSettingsFile();									// Read settings file to set variables
 	bool SetupGLFW();											
 	bool SetupImGUI();											// Creates window flags and sets colors
 	bool SetupModules();										// Iterates through s_moduleList and runs the Setup() function
 
 	bool FirstTimeSetup(); 										// Called if SetupFileSystem() could not find directories necessary, thereby assuming FirstTimeSetup
-	
+	bool ResetSettingsFile();									// Will rewrite the settings file to default values
 	
 	static std::vector<Module*> s_moduleList;							// Holds all Modules
 	void AddModule(Module* module) { s_moduleList.push_back(module); }	// Adds given Module parameter to list of known modules
